@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-26 13:45:53</sys_created_on>
+        <sys_id>938b5f3297a42150b2e1f97e6253af86</sys_id>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_step_938b5f3297a42150b2e1f97e6253af86</sys_update_name>
+        <table/>
+        <test display_value="KLF_GlideRecordUtilsTest">b57b1f3297a42150b2e1f97e6253afed</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=938b5f3297a42150b2e1f97e6253af86"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>938b5f3297a42150b2e1f97e6253af86</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-26 13:45:53</sys_created_on>
+        <sys_id>f70d5bf297a42150b2e1f97e6253aff7</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-26 14:49:01</sys_updated_on>
+        <value>(function(outputs, steps, params, stepResult, assertEqual) {
+    describe('KLF_GlideRecordUtils.deleteRecordTemplate', function() {
+		var task1Name = 'KLF_GlideRecordUtils task1';
+		var task2Name = 'KLF_GlideRecordUtils task2';
+		beforeAll(function() {
+			// create a couple tasks as test data
+			var task1 = new GlideRecord('task');
+			task1.short_description = task1Name;
+			task1.update();
+			
+			
+			var task2 = new GlideRecord('task');
+			task2.short_description = task2Name;
+			task2.update();
+			
+		});
+		
+		afterAll(function() {
+			// cleanup created tasks
+			var task = new GlideRecord('task');
+			task.addQuery('short_description', task1Name).addOrCondition('short_description', task2Name);
+			task.deleteMultiple();
+		});
+		
+		it('should delete only the records in the query', function(){
+			// at this point there should be 2 tasks created by beforeAll
+			// i'm going to target deleting one of them
+			var taskDelete = new GlideRecord('task');
+			taskDelete.addQuery('short_description', task1Name);
+			new global.KLF_GlideRecordUtils().deleteRecordTemplate('task', taskDelete.getEncodedQuery());
+
+			// one should be deleted now. query for both and should get one back
+			var task = new GlideRecord('task');
+			task.addQuery('short_description', task1Name).addOrCondition('short_description', task2Name);
+			task.query();
+			expect(task.getRowCount()).toBe(1);
+		});
+	});
+
+})(outputs, steps, params, stepResult, assertEqual);
+
+jasmine.getEnv().execute();
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>938b5f3297a42150b2e1f97e6253af86</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-26 13:45:53</sys_created_on>
+        <sys_id>ff0d5bf297a42150b2e1f97e6253aff6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-26 13:45:53</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+</record_update>

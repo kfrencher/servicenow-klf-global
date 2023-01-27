@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_angular_provider">
+    <sp_angular_provider action="INSERT_OR_UPDATE">
+        <name>klfModal</name>
+        <script><![CDATA[function factory($q, spUtil, $http, $uibModal, i18n, $document, $timeout, $uibModalStack) {
+    "use strict";
+    var template = `<div class="modal-header" ng-style="options.headerStyle">
+    <button type="button" class="close pull-right" ng-click="$dismiss()" title="Close modal" 
+    data-toggle="tooltip" data-placement="bottom" aria-label="Close modal" autofocus="autofocus" sn-atf-id="klf-modal-close">×</button>
+    <h1 class="modal-title h4" id="modal-title">
+        <label for="xpInput" ng-bind-html="options.title"></label>
+    </h1>
+</div>
+<div class="modal-body" ng-keyup="keyPress($event.keyCode)">
+    <p ng-if="options.message" ng-bind-html="options.message"></p>
+    <p ng-if="options.errorMessage" class="alert alert-danger ng-binding ng-scope" role="alert" ng-bind-html="options.errorMessage"></p>
+    <div ng-if="options.widget">
+        <sp-widget widget="options.widget"></sp-widget>
+    </div>
+    <div ng-if="options.input">
+        <form name="form.xpForm" ng-if="options.input" ng-submit="submit()">
+            <div class="form-group"><label for="xpInput" ng-if="options.label">
+                <span class="field-decorations"><span class="fa fa-asterisk mandatory" title="Required" style="padding-right: .25em"></span>{{options.label}}</span></label>
+                <input sn-atf-id="klf-modal-text" id="xpInput" type="text" class="form-control" ng-model="input.value" required="true" ng-change="changed=true" ng-blur="clearFocusListCache()" 
+                ng-if="!options.values || options.values.length === 0" autocomplete="off" aria-invalid="{{(changed == true &amp;&amp; form.xpForm.$invalid) || false}}"></input>
+                <div class="input-group" ng-if="options.values"><input id="xpInput" type="text" class="form-control" ng-model="input.value" 
+                    required="true" ng-change="changed=true" ng-blur="clearFocusListCache()" autocomplete="off" 
+                    aria-invalid="{{(changed == true &amp;&amp; form.xpForm.$invalid) || false}}"></input>
+                    <div class="input-group-btn" dropdown="true"><button type="button" class="btn btn-default dropdown-toggle" 
+                        dropdown-toggle="true" data-toggle="dropdown"><span class="caret"></span></button>
+                        <ul class="dropdown-menu pull-right">
+                            <li ng-repeat="value in options.values"><a href="" ng-click="input.name = value">{{value}}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal-footer" ng-style="options.footerStyle">
+    <button ng-repeat="button in options.buttons track by button.label" sp-focus-if="button.focus" 
+    ng-disabled="button.primary &amp;&amp; options.input &amp;&amp; form.xpForm.$invalid" class="btn btn-default {{button.class}}"
+    ng-class="{'btn-primary':button.primary}" type="button" ng-click="buttonClicked(button)" sn-atf-id="klf-button-{{button.label}}">{{button.label}}</button>
+</div>`;
+    function alert(message, appendTo) {
+        var options = {
+            title: message,
+            buttons: [{
+                label: i18n.getMessage('OK'),
+                primary: true
+            }],
+            appendTo: appendTo
+        };
+        return alertConfirm(options);
+    }
+    function confirm(message, appendTo) {
+        var options = {
+            title: message,
+            appendTo: appendTo
+        };
+        return alertConfirm(options);
+    }
+    function alertConfirm(options) {
+        options.messageOnly = true;
+        if (options.title.length < 25)
+            options.size = 'sm'
+        var defer = $q.defer();
+        open(options).then(function() {
+            defer.resolve(true);
+        }, function() {
+            defer.reject(false);
+        })
+        return defer.promise;
+    }
+    function prompt(message, defaultValue, appendTo, label) {
+        var options = {
+            label: label || '',
+            title: message,
+            input: true,
+            value: defaultValue,
+            appendTo: appendTo,
+            headerStyle: {
+                border: 'none',
+                'padding-bottom': 0
+            },
+            footerStyle: {
+                border: 'none',
+                'padding-top': 0
+            }
+        };
+        var defer = $q.defer();
+        open(options).then(function(value) {
+            defer.resolve(value);
+        }, function() {
+            defer.reject(null);
+        })
+        return defer.promise;
+    }
+    function open(options) {
+        options = initOptions(options);
+        var defer = $q.defer();
+        if (options.widget) {
+            var widgetURL = spUtil.getWidgetURL(options.widget);
+            $http.post(widgetURL, options.widgetInput).success(function(response) {
+                options.widget = response.result;
+                options.widget.options.shared = options.shared;
+                _open(options, defer);
+            });
+        } else
+            _open(options, defer);
+        return defer.promise;
+    }
+    function _open(options, defer) {
+        var pageRoot = angular.element('.sp-page-root');
+        var modal = $uibModal.open({
+            template: template,
+            controller: spModalCtrl,
+            size: options.size,
+            appendTo: options.appendTo,
+            backdrop: options.backdrop != undefined ? options.backdrop : true,
+            keyboard: options.keyboard != undefined ? options.keyboard : true,
+            resolve: {
+                options: function() {
+                    return options;
+                }
+            }
+        });
+        modal.result.then(function(result) {
+            if (options.input) {
+                defer.resolve(result.input, result.button);
+            } else {
+                defer.resolve(result.button);
+            }
+        }, function() {
+            defer.reject();
+        });
+        modal.rendered.then(function() {
+            var h1 = angular.element('#modal-title');
+            var modal = h1.closest('div.modal');
+            modal.attr('aria-labelledby', 'modal-title');
+            modal.attr('sn-atf-area', 'klf-modal');
+            pageRoot.attr('aria-hidden', 'true');
+            modal.attr('aria-modal', 'true');
+            if (options.noDismiss) {
+                $timeout(function() {
+                    var focusableEls = window.tabbable(modal[0]);
+                    if (focusableEls[0])
+                        focusableEls[0].focus();
+                }, 0);
+            }
+        });
+    }
+    function initOptions(options) {
+        var defaults = {
+            title: '',
+            message: '',
+            messageOnly: false,
+            errorMessage: '',
+            input: false,
+            label: '',
+            size: '',
+            value: '',
+            required: false,
+            values: false,
+            onSubmit: null,
+            widget: null,
+            widgetInput: null,
+            noDismiss: false,
+            dismissOnEnter: false,
+            buttons: [{
+                label: i18n.getMessage('Cancel'),
+                cancel: true
+            }, {
+                label: i18n.getMessage('OK'),
+                primary: true
+            }]
+        };
+        options = options || {};
+        for (var key in defaults) {
+            if (options[key] === undefined) {
+                options[key] = defaults[key];
+            }
+        }
+        if (options.messageOnly) {
+            options.headerStyle = {
+                border: 'none'
+            }
+            options.footerStyle = {
+                border: 'none',
+                'padding-top': 0
+            }
+        }
+        if (options.noDismiss)
+            options.headerStyle = {
+                display: 'none'
+            };
+        return options;
+    }
+    function spModalCtrl($scope, options) {
+        $scope.input = {
+            value: options.value
+        };
+        $scope.options = options;
+        $scope.form = {};
+        $scope.buttonClicked = function(button) {
+            if (button.cancel) {
+                $scope.$dismiss();
+                return;
+            }
+            if (options.input && $scope.form.xpForm.$invalid) {
+                $scope.changed = true;
+                return;
+            }
+            if (options.onSubmit) {
+                var promise = options.onSubmit();
+                promise.then(function(res) {
+                    if (!res.status) {
+                        $scope.options.errorMessage = res.errorMessage;
+                        return;
+                    } else {
+                        $scope.$close({
+                            button: button,
+                            input: $scope.input.value
+                        });
+                    }
+                });
+            } else {
+                $scope.$close({
+                    button: button,
+                    input: $scope.input.value
+                });
+            }
+        }
+        $scope.$on('modal.closing', function() {
+            var pageRoot = angular.element('.sp-page-root');
+            pageRoot.attr('aria-hidden', 'false');
+        });
+        $scope.clearFocusListCache = function() {
+            $uibModalStack.clearFocusListCache();
+        }
+        $scope.submit = function() {
+            var ok;
+            angular.forEach($scope.options.buttons, function(button) {
+                if (button.primary)
+                    ok = button;
+            })
+            if (ok)
+                $scope.buttonClicked(ok);
+        }
+        $scope.keyPress = function(keyCode) {
+            if (keyCode === 13 && $scope.options.dismissOnEnter == true)
+                $scope.submit();
+        }
+    }
+    var spModal = {
+        alert: alert,
+        confirm: confirm,
+        prompt: prompt,
+        open: open
+    };
+    return spModal;
+}]]></script>
+        <sys_class_name>sp_angular_provider</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-21 18:06:16</sys_created_on>
+        <sys_id>8a8862dd97ac2910b2e1f97e6253af7c</sys_id>
+        <sys_name>klfModal</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sp_angular_provider_8a8862dd97ac2910b2e1f97e6253af7c</sys_update_name>
+        <type>factory</type>
+    </sp_angular_provider>
+</record_update>

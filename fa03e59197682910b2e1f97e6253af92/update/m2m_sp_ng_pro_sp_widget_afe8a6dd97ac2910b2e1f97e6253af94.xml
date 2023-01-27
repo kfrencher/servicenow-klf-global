@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_ng_pro_sp_widget">
+    <m2m_sp_ng_pro_sp_widget action="INSERT_OR_UPDATE">
+        <sp_angular_provider display_value="klfModal">8a8862dd97ac2910b2e1f97e6253af7c</sp_angular_provider>
+        <sp_widget display_value="KLF Form">bef4a95597682910b2e1f97e6253af86</sp_widget>
+        <sys_class_name>m2m_sp_ng_pro_sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-21 18:07:15</sys_created_on>
+        <sys_id>afe8a6dd97ac2910b2e1f97e6253af94</sys_id>
+        <sys_name>klfModal.KLF Form</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>m2m_sp_ng_pro_sp_widget_afe8a6dd97ac2910b2e1f97e6253af94</sys_update_name>
+    </m2m_sp_ng_pro_sp_widget>
+</record_update>
