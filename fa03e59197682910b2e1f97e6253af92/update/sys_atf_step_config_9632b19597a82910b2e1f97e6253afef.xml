@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step_config">
+    <sys_atf_step_config action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <batch_order_constraint>stop</batch_order_constraint>
+        <can_mutate_page>false</can_mutate_page>
+        <category display_value="Service Portal">1bd1c141e7020300b2888f49c2f6a9b0</category>
+        <class_name/>
+        <class_type>script</class_type>
+        <deprecated>false</deprecated>
+        <description_generator><![CDATA[(function generateDescription(step) {
+	var td, label, description, value, name, id;
+	if (gs.nil(step.inputs.u_ui_action)) {
+		gs.error("Click a UI Action description generation error, no UI Action set");
+		return "";
+	}
+	
+    td = GlideTableDescriptor.get(step.inputs.u_table);
+	if (td)
+		label = td.getLabel();
+
+	var uiAction = step.inputs.u_ui_action.getRefRecord();
+	if (uiAction != null) {
+		name = uiAction.name;
+		id = uiAction.sys_id;
+	} else {
+		gs.error("Click a UI Action description generation error, unable to find UI Action by id: '" + step.inputs.u_ui_action + "'");
+		return "";
+	}
+	
+	if(step.inputs.u_is_client && step.inputs.u_is_client.toString() === 'true') {
+		gs.log('IS CLIEZNT');
+		return gs.getMessage("Click Client UI Action '{0}' on '{1}' form", [name, label]);
+	}
+
+	if (step.inputs.u_assert_type === "form_submitted_to_server") {
+		return gs.getMessage("Confirm that browser submits '{0}' form to server when clicking UI Action '{1}'", [name, label]);
+	} else if (step.inputs.u_assert_type === "form_submission_canceled_in_browser") {
+		return gs.getMessage("Confirm that browser blocks submission of '{0}' form to server when clicking UI Action '{1}'", [name, label]);
+	}
+
+	return gs.getMessage("Click UI Action '{0}' on '{1}' form", [name, label]);
+})(step);
+]]></description_generator>
+        <html_description><![CDATA[<p>Clicks a UI Action on the current form.</p>
+<h4>Additional Considerations</h4>
+<p>In order to use this step you must have already opened a form using either the &#34;Open a Page (SP)&#34; step. After this step, you may no longer use any form steps on the currently opened form as it is expected that this step will close it or move to a different page.</p>
+<p>Outputs the table and sys_id of the record on which the action was clicked.</p>
+<p>To click a client UI action click the Is Client checkbox</p>]]></html_description>
+        <icon>icon-article-document</icon>
+        <inputs/>
+        <name>KLF Click a UI Action (SP)</name>
+        <order>7300</order>
+        <outputs/>
+        <step_env display_value="UI">d2cb02e1870312009dccc9ded0e3ec7c</step_env>
+        <step_execution_generator><![CDATA[debugger;
+(function(step, stepResult, assertionObject) {
+
+    assertionObject.executeStep = function(step, stepResult) {
+
+        var FAILED_NO_G_FORM = "FAILURE: Unable to submit form, g_form is not defined. A valid form must be open before setting values";
+        var ERROR_UNDEFINED_ACTION = "FAILURE: UI Action not defined by its Step";
+        var CLICK_ACTION = "Click UI Action '{0}' on '{1}' form";
+        var FAILED_TO_FIND_ACTION = "FAILURE: Failed to find UI Action '{0}' on '{1}' form";
+        var SUCCESS_BLOCKED_ACTION = "Successfully confirmed that browser blocks submission of '{0}' form to server when clicking UI Action '{1}'";
+        var FAILED_BROWSER_SUBMIT = "FAILURE: Browser failed to submit '{0}' form to server when clicking UI Action '{1}'";
+        var DONT_CARE_ACTION = "Successfully clicked UI Action '{0}' on '{1}' form";
+        var SUCCESS_SUBMIT = "Successfully confirmed that browser submits '{0}' form to server when clicking UI Action '{1}'";
+        var FAILED_SUBMIT = "FAILURE: Failed to submit '{0}' form to server when clicking UI Action '{1}'";
+
+        var map = new GwtMessage().getMessages([FAILED_NO_G_FORM, ERROR_UNDEFINED_ACTION, CLICK_ACTION, FAILED_TO_FIND_ACTION, SUCCESS_BLOCKED_ACTION, FAILED_BROWSER_SUBMIT, DONT_CARE_ACTION, SUCCESS_SUBMIT, FAILED_SUBMIT]);
+
+        function message(msg) {
+            return g_ui_testing_util.setTestStepStatusMessage(msg);
+        }
+
+        function onError(msg) {
+            message(msg);
+            stepResult.message = msg;
+            stepResult.success = false;
+            step.defer.reject();
+        }
+
+        function onSuccess(msg) {
+            message(msg);
+            stepResult.message = msg;
+            stepResult.success = true;
+            step.defer.resolve();
+        }
+
+        function checkRecord(table, sysId) {
+            var gr = new GlideRecord(table);
+            var success = gr.get(sysId);
+            if (success) {
+                stepResult.outputs.u_record_id = sysId;
+                return false;
+            }
+            return true;
+        }
+
+        function hasValidationScriptState(testFrameWindow) {
+            return testFrameWindow.NOW.validationScriptState && Object.keys(testFrameWindow.NOW.validationScriptState).length > 0;
+        }
+
+        function checkFormValidation(form, actionName, errors, sysId) {
+            var table = form.getTableName();
+            var assertType = step.inputs.u_assert_type;
+            if (assertType === "form_submission_canceled_in_browser") {
+                if (errors) {
+                    onSuccess(formatMessage(map[SUCCESS_BLOCKED_ACTION], table, actionName));
+                } else {
+                    onError(formatMessage(map[FAILED_BROWSER_SUBMIT], table, actionName));
+                }
+            } else if (assertType === "form_submitted_to_server") {
+                if (!errors)
+                    errors = checkRecord(table, sysId);
+                if (errors) {
+                    onError(formatMessage(map[FAILED_BROWSER_SUBMIT], table, actionName));
+                } else {
+                    onSuccess(formatMessage(map[SUCCESS_SUBMIT], table, actionName));
+                }
+            } else {
+                onSuccess(formatMessage(map[DONT_CARE_ACTION], actionName, table));
+            }
+        }
+
+        function assert(form, actionName) {
+            var table = form.getTableName();
+            var assertType = step.inputs.u_assert_type;
+            var sysId = form.getSysId();
+            stepResult.outputs.u_table = table;
+            stepResult.outputs.u_record_id = sysId;
+            var timeout = step.timeout || 5;
+            // KLF
+            // if this is a client side UI action all we're doing is
+            // clicking the button
+            if(step.inputs.u_is_client === 'true') {
+                uiActionElement.click();
+                onSuccess(formatMessage(map[DONT_CARE_ACTION], actionName, table));
+                return;
+            } 
+            form.$private.userState.setRunningAction(actionName);
+            errors = !form.$private.validateForm(actionName);
+            if (hasValidationScriptState(testFrameWindow)) {
+                form.$private.events.on('propertyChange', function(type, fieldName, propertyName, propertyValue) {
+                    if (propertyName == "errorMessage")
+                        checkFormValidation(form, actionName, true);
+                });
+                form.$rootScope.$on('sp.form.submitted', function(e, status) {
+                    setTimeout(function() {
+                        checkFormValidation(form, actionName, false, status.sys_id);
+                    }, timeout);
+                });
+            } else {
+                if (!errors)
+                    form.$rootScope.$on('sp.form.submitted', function(e, status) {
+                        setTimeout(function() {
+                            checkFormValidation(form, actionName, false, status.sys_id);
+                        }, timeout);
+                    });
+                else
+                    checkFormValidation(form, actionName, true);
+            }
+        }
+
+        var testFrameWindow = g_ui_testing_util.getTestIFrameWindow();
+
+        // Fail Step if there's no gForm
+        if (!testFrameWindow.g_form) {
+            onError(map[FAILED_NO_G_FORM]);
+            return;
+        }
+
+        var actionId = step.inputs.u_ui_action;
+
+        // Fail Step if there's no actionName or actionId
+        if (!actionId) {
+            onError(map[ERROR_UNDEFINED_ACTION]);
+            return;
+        }
+
+
+        // Set initial message
+        message(formatMessage(map[CLICK_ACTION], actionName, table));
+
+        var document = jQuery(testFrameWindow.document);
+        var uiActionElement = document.find("[gsft_id='" + actionId + "']");
+
+        // KLF
+        // need to get the UI action a bit different than the original
+        // because we aren't passed the action name for some reason
+        var table = step.inputs.u_table;
+        var actionName = uiActionElement.text();
+
+        // Fail step, no UI action found
+        if (uiActionElement.length == 0) {
+            onError(formatMessage(map[FAILED_TO_FIND_ACTION], actionName, table));
+            return;
+        }
+
+        assert(testFrameWindow.g_form, actionName);
+    };
+    assertionObject.canMutatePage = step.can_mutate_page;
+})(step, stepResult, assertionObject);]]></step_execution_generator>
+        <sys_class_name>sys_atf_step_config</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-21 14:08:13</sys_created_on>
+        <sys_id>9632b19597a82910b2e1f97e6253afef</sys_id>
+        <sys_name>KLF Click a UI Action (SP)</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_step_config_9632b19597a82910b2e1f97e6253afef</sys_update_name>
+        <template_reminder>Demo Click a UI Action (SP)</template_reminder>
+        <type display_value="Test Step" name="sys_atf_step">c3004e8c756401100acb0f6766fcbfd1</type>
+        <wizard_redirect/>
+    </sys_atf_step_config>
+    <sys_translated_text action="delete_multiple" query="documentkey=9632b19597a82910b2e1f97e6253afef"/>
+    <sys_variable_value action="delete_multiple" query="document_key=9632b19597a82910b2e1f97e6253afef"/>
+    <sys_element_mapping action="delete_multiple" query="table=var__m_atf_input_variable_9632b19597a82910b2e1f97e6253afef^id=9632b19597a82910b2e1f97e6253afef"/>
+    <sys_element_mapping action="delete_multiple" query="table=var__m_atf_output_variable_9632b19597a82910b2e1f97e6253afef^id=9632b19597a82910b2e1f97e6253afef"/>
+</record_update>

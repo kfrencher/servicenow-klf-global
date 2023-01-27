@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test">
+    <sys_atf_test action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from display_value="SNB_LdapGroupServiceTest">3b01243997e8a910b2e1f97e6253afd1</copied_from>
+        <description/>
+        <enable_parameterized_testing>false</enable_parameterized_testing>
+        <fail_on_server_error>true</fail_on_server_error>
+        <name>SNB_LdapGroupServiceTest copy 2</name>
+        <parameters/>
+        <remember/>
+        <sys_class_name>sys_atf_test</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-24 13:44:02</sys_created_on>
+        <sys_id>85798d1e97246d10b2e1f97e6253af7c</sys_id>
+        <sys_name>SNB_LdapGroupServiceTest copy 2</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_test_85798d1e97246d10b2e1f97e6253af7c</sys_update_name>
+    </sys_atf_test>
+    <sys_variable_value action="delete_multiple" query="document_key=85798d1e97246d10b2e1f97e6253af7c"/>
+</record_update>

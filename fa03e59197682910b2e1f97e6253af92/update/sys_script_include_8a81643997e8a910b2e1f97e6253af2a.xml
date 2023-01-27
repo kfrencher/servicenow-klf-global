@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.SNB_LdapGroupServiceTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>SNB_LdapGroupServiceTest</name>
+        <script><![CDATA[function SNB_LdapGroupServiceTest(outputs, steps, params, stepResult, assertEqual) {
+    describe('SNB_LdapGroupServiceTest.getGroupByDn', function() {
+        var expectedGroupName = 'test group';
+        beforeAll(function() {
+            var expectedGroup = new GlideRecord('sys_user_group');
+            expectedGroup.newRecord();
+            expectedGroup.name = expectedGroupName;
+            expectedGroup.source = 'ldap: ' + expectedGroupName;
+            expectedGroup.update();
+        });
+
+        try {
+            var ldapGroupService = new global.SNB_LdapGroupService({
+                ldapServerName: 'Example LDAP Server'
+            });
+        } catch(e) {
+            stepResult.setOutputMessage(e);
+            stepResult.setFailed();
+            return;
+        }
+
+        it('should return group when one exists', function() {
+            var group = ldapGroupService.getGroupByDn(expectedGroupName);
+            expect(group).not.toBeNull();
+            if(group) {
+                expect(group.getValue('name')).toBe(expectedGroupName);
+            }
+        });
+
+        it('should not return a group when no group name is provided', function() {
+            var group = ldapGroupService.getGroupByDn();
+            expect(group).toBeNull();
+        });
+
+        it('should not return group when given a bad group name', function() {
+            var group = ldapGroupService.getGroupByDn('INVALID GROUP NAME');
+            expect(group).toBeNull();
+        });
+
+    });
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-22 21:32:39</sys_created_on>
+        <sys_id>8a81643997e8a910b2e1f97e6253af2a</sys_id>
+        <sys_name>SNB_LdapGroupServiceTest</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_8a81643997e8a910b2e1f97e6253af2a</sys_update_name>
+    </sys_script_include>
+</record_update>
