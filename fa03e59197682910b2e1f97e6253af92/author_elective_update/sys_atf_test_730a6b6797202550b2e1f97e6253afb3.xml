@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test">
+    <sys_atf_test action="DELETE">
+        <active>true</active>
+        <copied_from display_value="KLF_TestUtilsTest">d71457eb97ace150b2e1f97e6253aff7</copied_from>
+        <description/>
+        <enable_parameterized_testing>false</enable_parameterized_testing>
+        <fail_on_server_error>true</fail_on_server_error>
+        <name>KLF_TestUtilsTest copy</name>
+        <parameters/>
+        <remember/>
+        <sys_class_name>sys_atf_test</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:08</sys_created_on>
+        <sys_id>730a6b6797202550b2e1f97e6253afb3</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KLF_TestUtilsTest copy</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_test_730a6b6797202550b2e1f97e6253afb3</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-28 22:38:08</sys_updated_on>
+    </sys_atf_test>
+    <sys_variable_value action="DELETE" query="document_key=730a6b6797202550b2e1f97e6253afb3"/>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="G KLF">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>3985fabbdb7037808aea21c40596199a</instance_id>
+        <instance_name>dev82424</instance_name>
+        <name>sys_atf_test_730a6b6797202550b2e1f97e6253afb3</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test"><sys_atf_test action="INSERT_OR_UPDATE"><active>true</active><copied_from display_value="KLF_TestUtilsTest">d71457eb97ace150b2e1f97e6253aff7</copied_from><description/><enable_parameterized_testing>false</enable_parameterized_testing><fail_on_server_error>true</fail_on_server_error><name>KLF_TestUtilsTest copy</name><parameters/><remember/><sys_class_name>sys_atf_test</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-01-28 22:38:08</sys_created_on><sys_id>730a6b6797202550b2e1f97e6253afb3</sys_id><sys_mod_count>0</sys_mod_count><sys_name>KLF_TestUtilsTest copy</sys_name><sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package><sys_policy/><sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope><sys_update_name>sys_atf_test_730a6b6797202550b2e1f97e6253afb3</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-01-28 22:38:08</sys_updated_on></sys_atf_test><sys_variable_value action="delete_multiple" query="document_key=730a6b6797202550b2e1f97e6253afb3"/></record_update>]]></payload>
+        <payload_hash>-1043029133</payload_hash>
+        <record_name>KLF_TestUtilsTest copy</record_name>
+        <reverted_from/>
+        <source>f214add197682910b2e1f97e6253afb4</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:08</sys_created_on>
+        <sys_id>3f0a6b6797202550b2e1f97e6253afb5</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>185fa87e4f40000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-28 22:38:08</sys_updated_on>
+        <type>Test</type>
+        <update_guid>770a6b67f12025505e538aa428b0a5b5</update_guid>
+        <update_guid_history>770a6b67f12025505e538aa428b0a5b5:-1043029133</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:12</sys_created_on>
+        <sys_db_object display_value="" name="sys_atf_test">sys_atf_test</sys_db_object>
+        <sys_id>811529d3f6504d4389277feec3c4bb41</sys_id>
+        <sys_metadata>730a6b6797202550b2e1f97e6253afb3</sys_metadata>
+        <sys_name>KLF_TestUtilsTest copy</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_atf_test_730a6b6797202550b2e1f97e6253afb3</sys_update_name>
+        <sys_update_version display_value="sys_atf_test_730a6b6797202550b2e1f97e6253afb3">3f0a6b6797202550b2e1f97e6253afb5</sys_update_version>
+    </sys_metadata_delete>
+</record_update>

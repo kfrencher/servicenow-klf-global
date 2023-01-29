@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="DELETE">
+        <active>true</active>
+        <copied_from display_value="Run Server Side Script">7f2497eb97ace150b2e1f97e6253af02</copied_from>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:08</sys_created_on>
+        <sys_id>3b0a6b6797202550b2e1f97e6253afb6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_step_3b0a6b6797202550b2e1f97e6253afb6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-28 22:38:08</sys_updated_on>
+        <table/>
+        <test display_value="KLF_TestUtilsTest copy">730a6b6797202550b2e1f97e6253afb3</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="DELETE" query="document_key=3b0a6b6797202550b2e1f97e6253afb6"/>
+    <sys_variable_value action="DELETE">
+        <document>sys_atf_step</document>
+        <document_key>3b0a6b6797202550b2e1f97e6253afb6</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:08</sys_created_on>
+        <sys_id>b70a6b6797202550b2e1f97e6253afb7</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-28 22:38:08</sys_updated_on>
+        <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
+    var TestUtils = global.KLF_TestUtils;&#13;
+&#13;
+    /**&#13;
+     * Returns the number of steps in a test&#13;
+     * @param {string} testSysId sys_atf_test.sys_id&#13;
+     * @returns {number}&#13;
+     */&#13;
+    function getStepCount(testSysId) {&#13;
+        var stepGr = new GlideRecord('sys_atf_step');&#13;
+        stepGr.addQuery('test', testSysId);&#13;
+        stepGr.query();&#13;
+        return stepGr.getRowCount();&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * Returns the number of steps in a test using the test name&#13;
+     * @param {string} testName sys_atf_test.name&#13;
+     * @returns {number}&#13;
+     */&#13;
+    function getStepCountByName(testName) {&#13;
+        var stepGr = new GlideRecord('sys_atf_step');&#13;
+        stepGr.addQuery('test.name', testName);&#13;
+        stepGr.query();&#13;
+        return stepGr.getRowCount();&#13;
+    }&#13;
+&#13;
+&#13;
+    /**&#13;
+     * I'm using this common beforeAll function in each describe because they all&#13;
+     * do the same thing&#13;
+     */&#13;
+    function commonBeforeAll() {&#13;
+        try {&#13;
+            // I'm always using test1 as the test name that is created&#13;
+            // so before each test i'm removing the test data that the previous&#13;
+            // test generated&#13;
+            var testGrDelete = new GlideRecord('sys_atf_test');&#13;
+            testGrDelete.addQuery('name', 'test1');&#13;
+            new global.KLF_GlideRecordUtils().deleteRecord('sys_atf_test',&#13;
+                testGrDelete.getEncodedQuery());&#13;
+        } catch(e) {&#13;
+            gs.error(e);&#13;
+        }&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * Returns an unsaved sys_atf_test record with the&#13;
+     * sys_atf_test.name filled in&#13;
+     * @param {string} name sys_atf_test.name Name of the test&#13;
+     * @returns {GlideRecord} Unsaved sys_atf_test&#13;
+     */&#13;
+    function createTest(name) {&#13;
+        var test = new GlideRecord('sys_atf_test');&#13;
+        test.newRecord();&#13;
+        test.name = name;&#13;
+        &#13;
+        return test;&#13;
+&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * @typedef {Object} StepData&#13;
+     * @property {string} testSysId sys_atf_test.sys_id The parent test&#13;
+     * @property {string} stepConfigId sys_atf_step_config.sys_id The related step config&#13;
+     */&#13;
+    /**&#13;
+     * Returns an unsaved sys_atf_step record that is a child&#13;
+     * of the sys_atf_test.sys_id passed in.&#13;
+     * @param {StepData} stepData&#13;
+     */&#13;
+    function createStep(stepData) {&#13;
+        var step = new GlideRecord('sys_atf_step');&#13;
+        step.newRecord();&#13;
+        step.test = stepData.testSysId;&#13;
+        step.step_config = stepData.stepConfigId;&#13;
+        return step;&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * Returns the retrieved sys_atf_step_config GlideRecord&#13;
+     * @param {string} name sys_atf_step_config.name&#13;
+     * @returns {GlideRecord} sys_atf_step_config&#13;
+     */&#13;
+    function getStepConfigByName(name) {&#13;
+        var stepConfig = new GlideRecord('sys_atf_step_config');&#13;
+        if(stepConfig.get('name', name)) {&#13;
+            return stepConfig;&#13;
+        } else {&#13;
+            throw 'Could not find step config using step config name: ' + name;&#13;
+        }&#13;
+    }&#13;
+&#13;
+    describe('TestUtils.getMaxStepOrder', function() {&#13;
+        var test = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+            // Creating a test with three steps and getting the max&#13;
+            // order number. Should be 3 because there are 3 steps&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+        it('Should return the max order number', function() {&#13;
+            var maxStepOrder = TestUtils.getMaxStepOrder(test.getUniqueValue());&#13;
+            expect(maxStepOrder).toEqual(3);&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.deleteTest', function() {&#13;
+        var test = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+            // Creating a test with three steps and then deleting it&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+        it('Should delete the test and all of its steps', function() {&#13;
+            TestUtils.deleteTest(test.getUniqueValue());&#13;
+            expect(getStepCount(test.getUniqueValue())).toEqual(0);&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.moveSteps', function() {&#13;
+        var fromTest = null;&#13;
+        var logConfig = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+&#13;
+            // Creating a test with a couple steps in it. The moved&#13;
+            // steps should be removed from one test and added to&#13;
+            // another test&#13;
+            fromTest = createTest('test1');&#13;
+            fromTest.update();&#13;
+            logConfig = getStepConfigByName('Log');&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: fromTest.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: fromTest.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+&#13;
+        it('Should move steps from one test to another', function() {&#13;
+            // Creating a test to move the steps to&#13;
+            // Initially should have no steps&#13;
+            var toTest = createTest('test2');&#13;
+&#13;
+            var expectedStepCount = 2;&#13;
+            TestUtils.moveSteps(fromTest.getUniqueValue(), toTest.getUniqueValue());&#13;
+&#13;
+            // Checking to see that the from test has no steps&#13;
+            expect(getStepCount(fromTest.getUniqueValue())).toBe(0);&#13;
+&#13;
+            // Checking to see that the to test has the correct amount of steps&#13;
+            expect(getStepCount(toTest.getUniqueValue())).toBe(2);&#13;
+&#13;
+            var step = new GlideRecord('sys_atf_step');&#13;
+            step.addQuery('test', toTest.getUniqueValue());&#13;
+            step.query();&#13;
+&#13;
+            while(step.next()) {&#13;
+                // Checking to see that the step config is correct&#13;
+                expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue());&#13;
+            }&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.copyTest', function() {&#13;
+        var test = null;&#13;
+        var logConfig = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+&#13;
+            // Creating a test with a couple steps in it. The copied&#13;
+            // test should be a new test instance with matching test&#13;
+            // steps&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            logConfig = getStepConfigByName('Log');&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+&#13;
+        it('Should create copy of a test including all steps', function() {&#13;
+            var expectedStepCount = 2;&#13;
+            var expectedStepConfig = logConfig;&#13;
+            var testCopySysId = TestUtils.copyTest(test.getUniqueValue());&#13;
+            var testCopy = new GlideRecord('sys_atf_test');&#13;
+&#13;
+            // Checking to see the test copy exists&#13;
+            expect(testCopy.get(testCopySysId)).toBe(true);&#13;
+&#13;
+            var step = new GlideRecord('sys_atf_step');&#13;
+            step.addQuery('test', testCopy.getUniqueValue());&#13;
+            step.query();&#13;
+&#13;
+            // Checking to see there are the right amount of steps&#13;
+            expect(step.getRowCount()).toBe(expectedStepCount);&#13;
+&#13;
+            while(step.next()) {&#13;
+                // Checking to see that the step config is correct&#13;
+                expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue());&#13;
+            }&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.updateStepOrder', function() {&#13;
+        var test = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+&#13;
+            // Creating a test with three steps &#13;
+            // The order in the three steps should initially be&#13;
+            // 1, 2, 3. I'm then updating that order to a number&#13;
+            // greater than 3, so we expect the order to start with&#13;
+            // the new start order&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+        it('should update the order in all steps', function() {&#13;
+            var expectedOrderStart = 10;&#13;
+            TestUtils.updateStepOrder(test.getUniqueValue(), expectedOrderStart);&#13;
+&#13;
+            var step = new GlideRecord('sys_atf_step');&#13;
+            step.addQuery('test', test.getUniqueValue());&#13;
+            step.query();&#13;
+            var expectedOrder = expectedOrderStart;&#13;
+            while(step.next()) {&#13;
+                expectedOrder = expectedOrder + 1;&#13;
+                expect(parseInt(step.getValue('order'))).toBe(expectedOrder);&#13;
+            }&#13;
+        });&#13;
+    });&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+jasmine.getEnv().execute();&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+    <sys_variable_value action="DELETE">
+        <document>sys_atf_step</document>
+        <document_key>3b0a6b6797202550b2e1f97e6253afb6</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:08</sys_created_on>
+        <sys_id>f30a6b6797202550b2e1f97e6253afb7</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-28 22:38:08</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="G KLF">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>3985fabbdb7037808aea21c40596199a</instance_id>
+        <instance_name>dev82424</instance_name>
+        <name>sys_atf_step_3b0a6b6797202550b2e1f97e6253afb6</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step"><sys_atf_step action="INSERT_OR_UPDATE"><active>true</active><copied_from display_value="Run Server Side Script">7f2497eb97ace150b2e1f97e6253af02</copied_from><description>Run Server Side Validation Script</description><display_name>Run Server Side Script</display_name><inputs/><mugshots_cache_json/><notes/><order>1</order><step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config><sys_class_name>sys_atf_step</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-01-28 22:38:08</sys_created_on><sys_id>3b0a6b6797202550b2e1f97e6253afb6</sys_id><sys_mod_count>0</sys_mod_count><sys_name>Run Server Side Script</sys_name><sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package><sys_policy/><sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope><sys_update_name>sys_atf_step_3b0a6b6797202550b2e1f97e6253afb6</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-01-28 22:38:08</sys_updated_on><table/><test display_value="KLF_TestUtilsTest copy">730a6b6797202550b2e1f97e6253afb3</test><timeout/><warning_message/></sys_atf_step><sys_variable_value action="delete_multiple" query="document_key=3b0a6b6797202550b2e1f97e6253afb6"/><sys_variable_value action="INSERT_OR_UPDATE"><document>sys_atf_step</document><document_key>3b0a6b6797202550b2e1f97e6253afb6</document_key><order>200</order><sys_class_name>sys_variable_value</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-01-28 22:38:08</sys_created_on><sys_id>b70a6b6797202550b2e1f97e6253afb7</sys_id><sys_mod_count>0</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-01-28 22:38:08</sys_updated_on><value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
+    var TestUtils = global.KLF_TestUtils;&#13;
+&#13;
+    /**&#13;
+     * Returns the number of steps in a test&#13;
+     * @param {string} testSysId sys_atf_test.sys_id&#13;
+     * @returns {number}&#13;
+     */&#13;
+    function getStepCount(testSysId) {&#13;
+        var stepGr = new GlideRecord('sys_atf_step');&#13;
+        stepGr.addQuery('test', testSysId);&#13;
+        stepGr.query();&#13;
+        return stepGr.getRowCount();&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * Returns the number of steps in a test using the test name&#13;
+     * @param {string} testName sys_atf_test.name&#13;
+     * @returns {number}&#13;
+     */&#13;
+    function getStepCountByName(testName) {&#13;
+        var stepGr = new GlideRecord('sys_atf_step');&#13;
+        stepGr.addQuery('test.name', testName);&#13;
+        stepGr.query();&#13;
+        return stepGr.getRowCount();&#13;
+    }&#13;
+&#13;
+&#13;
+    /**&#13;
+     * I'm using this common beforeAll function in each describe because they all&#13;
+     * do the same thing&#13;
+     */&#13;
+    function commonBeforeAll() {&#13;
+        try {&#13;
+            // I'm always using test1 as the test name that is created&#13;
+            // so before each test i'm removing the test data that the previous&#13;
+            // test generated&#13;
+            var testGrDelete = new GlideRecord('sys_atf_test');&#13;
+            testGrDelete.addQuery('name', 'test1');&#13;
+            new global.KLF_GlideRecordUtils().deleteRecord('sys_atf_test',&#13;
+                testGrDelete.getEncodedQuery());&#13;
+        } catch(e) {&#13;
+            gs.error(e);&#13;
+        }&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * Returns an unsaved sys_atf_test record with the&#13;
+     * sys_atf_test.name filled in&#13;
+     * @param {string} name sys_atf_test.name Name of the test&#13;
+     * @returns {GlideRecord} Unsaved sys_atf_test&#13;
+     */&#13;
+    function createTest(name) {&#13;
+        var test = new GlideRecord('sys_atf_test');&#13;
+        test.newRecord();&#13;
+        test.name = name;&#13;
+        &#13;
+        return test;&#13;
+&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * @typedef {Object} StepData&#13;
+     * @property {string} testSysId sys_atf_test.sys_id The parent test&#13;
+     * @property {string} stepConfigId sys_atf_step_config.sys_id The related step config&#13;
+     */&#13;
+    /**&#13;
+     * Returns an unsaved sys_atf_step record that is a child&#13;
+     * of the sys_atf_test.sys_id passed in.&#13;
+     * @param {StepData} stepData&#13;
+     */&#13;
+    function createStep(stepData) {&#13;
+        var step = new GlideRecord('sys_atf_step');&#13;
+        step.newRecord();&#13;
+        step.test = stepData.testSysId;&#13;
+        step.step_config = stepData.stepConfigId;&#13;
+        return step;&#13;
+    }&#13;
+&#13;
+    /**&#13;
+     * Returns the retrieved sys_atf_step_config GlideRecord&#13;
+     * @param {string} name sys_atf_step_config.name&#13;
+     * @returns {GlideRecord} sys_atf_step_config&#13;
+     */&#13;
+    function getStepConfigByName(name) {&#13;
+        var stepConfig = new GlideRecord('sys_atf_step_config');&#13;
+        if(stepConfig.get('name', name)) {&#13;
+            return stepConfig;&#13;
+        } else {&#13;
+            throw 'Could not find step config using step config name: ' + name;&#13;
+        }&#13;
+    }&#13;
+&#13;
+    describe('TestUtils.getMaxStepOrder', function() {&#13;
+        var test = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+            // Creating a test with three steps and getting the max&#13;
+            // order number. Should be 3 because there are 3 steps&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+        it('Should return the max order number', function() {&#13;
+            var maxStepOrder = TestUtils.getMaxStepOrder(test.getUniqueValue());&#13;
+            expect(maxStepOrder).toEqual(3);&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.deleteTest', function() {&#13;
+        var test = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+            // Creating a test with three steps and then deleting it&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+        it('Should delete the test and all of its steps', function() {&#13;
+            TestUtils.deleteTest(test.getUniqueValue());&#13;
+            expect(getStepCount(test.getUniqueValue())).toEqual(0);&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.moveSteps', function() {&#13;
+        var fromTest = null;&#13;
+        var logConfig = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+&#13;
+            // Creating a test with a couple steps in it. The moved&#13;
+            // steps should be removed from one test and added to&#13;
+            // another test&#13;
+            fromTest = createTest('test1');&#13;
+            fromTest.update();&#13;
+            logConfig = getStepConfigByName('Log');&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: fromTest.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: fromTest.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+&#13;
+        it('Should move steps from one test to another', function() {&#13;
+            // Creating a test to move the steps to&#13;
+            // Initially should have no steps&#13;
+            var toTest = createTest('test2');&#13;
+&#13;
+            var expectedStepCount = 2;&#13;
+            TestUtils.moveSteps(fromTest.getUniqueValue(), toTest.getUniqueValue());&#13;
+&#13;
+            // Checking to see that the from test has no steps&#13;
+            expect(getStepCount(fromTest.getUniqueValue())).toBe(0);&#13;
+&#13;
+            // Checking to see that the to test has the correct amount of steps&#13;
+            expect(getStepCount(toTest.getUniqueValue())).toBe(2);&#13;
+&#13;
+            var step = new GlideRecord('sys_atf_step');&#13;
+            step.addQuery('test', toTest.getUniqueValue());&#13;
+            step.query();&#13;
+&#13;
+            while(step.next()) {&#13;
+                // Checking to see that the step config is correct&#13;
+                expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue());&#13;
+            }&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.copyTest', function() {&#13;
+        var test = null;&#13;
+        var logConfig = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+&#13;
+            // Creating a test with a couple steps in it. The copied&#13;
+            // test should be a new test instance with matching test&#13;
+            // steps&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            logConfig = getStepConfigByName('Log');&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: logConfig.getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+&#13;
+        it('Should create copy of a test including all steps', function() {&#13;
+            var expectedStepCount = 2;&#13;
+            var expectedStepConfig = logConfig;&#13;
+            var testCopySysId = TestUtils.copyTest(test.getUniqueValue());&#13;
+            var testCopy = new GlideRecord('sys_atf_test');&#13;
+&#13;
+            // Checking to see the test copy exists&#13;
+            expect(testCopy.get(testCopySysId)).toBe(true);&#13;
+&#13;
+            var step = new GlideRecord('sys_atf_step');&#13;
+            step.addQuery('test', testCopy.getUniqueValue());&#13;
+            step.query();&#13;
+&#13;
+            // Checking to see there are the right amount of steps&#13;
+            expect(step.getRowCount()).toBe(expectedStepCount);&#13;
+&#13;
+            while(step.next()) {&#13;
+                // Checking to see that the step config is correct&#13;
+                expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue());&#13;
+            }&#13;
+        });&#13;
+    });&#13;
+&#13;
+    describe('TestUtils.updateStepOrder', function() {&#13;
+        var test = null;&#13;
+&#13;
+        beforeAll(function() {&#13;
+            commonBeforeAll();&#13;
+&#13;
+            // Creating a test with three steps &#13;
+            // The order in the three steps should initially be&#13;
+            // 1, 2, 3. I'm then updating that order to a number&#13;
+            // greater than 3, so we expect the order to start with&#13;
+            // the new start order&#13;
+            test = createTest('test1');&#13;
+            test.update();&#13;
+            [&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                }),&#13;
+                createStep({&#13;
+                    testSysId: test.getUniqueValue(),&#13;
+                    stepConfigId: getStepConfigByName('Log').getUniqueValue()&#13;
+                })&#13;
+            ].forEach(function(step) {&#13;
+                step.update();&#13;
+            });&#13;
+        });&#13;
+&#13;
+        it('should update the order in all steps', function() {&#13;
+            var expectedOrderStart = 10;&#13;
+            TestUtils.updateStepOrder(test.getUniqueValue(), expectedOrderStart);&#13;
+&#13;
+            var step = new GlideRecord('sys_atf_step');&#13;
+            step.addQuery('test', test.getUniqueValue());&#13;
+            step.query();&#13;
+            var expectedOrder = expectedOrderStart;&#13;
+            while(step.next()) {&#13;
+                expectedOrder = expectedOrder + 1;&#13;
+                expect(parseInt(step.getValue('order'))).toBe(expectedOrder);&#13;
+            }&#13;
+        });&#13;
+    });&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+jasmine.getEnv().execute();&#13;
+</value><variable display_value="Test script">989d9e235324220002c6435723dc3484</variable></sys_variable_value><sys_variable_value action="INSERT_OR_UPDATE"><document>sys_atf_step</document><document_key>3b0a6b6797202550b2e1f97e6253afb6</document_key><order>100</order><sys_class_name>sys_variable_value</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-01-28 22:38:08</sys_created_on><sys_id>f30a6b6797202550b2e1f97e6253afb7</sys_id><sys_mod_count>0</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-01-28 22:38:08</sys_updated_on><value>3.1</value><variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable></sys_variable_value></record_update>]]></payload>
+        <payload_hash>-218281697</payload_hash>
+        <record_name>Run Server Side Script</record_name>
+        <reverted_from/>
+        <source>f214add197682910b2e1f97e6253afb4</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:08</sys_created_on>
+        <sys_id>bb0aa7e797202550b2e1f97e6253afd3</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>185fa87e52c0000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-01-28 22:38:08</sys_updated_on>
+        <type>Test Step</type>
+        <update_guid>f30aa7e72e20255005a03151295410d3</update_guid>
+        <update_guid_history>f30aa7e72e20255005a03151295410d3:-218281697</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-28 22:38:12</sys_created_on>
+        <sys_db_object display_value="" name="sys_atf_step">sys_atf_step</sys_db_object>
+        <sys_id>0821d1c6014048109181eb1a4e3da900</sys_id>
+        <sys_metadata>3b0a6b6797202550b2e1f97e6253afb6</sys_metadata>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_atf_step_3b0a6b6797202550b2e1f97e6253afb6</sys_update_name>
+        <sys_update_version display_value="sys_atf_step_3b0a6b6797202550b2e1f97e6253afb6">bb0aa7e797202550b2e1f97e6253afd3</sys_update_version>
+    </sys_metadata_delete>
+</record_update>
