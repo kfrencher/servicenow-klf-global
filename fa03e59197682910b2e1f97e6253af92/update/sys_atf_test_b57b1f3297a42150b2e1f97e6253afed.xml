@@ -2,7 +2,7 @@
     <sys_atf_test action="INSERT_OR_UPDATE">
         <active>true</active>
         <copied_from/>
-        <description/>
+        <description>Testing some global utility functions that involve GlideRecord</description>
         <enable_parameterized_testing>false</enable_parameterized_testing>
         <fail_on_server_error>true</fail_on_server_error>
         <name>KLF_GlideRecordUtilsTest</name>
