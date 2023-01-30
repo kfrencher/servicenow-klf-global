@@ -25,7 +25,7 @@
         <processing_script><![CDATA[if(sys_package != gs.getCurrentApplicationId()) {
 	gs.addErrorMessage('You must be in the same scope as the test to add steps');
 } else {
-	var TestUtils = global.KLF_TestUtils;
+	var TestUtils = global.KLF_AtfAddStepsHelper;
 	var fromTest = TestUtils.getTest(test_source_sys_id);
 	if(!fromTest) {
 		gs.addErrorMessage('Could not find test source to copy steps from using sys_id: ' + test_source_sys_id);

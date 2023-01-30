@@ -2,15 +2,15 @@
     <sys_script_include action="INSERT_OR_UPDATE">
         <access>public</access>
         <active>true</active>
-        <api_name>global.KLF_TestUtils</api_name>
+        <api_name>global.KLF_AtfAddStepsHelper</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <name>KLF_TestUtils</name>
+        <name>KLF_AtfAddStepsHelper</name>
         <script><![CDATA[/** @ts-ignore */
 var global = global || {};
 
-global.KLF_TestUtils = (function() {
+global.KLF_AtfAddStepsHelper = (function() {
     return {
         /**
          * Gets an sys_atf_test record by sys_id
@@ -129,7 +129,7 @@ global.KLF_TestUtils = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-28 21:00:46</sys_created_on>
         <sys_id>7d731b6b97ace150b2e1f97e6253afcc</sys_id>
-        <sys_name>KLF_TestUtils</sys_name>
+        <sys_name>KLF_AtfAddStepsHelper</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>

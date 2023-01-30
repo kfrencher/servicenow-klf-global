@@ -7,7 +7,8 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_GlideRecordUtils</name>
-        <script><![CDATA[var global = global || {};
+        <script><![CDATA[//@ts-ignore
+var global = global || {};
 global.KLF_GlideRecordUtils = function() {};
 
 global.KLF_GlideRecordUtils.prototype = {
@@ -40,6 +41,32 @@ global.KLF_GlideRecordUtils.prototype = {
 	},
 
 	/**
+	 * Used to insert records from tables only accessible in Global scope. Some tables
+	 * restrict write access to only Global so a scoped application can use this method
+	 * to insert records in global scope they otherwise wouldn't be able to update. 	
+	 * @param {string} tableName The table name to perform deletion
+	 * @param {Object} updates An object containing the fields and values to update
+	 * @example var taskInsert = new GlideRecord('task');
+	 * new global.KLF_GlideRecord().insertRecord('incident', {
+	 *   short_description: 'Updated description'
+	 * });
+	 */
+	insertRecord: function(tableName, updates) {
+		if(!updates) {
+			throw 'updates is required';
+		}
+		
+		var glideRecord = new GlideRecord(tableName);
+		glideRecord.newRecord();
+
+		Object.keys(updates).forEach(function(field) {
+			glideRecord.setValue(field, updates[field]);
+		});
+		glideRecord.update();
+		return glideRecord;
+	},
+
+	/**
 	 * Used to update records from tables only accessible in Global scope. Some tables
 	 * restrict write access to only Global so a scoped application can use this method
 	 * to update records in global scope they otherwise wouldn't be able to update. You
@@ -48,11 +75,10 @@ global.KLF_GlideRecordUtils.prototype = {
 	 * @param {string} tableName The table name to perform deletion
 	 * @param {string} encodedQuery An encoded query passed to this function to filter
 	 * @param {Object} updates An object containing the fields and values to update
-	 * the records to delete
-	 * query params before deletion. This is required
+	 * @returns {string[]} An array of sys_ids of the records updated
 	 * @example var taskUpdate = new GlideRecord('task');
-	 * taskDelete.addQuery(active, false);
-	 * new global.KLF_GlideRecord().deleteRecord('incident', taskDelete.getEncodedQuery(), {
+	 * taskUpdate.addQuery(active, false);
+	 * new global.KLF_GlideRecord().updateRecord('incident', taskUpdate.getEncodedQuery(), {
 	 *   short_description: 'Updated description'
 	 * });
 	 */
@@ -68,12 +94,17 @@ global.KLF_GlideRecordUtils.prototype = {
 		glideRecord.addEncodedQuery(encodedQuery);
 		glideRecord.query();
 		
+		/** @type {string[]} */
+		var updatedSysIds = [];
 		while(glideRecord.next()) {
 			Object.keys(updates).forEach(function(field) {
 				glideRecord.setValue(field, updates[field]);
 			});
 			glideRecord.update();
+			updatedSysIds.push(glideRecord.getUniqueValue());
 		}
+
+		return updatedSysIds;
 	}
 
 };]]></script>

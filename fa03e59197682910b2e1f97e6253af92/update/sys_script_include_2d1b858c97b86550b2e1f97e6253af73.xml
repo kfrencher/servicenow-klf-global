@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_TestUtilsTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_TestUtilsTest</name>
+        <script><![CDATA[function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
+    var testUtils = global.KLF_TestUtils;
+
+    describe('KLF_TestUtilTest.impersonateUser', function() {
+        it('should impersonate the user with the given sys_id', function() {
+            var user = testUtils.createUser('testUser');
+            testUtils.impersonateUser(user.sys_id);
+            expect(user.getValue('sys_id')).toBe(gs.getUserID());
+        });
+    });
+
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-01-30 00:20:32</sys_created_on>
+        <sys_id>2d1b858c97b86550b2e1f97e6253af73</sys_id>
+        <sys_name>KLF_TestUtilsTest</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_2d1b858c97b86550b2e1f97e6253af73</sys_update_name>
+    </sys_script_include>
+</record_update>

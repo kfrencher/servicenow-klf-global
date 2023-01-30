@@ -2,21 +2,21 @@
     <sys_atf_test action="INSERT_OR_UPDATE">
         <active>true</active>
         <copied_from/>
-        <description>Testing the code added to add test steps from a selected test to another test</description>
+        <description/>
         <enable_parameterized_testing>false</enable_parameterized_testing>
         <fail_on_server_error>true</fail_on_server_error>
-        <name>KLF_AtfAddStepsHelperTest</name>
+        <name>KLF_TestUtilsScriptTest</name>
         <parameters/>
         <remember/>
         <sys_class_name>sys_atf_test</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2023-01-28 21:02:24</sys_created_on>
-        <sys_id>d71457eb97ace150b2e1f97e6253aff7</sys_id>
-        <sys_name>KLF_AtfAddStepsHelperTest</sys_name>
+        <sys_created_on>2023-01-30 00:10:30</sys_created_on>
+        <sys_id>a3a8458897b86550b2e1f97e6253affb</sys_id>
+        <sys_name>KLF_TestUtilsScriptTest</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
-        <sys_update_name>sys_atf_test_d71457eb97ace150b2e1f97e6253aff7</sys_update_name>
+        <sys_update_name>sys_atf_test_a3a8458897b86550b2e1f97e6253affb</sys_update_name>
     </sys_atf_test>
-    <sys_variable_value action="delete_multiple" query="document_key=d71457eb97ace150b2e1f97e6253aff7"/>
+    <sys_variable_value action="delete_multiple" query="document_key=a3a8458897b86550b2e1f97e6253affb"/>
 </record_update>
