@@ -19,9 +19,144 @@ global.KLF_TestUtils = (function() {
     return {
 
         /**
+         * Deletes records from the given tables that the specified
+         * user has created. Tables can be specified as a string or an array of strings
+         * @param {string} createdBySysId sys_user.sys_id
+         * @param {string|string[]} tableNames The names of the tables to delete records from
+         */
+        deleteRecordsCreatedBy: function(createdBySysId, tableNames) {
+            if(typeof tableNames === 'string') {
+                tableNames = [tableNames];
+            }
+
+            // first i need to transform the createdBySysId sys_user.sys_id
+            //into a sys_user.user_name
+            var createdBy = new GlideRecord('sys_user');
+            if(!createdBy.get(createdBySysId)) {
+                throw new Error('Could not find user with sys_id: ' + createdBySysId);
+            }
+            var createdByUserName = createdBy.getValue('user_name');
+
+            tableNames.forEach(function(tableName) {
+                var gr = new GlideRecord(tableName);
+                gr.addQuery('sys_created_by', createdByUserName);
+                gr.deleteMultiple();
+            });
+        },
+
+        /**
+         * Deletes records from the given tables that the common user
+         * has created. Tables can be specified as a string or an array of strings
+         * @param {string|string[]} tableNames The names of the tables to delete records from
+         */
+        deleteRecordsCreatedByCommonUser: function(tableNames) {
+            var commonUser = this.getCommonUser();
+            if(commonUser === null) {
+                throw new Error('Could not find common user');
+            }
+            this.deleteRecordsCreatedBy(commonUser.getUniqueValue(), tableNames);
+        },
+        
+        /**
+         * Executes the given function as the common user and then reverts back to the original user
+         * @param {function} func The function to execute as the given user
+         */
+        runAsCommonUser: function(func) {
+            this.runAsUser(this.createCommonUser().getUniqueValue(), func);
+        },
+
+        /**
+         * Executes the given function as the given user and then reverts back to the original user
+         * @param {string} userSysId The sys_id of the user to impersonate
+         * @param {function} func The function to execute as the given user
+         */
+        runAsUser: function(userSysId, func) {
+            var previousUserSysId = this.impersonateUser(userSysId);
+            try {
+                func();
+            } catch(e) {
+                gs.error(e);
+            }
+            this.impersonateUser(previousUserSysId);
+        },
+
+        /**
+         * Returns common user sys_user record or null if it does not exist
+         * @returns {GlideRecord} The sys_user record of the common user or null if it does not exist
+         */
+        getCommonUser: function() {
+            var user = new GlideRecord('sys_user');
+            if(user.get('user_name', 'common')) {
+                return user;
+            } else {
+                return null;
+            }
+        },
+
+        /**
+         * Creates a user with no roles or groups to simulate a common user
+         * @returns {GlideRecord} The newly created sys_user record
+         */
+        createCommonUser: function() {
+            var user = this.createUser('common');
+            return user;
+        },
+
+        /**
+         * Retrieves a user that has admin access
+         * @returns {GlideRecord} Some user that has admin access
+         */
+        getAdminUser: function() {
+            var user = new GlideRecord('sys_user');
+            if(user.get('user_name', 'admin')) {
+                return user;
+            } else {
+                throw new Error('Could not find admin user');
+            }
+        },
+
+        /**
+         * Impersonates the admin user and returns the GlideRecord of the admin user
+         * Returns the sys_id of the current user before impersonation
+         * @returns {[GlideRecord, string]} The sys_user record for admin user and the
+         * sys_id of the current user before impersonation
+         */
+        impersonateAdminUser: function() {
+            var adminUser = this.getAdminUser();
+            var currentUser = this.impersonateUser(adminUser.getUniqueValue());
+            return [adminUser, currentUser];
+        },
+
+        /**
+         * Returns the common user sys_user record or creates it if it does not exist
+         * @returns {GlideRecord} The sys_user record of the common user
+         */
+        getOrCreateCommonUser: function() {
+            var user = this.getCommonUser();
+            if(user) {
+                return user;
+            } else {
+                return this.createCommonUser();
+            }
+        },
+
+        /**
+         * Impersonates the admin user
+         * Returns the GlideRecord of the common user that was impersonated
+         * Returns the sys_id of the current user before impersonation
+         * @returns {[GlideRecord, string]} The sys_user record for common user and the
+         * sys_id of the current user before impersonation
+         */
+        impersonateCommonUser: function() {
+            var commonUser = this.getOrCreateCommonUser();
+            var currentUser = this.impersonateUser(commonUser.getUniqueValue());
+            return [commonUser, currentUser];
+        },
+
+        /**
          * Impersonates the user with the given sys_id
          * @param {string} userSysId The sys_id of the user to impersonate
-         * @returns {string} The sys_id of the user that was impersonated
+         * @returns {string} The sys_id of the current user before impersonation
          */
         impersonateUser: function(userSysId) {
             var impersonator = new GlideImpersonate();
