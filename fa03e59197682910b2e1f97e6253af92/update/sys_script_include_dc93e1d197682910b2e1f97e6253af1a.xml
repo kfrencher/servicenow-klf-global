@@ -2,19 +2,19 @@
     <sys_script_include action="INSERT_OR_UPDATE">
         <access>public</access>
         <active>true</active>
-        <api_name>global.SNB_SPUtils</api_name>
+        <api_name>global.KLF_SPUtils</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <name>SNB_SPUtils</name>
+        <name>KLF_SPUtils</name>
         <script><![CDATA[//@ts-ignore
 var global = global || {};
 /**
- * @class global.SNB_SPUtils
+ * @class global.KLF_SPUtils
  * contains utility functions
  */
-global.SNB_SPUtils = function() {};
-global.SNB_SPUtils.prototype = {
+global.KLF_SPUtils = function() {};
+global.KLF_SPUtils.prototype = {
     /**
      * substitute call for $sp.getStream. For some reason $sp.getStream was returning a
      * NullPointerException in Rome, so I replaced it with an equivalent call. This is used
@@ -316,7 +316,7 @@ global.SNB_SPUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
-        <sys_name>SNB_SPUtils</sys_name>
+        <sys_name>KLF_SPUtils</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
