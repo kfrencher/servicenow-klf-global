@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?><database>
+    <element attributes="copied_from_column=copied_from,update_synch=true" db_object_id="f2004e8c756401100acb0f6766fcbf7c" extends="sys_metadata" label="Test" max_length="40" name="sys_atf_test" type="collection">
+        <element label="Template" max_length="40" name="u_template" type="boolean"/>
+    </element>
+</database>

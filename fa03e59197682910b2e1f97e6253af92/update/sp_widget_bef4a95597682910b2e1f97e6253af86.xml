@@ -92,14 +92,14 @@
     } else {
       return $scope.data.f._ui_actions;
     }
-  }
+  };
 
   $scope.getPrimaryAction = function() {
     var primaryActions = $scope.data.f._ui_actions.filter(function(action) {
       return action.primary;
     });		
     return (primaryActions.length) ? primaryActions[0] : null;
-  }
+  };
 
   $scope.getUIActionContextMenu = function(event) {
     var menu = [];
@@ -123,7 +123,7 @@
     }]);
 
     return menu;
-  }
+  };
 
   function exportPDF(landscape) {
     $window.open("/" + $scope.data.f.table + ".do?PDF&landscape=" + landscape + "&sys_id=" + $scope.data.sys_id + "&sysparm_view=" + $scope.data.f.view);
@@ -136,7 +136,7 @@
       $scope.triggerUIAction(primaryAction);
   });
   $scope.$on('$destroy', function() {
-    deregister()
+    deregister();
   });
 
   $scope.triggerUIAction = function(action) {
@@ -152,6 +152,7 @@
 
     var activeElement = document.activeElement;
     if (activeElement) {
+      // @ts-ignore - blur() is not a function on type Element
       activeElement.blur();
     }
 
@@ -162,7 +163,7 @@
           $scope.submitting = false;
       }
     });
-  }
+  };
 
   $scope.$on("spModel.uiActionComplete", function(evt, response, savedFormSysId) {
     if (!response.isInsert &&  ($scope.data.sys_id !== savedFormSysId))
@@ -178,7 +179,7 @@
 
   function constructResponseHandler(response) {
     return function() {
-	  $rootScope.$broadcast("sp.form.submitted", {sys_id: (response.isInsert) ? response.sys_id : $scope.data.sys_id});
+    $rootScope.$broadcast("sp.form.submitted", {sys_id: (response.isInsert) ? response.sys_id : $scope.data.sys_id});
       var message;
       var eventName = "sp.form.record.updated";
       if (response.isInsert) {
@@ -197,7 +198,7 @@
       spUtil.addTrivialMessage(message);
       spUtil.simulateFakeFormSubmitForAutoComplete('widget-form', $scope.data.f._fields);
       $timeout(clearStatus, 2000);
-    }
+    };
   }
 
   var ctrl = this;
@@ -205,7 +206,7 @@
   var unregister = $scope.$on('$sp.list.click', onListClick);
   $scope.$on("$destroy", function() {
     unregister();
-  })
+  });
 	
 	function _save() {
 		var primaryAction = $scope.getPrimaryAction();
@@ -238,10 +239,10 @@
 	
 	var g_form;
 	function initForm(gFormInstance) {
-              $scope.$evalAsync(function() {
-		     if ($('#widget-form').parents('.modal').length)
-		        $scope.embeddedInModal = true;
-		})
+    $scope.$evalAsync(function() { 
+      if ($('#widget-form').parents('.modal').length) 
+        $scope.embeddedInModal = true;
+    });
 
 		if (gFormInstance.getTableName() == $scope.data.f.table){
 			g_form = gFormInstance;
@@ -268,7 +269,7 @@
 			if (data.fieldToClear != "" && g_form.hasField(data.fieldToClear))
 				g_form.setValue(data.fieldToClear, "");
 		}
-	})
+	});
 
   // Show or hide related lists
   $scope.$watch('data.f._related_lists', function() {
@@ -330,7 +331,7 @@
   }
 
   if ($scope.data.f.title) {
-	  $scope.$emit('sp.widget-modal.set-aria-label', $scope.data.f.title);
+    $scope.$emit('sp.widget-modal.set-aria-label', $scope.data.f.title);
   }
 }]]></client_script>
         <controller_as>c</controller_as>
@@ -521,7 +522,7 @@
 		data.view = options.view || $sp.getParameter("view") || $sp.getParameter("v"); // no default
 	}
 
-  	if (isPopup && gs.getProperty("glide.service_portal.reference.use_sys_popup_view", "false") == "true") {
+	if (isPopup && gs.getProperty("glide.service_portal.reference.use_sys_popup_view", "false") == "true") {
 		options.hideRelatedLists = true;
 		options.disableUIActions = "true";
 	}
@@ -547,7 +548,7 @@
 
 	var rec = $sp.getRecord(data.table, data.sys_id);
 
- 	if (data.sys_id != "-1" && !rec.canRead())
+	if (data.sys_id != "-1" && !rec.canRead())
 		return; // can't see requested record
 	
 	if (data.sys_id == "-1" && !rec.canCreate())
@@ -579,12 +580,12 @@
 			fm.hardcoded = true;
 			fm.widgetInstance = $sp.getWidget('widget-ticket-conversation',
 																{table: data.table,
-																 sys_id: data.sys_id,
-																 includeExtended: true,
-																 hideAttachmentBtn: true,
-																 title: "${Activity}",
-																 use_dynamic_placeholder: true,
-																 btnLabel: "${Post}"});
+																sys_id: data.sys_id,
+																includeExtended: true,
+																hideAttachmentBtn: true,
+																title: "${Activity}",
+																use_dynamic_placeholder: true,
+																btnLabel: "${Post}"});
 		} else if(fm.formatter == "com_glideapp_servicecatalog_veditor" || fm.formatter == "com_glideapp_questionset_default_question_editor") {
 			var qsConfig = $sp.getValue('quick_start_config');
 			if (qsConfig)

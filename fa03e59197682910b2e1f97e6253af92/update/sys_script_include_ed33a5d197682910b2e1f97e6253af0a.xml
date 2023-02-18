@@ -47,7 +47,7 @@ global.KLF_LdapGroupService = function(config) {
     this.ingestTypeName = config.ingestTypeName || defaultingestTypeName;
     var defaultSearchRdn = this.isActiveDirectoryGroups ? '' : 'ou=Groups~';
     this.searchRdn = config.searchRdn || defaultSearchRdn;
-}
+};
 
 global.KLF_LdapGroupService.prototype = {
     /**
@@ -57,7 +57,7 @@ global.KLF_LdapGroupService.prototype = {
      * but you need to wrap the return in a string constructor like
      * String(result.get('cn')). If you don't do this i've found some string methods
      * do not work correctly
-     * @typedef LdapResult
+     * @typedef {Hashtable} LdapResult
      * @property {string} en
      * @property {string} dn
      * @property {string} description Description of group
@@ -221,8 +221,9 @@ global.KLF_LdapGroupService.prototype = {
                 types.push(type.getUniqueValue());
             }
             return types;
-        } else {}
-        return [];
+        } else {
+            return [];
+        }
     },
     /**
      * Creates the marker for newly ingested groups by this class. This is so
@@ -234,7 +235,7 @@ global.KLF_LdapGroupService.prototype = {
     getOrCreateIngestGroupType: function() {
         var type = new GlideRecord('sys_user_group_type');
         var ingestTypeName = this.ingestTypeName;
-        if (type.get('name', ingestTypeName)) {} else {
+        if (type.get('name', ingestTypeName)) {
             return type.getUniqueValue();
         }
         type.newRecord();
@@ -640,7 +641,7 @@ global.KLF_LdapGroupService.prototype = {
      * @returns {string} The default sys_user_group_type name for a LDAP group
      */
     getDefaultLdapGroupTypeName: function() {
-        return 'SNB LDAP GROUP'
+        return 'SNB LDAP GROUP';
     },
     /**
      * @returns {string} The default sys_user_group_type name for an AD group
@@ -686,7 +687,7 @@ global.KLF_LdapGroupService.prototype = {
         return new global.ArrayUtil().unique(results);
     },
     type: 'KLF_LdapGroupService'
-}]]></script>
+};]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:03:55</sys_created_on>

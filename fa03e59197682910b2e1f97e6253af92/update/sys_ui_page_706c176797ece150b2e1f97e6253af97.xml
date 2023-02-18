@@ -12,11 +12,15 @@
 		<input type="hidden" name="test_target_sys_id" value="${sysparm_to_test_sys_id}"/>
 		<p>Select test to add steps from</p>
 		<div style="margin: 15px 0">
-			<!-- Constrain to tests in the current application scope and exclude the current test from the list -->
+			<!-- 
+				Constrain to tests in the current application scope and exclude the current test from the list 
+				Only show tests with names that start with template
+				Order by name
+			-->
 			<g:macro_invoke macro="ui_reference" name="test_source_sys_id" 
 							table="sys_atf_test" show_popup="true" 
 							show_lookup="true" 
-							query="sys_package=${sysparm_sys_package}^sys_id!=${sysparm_to_test_sys_id}"/>
+							query="sys_package=${sysparm_sys_package}^sys_id!=${sysparm_to_test_sys_id}^u_template=true^ORDERBYname"/>
 		</div>
 		<g:dialog_buttons_ok_cancel ok="return true" />
 	</g:ui_form>
@@ -35,7 +39,7 @@
 		gs.addErrorMessage('Could not find test target to copy steps to using sys_id: ' + test_target_sys_id);
 	}
 
-	// TestUtils.addTestSteps(test_source_sys_id, test_target_sys_id);
+	TestUtils.addTestSteps(test_source_sys_id, test_target_sys_id);
 
 	gs.addInfoMessage('Added steps from: ' + fromTest.getDisplayValue() + ' to ' + toTest.getDisplayValue());
 }

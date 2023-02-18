@@ -7,8 +7,8 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_SPUtils</name>
-        <script><![CDATA[//@ts-ignore
-var global = global || {};
+        <script><![CDATA[// @ts-ignore 
+var global = global || {}; 
 /**
  * @class global.KLF_SPUtils
  * contains utility functions
@@ -43,7 +43,7 @@ global.KLF_SPUtils.prototype = {
                     "name": "work_notes",
                     "label": "Work Notes"
                 }]
-            }
+            };
         } else {
             return {};
         }

@@ -62,13 +62,13 @@
     function alertConfirm(options) {
         options.messageOnly = true;
         if (options.title.length < 25)
-            options.size = 'sm'
+            options.size = 'sm';
         var defer = $q.defer();
         open(options).then(function() {
             defer.resolve(true);
         }, function() {
             defer.reject(false);
-        })
+        });
         return defer.promise;
     }
     function prompt(message, defaultValue, appendTo, label) {
@@ -92,7 +92,8 @@
             defer.resolve(value);
         }, function() {
             defer.reject(null);
-        })
+            
+        });
         return defer.promise;
     }
     function open(options) {
@@ -135,6 +136,7 @@
         });
         modal.rendered.then(function() {
             var h1 = angular.element('#modal-title');
+            // @ts-ignore
             var modal = h1.closest('div.modal');
             modal.attr('aria-labelledby', 'modal-title');
             modal.attr('sn-atf-area', 'klf-modal');
@@ -142,6 +144,7 @@
             modal.attr('aria-modal', 'true');
             if (options.noDismiss) {
                 $timeout(function() {
+                    // @ts-ignore
                     var focusableEls = window.tabbable(modal[0]);
                     if (focusableEls[0])
                         focusableEls[0].focus();
@@ -183,11 +186,11 @@
         if (options.messageOnly) {
             options.headerStyle = {
                 border: 'none'
-            }
+            };
             options.footerStyle = {
                 border: 'none',
                 'padding-top': 0
-            }
+            };
         }
         if (options.noDismiss)
             options.headerStyle = {
@@ -229,27 +232,27 @@
                     input: $scope.input.value
                 });
             }
-        }
+        };
         $scope.$on('modal.closing', function() {
             var pageRoot = angular.element('.sp-page-root');
             pageRoot.attr('aria-hidden', 'false');
         });
         $scope.clearFocusListCache = function() {
             $uibModalStack.clearFocusListCache();
-        }
+        };
         $scope.submit = function() {
             var ok;
             angular.forEach($scope.options.buttons, function(button) {
                 if (button.primary)
                     ok = button;
-            })
+            });
             if (ok)
                 $scope.buttonClicked(ok);
-        }
+        };
         $scope.keyPress = function(keyCode) {
             if (keyCode === 13 && $scope.options.dismissOnEnter == true)
                 $scope.submit();
-        }
+        };
     }
     var spModal = {
         alert: alert,
