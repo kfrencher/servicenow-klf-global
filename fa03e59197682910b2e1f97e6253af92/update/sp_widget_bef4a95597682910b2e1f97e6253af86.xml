@@ -2,32 +2,13 @@
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
         <client_script><![CDATA[function controller($rootScope, $scope, $timeout, $location, $log, $window, spUtil, nowAttachmentHandler, spAriaUtil, spNavStateManager, klfModal) {
-  // KLF
-  // add my client side UI action
-  function addKlfAction() {
-    const uiActions = $scope.data.f._ui_actions;
-    if (uiActions) {
-      $scope.data.f._ui_actions = [...uiActions, {
-        action_name: 'KLF Action',
-        form_style: 'unstyled',
-        is_client: true,
-        is_button: true,
-        is_context: false,
-        is_link: false,
-        name: 'klf_action',
-        sys_id: '671de11197a82910b2e1f97e6253afcf',
-        fn: function() {
-            klfModal.prompt('Enter some kind of classification')
-                .then(classification => {
-                  g_form.setValue('classification', classification);
-                });
-        }
-      }];
-    }
-  }
-  addKlfAction();
-  // Also add my ui action after the form is submitted
-  $scope.$on('sp.form.submitted', () => addKlfAction());
+  // KLF ADDITION
+	// adding the g_user reference to allow UI Actions to be compatible
+	var g_user;
+	glideUserSession.loadCurrentUser().then(function(_g_user) {
+		g_user = _g_user;
+	});
+	// END KLF ADDITION
   
 
   $scope.submitting = false;
@@ -86,8 +67,10 @@
       return [];
     if (type) {
       return $scope.data.f._ui_actions.filter(function(action) {
+				// KLF ADDITION
         //We handle the primary action button separately.
-        return !action.primary && action['is_' + type];
+        // return !action.primary && action['is_' + type];
+				return action['is_' + type];
       });
     } else {
       return $scope.data.f._ui_actions;
@@ -137,15 +120,54 @@
   });
   $scope.$on('$destroy', function() {
     deregister();
+		
+		// KLF ADDITION
+		// Firing this event to let other listeners know this form is going away
+		// THis allows external scripts like UI Policies and Client Scripts
+		// access to objects in Service Portal if the script is running in the
+		// Service Portal context
+		CustomEvent.fire('klf.form.destroy', {
+			g_form: g_form,
+			$rootScope: $rootScope,
+			$scope: $scope,
+			$timeout: $timeout,
+			$location: $location,
+			$log: $log,
+			$window: $window,
+			spUtil: spUtil,
+			nowAttachmentHandler: nowAttachmentHandler,
+			spAriaUtil: spAriaUtil,
+			spNavStateManager: spNavStateManager,
+			glideUserSession: glideUserSession,
+			i18n: i18n,
+			klfModal: klfModal
+		});
+		// END KLF ADDITION
   });
+	
+	// KLF ADDITION
+	// Allowing external widgets to trigger a UI Action
+	$rootScope.$on('klf.form.triggeraction', function(e, action) {
+		$scope.triggerUIAction(action);
+	});
+	
+	// I'm clearing messages that may be hanging around when the user executes another
+	// UI Action. The original function has been moved to a standalone function
+	$scope.triggerUIAction = function(action) {
+		// Clear any current messages now that the user is trying to do a new action
+		if(g_form) {
+			g_form.clearMessages();
+			setTimeout(function() {
+				originalTriggerUIAction(action);
+			});
+		} else {
+			originalTriggerUIAction(action);
+		}
+	}
+	// END KLF ADDITION
 
-  $scope.triggerUIAction = function(action) {
-    // KLF
-    if(action.is_client) {
-      action.fn.call(action, action.fn);
-      return;
-    }
-
+	// KLF ADDITION
+  function originalTriggerUIAction(action) {
 		if ($scope.data.disableUIActions && !action.primary) {
       return;
     }
@@ -155,17 +177,48 @@
       // @ts-ignore - blur() is not a function on type Element
       activeElement.blur();
     }
-
-    $scope.$evalAsync(function() {
-      if (g_form) {
-        $scope.submitting = true;
-        if (!g_form.submit(action.action_name || action.sys_id))
-          $scope.submitting = false;
-      }
-    });
+		
+		// KLF ADDITION
+		// Wrapping this code in a function to call later
+		function triggerAction() {
+			$scope.$evalAsync(function() {
+				if (g_form) {
+					$scope.submitting = true;
+					if (!g_form.submit(action.action_name || action.sys_id))
+						$scope.submitting = false;
+				}
+			});
+		}
+		
+		// KLF ADDITION
+		// Allowing other widgets to know an action is about to fire
+		$rootScope.$broadcast('klf.triggeruiaction', action);
+		// END KLF ADDITION
+		
+		// KLF ADDITION
+		if(action.is_custom) {
+			if(action.fn && action.is_client) {
+				var fnCall = action.fn;
+				if(action.onclick) {
+					eval(fnCall + '\n\n' + action.onclick); // eslint ignore
+				} else {
+					spUtil.addErrorMessage('Client action must include an onclick function');
+				}
+			}
+			return;
+		} else {
+			triggerAction();
+		}
+		// END KLF ADDITION
+    
   };
 
   $scope.$on("spModel.uiActionComplete", function(evt, response, savedFormSysId) {
+		// KLF ADDITION
+		var uiAction = $scope.uiAction;
+		$scope.uiAction = null; // Cleaning up
+		// END KLF ADDITION
+		
     if (!response.isInsert &&  ($scope.data.sys_id !== savedFormSysId))
       return;
 
@@ -174,12 +227,31 @@
       return;
 
     var sysID = (response.isInsert) ? response.sys_id : $scope.data.sys_id;
-    loadForm($scope.data.table, sysID).then(constructResponseHandler(response));
+		
+		// KLF ADDITION
+		// adding to support URL redirection
+    // loadForm($scope.data.table, sysID).then(constructResponseHandler(response));
+		me.server.get({action: 'getActionResponseFromSession', uiAction: uiAction}).then(function(redirectResponse) {
+			if(redirectResponse.data.redirectUrl) {
+				$location.url(redirectResponse.data.redirectUrl);
+			} else {
+				loadForm($scope.data.table, sysID).then(constructResponseHandler(response));
+			}
+		});
+		// END KLF ADDITION
   });
 
   function constructResponseHandler(response) {
     return function() {
-    $rootScope.$broadcast("sp.form.submitted", {sys_id: (response.isInsert) ? response.sys_id : $scope.data.sys_id});
+			// KLF ADDITION
+			// Adding some additions to thie event: uiAction, and isInsert
+    $rootScope.$broadcast("sp.form.submitted", {
+			uiAction: uiAction,
+			isInsert: response.isInsert,
+			sys_id: (response.isInsert) ? response.sys_id : $scope.data.sys_id
+		});
+			// END KLF ADDITION
+			
       var message;
       var eventName = "sp.form.record.updated";
       if (response.isInsert) {
@@ -196,7 +268,12 @@
       $rootScope.$broadcast(eventName, $scope.data.f._fields, $scope.data.sys_id);
       $scope.status = message;
       spUtil.addTrivialMessage(message);
-      spUtil.simulateFakeFormSubmitForAutoComplete('widget-form', $scope.data.f._fields);
+			// KLF ADDITION
+			// This function not always available
+			if(spUtil.simulateFakeFormSubmitForAutoComplete) {
+				spUtil.simulateFakeFormSubmitForAutoComplete('widget-form', $scope.data.f._fields);
+			}
+			// END KLF ADDITION
       $timeout(clearStatus, 2000);
     };
   }
@@ -223,6 +300,31 @@
     $scope.data.table = f.table = table;
     $scope.data.sys_id = f.sys_id = sys_id;
     f.view = $scope.data.view;
+		
+		// KLF ADDITION
+		// Firing this event to let other listeners know this form is going away
+		// THis allows external scripts like UI Policies and Client Scripts
+		// access to objects in Service Portal if the script is running in the
+		// Service Portal context
+		CustomEvent.fire('klf.form.load', {
+			g_form: g_form,
+			$rootScope: $rootScope,
+			$scope: $scope,
+			$timeout: $timeout,
+			$location: $location,
+			$log: $log,
+			$window: $window,
+			spUtil: spUtil,
+			nowAttachmentHandler: nowAttachmentHandler,
+			spAriaUtil: spAriaUtil,
+			spNavStateManager: spNavStateManager,
+			glideUserSession: glideUserSession,
+			i18n: i18n,
+			klfModal: klfModal,
+			f: f
+		});
+		// END KLF ADDITION
+		
     return $scope.server.update().then(setupAttachmentHandler);
   }
 
@@ -246,7 +348,12 @@
 
 		if (gFormInstance.getTableName() == $scope.data.f.table){
 			g_form = gFormInstance;
-			spNavStateManager.register($scope.data.table, _save, g_form);
+			
+			// KLF ADDITION
+			// disabling for now so dirty form popup does not display
+			// spNavStateManager.register($scope.data.table, _save, g_form);
+			// END KLF ADDITION
+			
 			$scope.isPageReady = true;
 			$timeout(function() {
 				$rootScope.$emit('spModel.gForm.rendered', g_form);
@@ -333,6 +440,48 @@
   if ($scope.data.f.title) {
     $scope.$emit('sp.widget-modal.set-aria-label', $scope.data.f.title);
   }
+	
+	// KLF ADDITION
+	// patch g_form because it doesn't properly skip validation on
+	// some action names it should by default
+	// adding a 'nvalidate' option so i can pass in any UI Action that has
+	// 'novalidate' and it will skip validation
+	var controllerArguments = arguments;
+	$scope.$on('spModel.gForm.initialized', function(e, gFormInstance) {
+		var originalValidate = gFormInstance.$private.validateForm;
+		gFormInstance.$private.validateForm = function(actionName) {
+			if(actionName) {
+				if(actionName.endsWith('novalidate')) {
+					return true;
+				}
+				if(['sysverb_back','sysverb_cancel','sysverb_delete','sysverb_query'].indexOf(actionName) >=0) {
+					return true;
+				}
+			}
+			return originalValidate.apply(gFormInstance.$private, arguments);
+		}
+		
+		// THis allows external scripts like UI Policies and Client Scripts
+		// access to objects in Service Portal if the script is running in the
+		// Service Portal context
+		CustomEvent.fire('klf.form.initialized', {
+			g_form: g_form,
+			$rootScope: $rootScope,
+			$scope: $scope,
+			$timeout: $timeout,
+			$location: $location,
+			$log: $log,
+			$window: $window,
+			spUtil: spUtil,
+			nowAttachmentHandler: nowAttachmentHandler,
+			spAriaUtil: spAriaUtil,
+			spNavStateManager: spNavStateManager,
+			glideUserSession: glideUserSession,
+			i18n: i18n,
+			klfModal: klfModal
+		});
+	});
+	// END KLF ADDITION
 }]]></client_script>
         <controller_as>c</controller_as>
         <css>.btn-form-menu {
@@ -501,6 +650,22 @@
 	var isPopup = false;
 
 	if (input) {
+		// KLF Addition
+		// adding support for URL redirection
+		if(input.action == 'getActionResponseFromSession') {
+			var uiAction = input.uiAction;
+			if(uiAction) {
+				var session = gs.getSession();
+				var actionDataJson = session.getClientData(uiAction.sys_id);
+				if(actionDataJson) {
+					data.actionData = JSON.parse(actionDataJson);
+					data.redirectUrl = data.actionData.redirectUrl;
+					return;
+				}
+			}
+		}
+		// END KLF Addition
+		
 		data.table = input.table;
 		data.sys_id = input.sys_id;
 		data.view = input.view;
@@ -519,7 +684,12 @@
 		data.sys_id = options.sys_id || $sp.getParameter("sys_id") || $sp.getParameter("sl_sys_id");
 		if (!data.sys_id && options.sys_id_required != "true")
 			data.sys_id = "-1";
-		data.view = options.view || $sp.getParameter("view") || $sp.getParameter("v"); // no default
+		
+		// KLF ADDITION
+		// making default view SP
+		// data.view = options.view || $sp.getParameter("view") || $sp.getParameter("v"); // no default
+		data.view = options.view || $sp.getParameter("view") || $sp.getParameter("v") || 'sp';
+		// END KLF ADDITION
 	}
 
 	if (isPopup && gs.getProperty("glide.service_portal.reference.use_sys_popup_view", "false") == "true") {
@@ -565,6 +735,35 @@
 	data.canAttach = !options.omitAttachmentButton && hasRecordAccess && gs.hasRole(gs.getProperty('glide.attachment.role')) && !GlideTableDescriptor.get(data.table).getED().getBooleanAttribute("no_attachment");
 	data.f = $sp.getForm(data.table, data.sys_id, data.query, data.view, isPopup);
 
+	// KLF ADDITION
+	var klfSpUtils = new global.KLF_SPUtils();
+	// Adding code to support applying templates
+	var templateName = $sp.getParameter('template_name');
+	if(data.sys_id == "-1" && templateName) {
+		klfSpUtils.applyGlideRecordTemplate(templateName, data.f);
+	}
+	// adding order to actions
+	var actionSysIds = data.f._ui_actions.map(function(action) {
+		return action.sys_id;
+	});
+	if(actionSysIds.length > 0) {
+		var actionGr = new GlideRecord('sys_ui_action');
+		actionGr.addQuery('sys_id', 'IN', actionSysIds);
+		actionGr.query();
+		while(actionGr.next()) {
+			data.f._ui_actions.forEach(function(action) {
+				if(action.sys_id == actionGr.getUniqueValue()) {
+					action.display_order = parseInt(actionGr.getValue('order')) || 100;
+				}
+			});
+		}
+	}
+	// Add client service portal actions
+	var clientActions = klfSpUtils.getSPClientUIActions(data.table, rec, data.view);
+	var filteredActions = klfSpUtils.filterForSPActionsInView([].concat(data.f._ui_actions, clientActions), data.view);
+	data.f._ui_actions = filteredActions;
+	// END KLF ADDITION
+	
 	// PRB1335036: show appropriate message when record is in cross app scope
 	data.f.outOfScope = !rec.isInSelectedScope();
 	// Populate scope labels only when needed
@@ -578,7 +777,7 @@
 		var fm = data.f._formatters[f];
 		if (fm.formatter == "activity.xml") {
 			fm.hardcoded = true;
-			fm.widgetInstance = $sp.getWidget('widget-ticket-conversation',
+			fm.widgetInstance = $sp.getWidget('klf-ticket-conversation', // KLF ADDITION - substituting custom ticket widget that adds audit entries
 																{table: data.table,
 																sys_id: data.sys_id,
 																includeExtended: true,
