@@ -16,6 +16,16 @@ var global = global || {};
 global.KLF_SPUtils = function() {};
 global.KLF_SPUtils.prototype = {
     /**
+     * Applies a sys_template to a GlideRecord
+     * @param {string} templateName Name of the template to apply
+     * @param {Object} spForm Form object to apply the template to
+     */
+    applyGlideRecordTemplate: function(templateName, spForm) {
+        var tableName = spForm.table;
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.applyTemplate(templateName);
+    },
+    /**
      * substitute call for $sp.getStream. For some reason $sp.getStream was returning a
      * NullPointerException in Rome, so I replaced it with an equivalent call. This is used
      * in the snb-ticket-conversation widget
@@ -316,10 +326,13 @@ global.KLF_SPUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
+        <sys_mod_count>1</sys_mod_count>
         <sys_name>KLF_SPUtils</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dc93e1d197682910b2e1f97e6253af1a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-02-20 07:51:20</sys_updated_on>
     </sys_script_include>
 </record_update>

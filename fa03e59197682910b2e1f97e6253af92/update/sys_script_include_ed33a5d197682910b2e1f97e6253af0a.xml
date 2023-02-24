@@ -129,7 +129,7 @@ global.KLF_LdapGroupService.prototype = {
         if (groups.length > 0) {
             return groups[0];
         } else {
-            null;
+            return null;
         }
     },
     /**
@@ -182,7 +182,10 @@ global.KLF_LdapGroupService.prototype = {
         var group = new GlideAggregate('sys_user_group');
         group.groupBy('sys_id');
         typeNames.forEach(function(name) {
-            group.addQuery('type', 'CONTAINS', me.getType(name));
+            var type = me.getType(name);
+            if(type) {
+                group.addQuery('type', 'CONTAINS', type);
+            }
         });
         group.query();
         var sysIds = [];
@@ -195,7 +198,7 @@ global.KLF_LdapGroupService.prototype = {
     /**
      * Returns the type sys_id by using the provided type name
      * @param {string} typeName Type name from sys_user_group_type
-     * @returns {string} sys_id of the type or null if type not found
+     * @returns {?string} sys_id of the type or null if type not found
      */
     getType: function(typeName) {
         var types = this.getTypes([typeName]);
@@ -256,8 +259,10 @@ global.KLF_LdapGroupService.prototype = {
         group.newRecord();
         group.name = this.getNameFromDn(ldapGroup.dn);
         group.source = 'ldap: ' + ldapGroup.dn;
-        group.type = [].concat(this.getOrCreateIngestGroupType(),
-            this.getTypes(types)).join(', ');
+        var _types = types ? this.getTypes(types) : [];
+        // @ts-ignore 
+        group.type = [].concat([this.getOrCreateIngestGroupType()],
+            _types).join(', ');
         group.update();
         this.addMembers(group.getUniqueValue(), ldapGroup.members);
         return group;
@@ -293,9 +298,10 @@ global.KLF_LdapGroupService.prototype = {
             user.groupBy('sys_id');
             user.groupBy('employee_number');
             user.groupBy('u_dn');
+            // @ts-ignore
             var peopleCopy = [].concat(people);
             var userCondition;
-            var peopleEmployeeNumber;
+            var peopleEmployeeNumber = [];
             if (this.isActiveDirectoryGroups) {
                 peopleEmployeeNumber = this._getActiveDirectoryUserEmployeeNumbers(peopleCopy);
                 userCondition = user.addQuery('employee_number', 'IN', peopleEmployeeNumber);
@@ -307,10 +313,12 @@ global.KLF_LdapGroupService.prototype = {
             }
             user.query();
             //used to track people we didn't find in ServiceNow that exist in LDAP
-            var missingPeople;
+            /** @type {string[]} */
+            var missingPeople = [];
             if (this.isActiveDirectoryGroups) {
                 missingPeople = peopleEmployeeNumber;
             } else {
+                // @ts-ignore
                 missingPeople = [].concat(people);
             }
             while (user.next()) {
@@ -338,11 +346,12 @@ global.KLF_LdapGroupService.prototype = {
             }
         }
         if (this.includeNestedGroups) {
+            var _processedGroups = processedGroups || [];
             var groupDNs = memberDNs.filter(function(member) {
                 return new RegExp(me.getGroupRegex(), 'i').test(member);
             });
             var groups = groupDNs.filter(function(groupDN) {
-                var alreadyProcessed = processedGroups.indexOf(groupDN) >= 0;
+                var alreadyProcessed = _processedGroups.indexOf(groupDN) >= 0;
                 return !alreadyProcessed;
             }).map(function(groupDN) {
                 var shortCn = me.getGroupShortNameFromDn(groupDN);
@@ -390,8 +399,8 @@ global.KLF_LdapGroupService.prototype = {
     /**
      * Returns an LdapGroup for the given group name or null
      * @param {string} groupName An individual group alias
-     * @param {transformFn} [transformFn]
-     * @param {string[]} [processedGroups] List of processed groups by DN.
+     * @param {?transformFn} [transformFn]
+     * @param {?string[]} [processedGroups] List of processed groups by DN.
      * Used for recursive calls
      * @returns {(LdapGroup|*)}
      */
@@ -471,15 +480,15 @@ global.KLF_LdapGroupService.prototype = {
      * be performed on the query results
      * @param {string} query A valid LDAP query
      * @param {number} limit Maximum number of results
-     * @param {transformFn} [transformFn] Function to transform the result of the LDAP query
-     * @param {string[]} [processedGroups] Accumulator for recursive query
+     * @param {?transformFn} [transformFn] Function to transform the result of the LDAP query
+     * @param {?string[]} [processedGroups] Accumulator for recursive query
      * @returns {(LdapGroup[]|*)} The list of found groups from LDAP
      */
     searchAndTransform: function(query, limit, transformFn, processedGroups) {
         var me = this;
         transformFn = transformFn || function(result) {
             var uniquemember = me.getUniqueMember(result);
-            var members = me.getMembers(result, processedGroups);
+            var members = me.getMembers(result, processedGroups || null);
             return {
                 en: String(result.get('cn')),
                 dn: String(result.get('dn')),
@@ -545,7 +554,7 @@ global.KLF_LdapGroupService.prototype = {
      * @param {LdapResult} result Result from an LDAP search
      * @param {?string[]} processedGroups Accumulated list of already processed groups specified by DN.
      * Used for recursive calls
-     * @returns {string[]} List of DNs of all the people in a group
+     * @returns {?string[]} List of DNs of all the people in a group
      */
     getMembers: function(result, processedGroups) {
         var me = this;
@@ -558,23 +567,21 @@ global.KLF_LdapGroupService.prototype = {
         var nestedPeople = [];
         if (this.includeNestedGroups) {
 
-            if (!processedGroups) {
-                processedGroups = [String(result.get('dn'))];
-            }
+            var _processedGroups = processedGroups ? processedGroups : [String(result.get('dn'))];
             var groupDNs = memberDNs.filter(function(member) {
                 return new RegExp(me.getGroupRegex(), 'i').test(member);
             });
             gs.debug('groups: ' + groupDNs.join('\n'));
             var groups = groupDNs.filter(function(groupDN) {
-                var alreadyProcessed = processedGroups.indexOf(groupDN) >= 0;
+                var alreadyProcessed = _processedGroups.indexOf(groupDN) >= 0;
                 return !alreadyProcessed;
             }).map(function(groupDN) {
                 var dnParts = groupDN.split(', ');
                 var en = dnParts[0];
                 var cnParts = en.split('=');
                 var shortCn = cnParts[1];
-                processedGroups.push(groupDN);
-                return me.getGroupByName(shortCn, null, processedGroups);
+                _processedGroups.push(groupDN);
+                return me.getGroupByName(shortCn, null, _processedGroups);
             }).filter(function(group) {
                 return !!group;
             });
@@ -582,6 +589,7 @@ global.KLF_LdapGroupService.prototype = {
                 return [].concat(people, group.members);
             }, []);
         }
+        // @ts-ignore
         return new global.ArrayUtil().unique([].concat(people, nestedPeople));
     },
     /**
@@ -692,10 +700,13 @@ global.KLF_LdapGroupService.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:03:55</sys_created_on>
         <sys_id>ed33a5d197682910b2e1f97e6253af0a</sys_id>
+        <sys_mod_count>15</sys_mod_count>
         <sys_name>KLF_LdapGroupService</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_ed33a5d197682910b2e1f97e6253af0a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-02-20 21:04:26</sys_updated_on>
     </sys_script_include>
 </record_update>
