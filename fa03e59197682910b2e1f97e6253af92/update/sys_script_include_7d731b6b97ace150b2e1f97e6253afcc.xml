@@ -19,7 +19,7 @@ global.KLF_AtfAddStepsHelper = (function() {
          */
         getTest: function(testSysId) {
             var test = new GlideRecord('sys_atf_test');
-            if(test.get(testSysId)) {
+            if (test.get(testSysId)) {
                 return test;
             } else {
                 return null;
@@ -51,7 +51,7 @@ global.KLF_AtfAddStepsHelper = (function() {
          */
         deleteTest: function(testSysId) {
             var test = new GlideRecord('sys_atf_test');
-            if(test.get(testSysId)) {
+            if (test.get(testSysId)) {
                 new global.KLF_GlideRecordUtils().deleteRecord('sys_atf_test', test.getEncodedQuery());
             }
         },
@@ -66,7 +66,7 @@ global.KLF_AtfAddStepsHelper = (function() {
             var step = new GlideRecord('sys_atf_step');
             step.addQuery('test', testSysId);
             step.query();
-            while(step.next()) {
+            while (step.next()) {
                 startOrder = startOrder + 1;
                 step.order = startOrder;
                 step.setWorkflow(false);
@@ -96,7 +96,7 @@ global.KLF_AtfAddStepsHelper = (function() {
             var userTestProcessor = new sn_atf.UserTestProcessor();
             try {
                 return userTestProcessor.copyTest(sourceTestSysId);
-            } catch(ex) {
+            } catch ( /**@type{*}*/ ex) {
                 gs.addErrorMessage(gs.getMessage("Unexpected error occurred while copying the test: {0}", ex.message));
                 return '';
             }
@@ -116,8 +116,8 @@ global.KLF_AtfAddStepsHelper = (function() {
             maxOrder.addAggregate('MAX', 'order');
             maxOrder.query();
 
-            if(maxOrder.next()) {
-                return parseInt(maxOrder.getAggregate('MAX', 'order')) || 0; 
+            if (maxOrder.next()) {
+                return parseInt(maxOrder.getAggregate('MAX', 'order')) || 0;
             } else {
                 return 0;
             }
@@ -130,13 +130,13 @@ global.KLF_AtfAddStepsHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-28 21:00:46</sys_created_on>
         <sys_id>7d731b6b97ace150b2e1f97e6253afcc</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>7</sys_mod_count>
         <sys_name>KLF_AtfAddStepsHelper</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_7d731b6b97ace150b2e1f97e6253afcc</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-02-20 21:01:06</sys_updated_on>
+        <sys_updated_on>2023-02-25 14:44:15</sys_updated_on>
     </sys_script_include>
 </record_update>

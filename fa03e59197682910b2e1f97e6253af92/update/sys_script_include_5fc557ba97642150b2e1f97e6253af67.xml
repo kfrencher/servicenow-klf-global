@@ -12,110 +12,156 @@ var global = global || {};
 global.KLF_GlideRecordUtils = function() {};
 
 global.KLF_GlideRecordUtils.prototype = {
-	/**
-	 * Used to delete records from tables only accessible in Global scope. Some tables
-	 * restrict delete access to only Global so a scoped application can use this method
-	 * to delete records in global scope they otherwise wouldn't be able to delete. You
-	 * can pass the encodedQuery by generating an encodedQuery using a GlideRecord in the
-	 * current scope and pass it to this function
-	 * @param {string} tableName The table name to perform deletion
-	 * @param {string} encodedQuery An encoded query passed to this function to filter
-	 * the records to delete
-	 * query params before deletion. This is required
-	 * @example var taskDelete = new GlideRecord('task');
-	 * taskDelete.addQuery(active, false);
-	 * new global.KLF_GlideRecord().deleteRecord('incident', taskDelete.getEncodedQuery());
-	 */
-	deleteRecord: function(tableName, encodedQuery) {
-		if(!encodedQuery) {
-			throw 'encodedQuery is required';
-		}
-		
-		var glideRecord = new GlideRecord(tableName);
-		glideRecord.addEncodedQuery(encodedQuery);
-		glideRecord.query();
-		
-		while(glideRecord.next()) {
-			glideRecord.deleteRecord();
-		}
-	},
+    /**
+     * Transforms the GlideRecord into a map. The exact set of fields to be included can be passed.
+     * If fields is not provided then all non 'sys' fields will be included. Sys fields are excluded
+     * from output. The keys in the map are the field names. Thevalues are the values retrieved with
+     * {@link GlideRecord#getValues}. Display values are copied over to the key value with a suffix of
+     * _display_value. A write flag is copied to the key value witha suffie of _canwrite
+     * @param {GlideRecord} glideRecord 
+     * @param {string[]} [fields]
+     * @returns {Object.<string,string>}
+     */
+    glideRecordToMap: function(glideRecord, fields) {
+        /** @type {Object.<string, string>} */
+        var glideRecordMap = {};
+        var elements = new global.ArrayUtil().convertArray(glideRecord.getElements());
+        elements.filter(function(element) {
+            var name = element.getName();
 
-	/**
-	 * Used to insert records from tables only accessible in Global scope. Some tables
-	 * restrict write access to only Global so a scoped application can use this method
-	 * to insert records in global scope they otherwise wouldn't be able to update. 	
-	 * @param {string} tableName The table name to perform deletion
-	 * @param {Object} updates An object containing the fields and values to update
-	 * @example var taskInsert = new GlideRecord('task');
-	 * new global.KLF_GlideRecord().insertRecord('incident', {
-	 *   short_description: 'Updated description'
-	 * });
-	 */
-	insertRecord: function(tableName, updates) {
-		if(!updates) {
-			throw 'updates is required';
-		}
-		
-		var glideRecord = new GlideRecord(tableName);
-		glideRecord.newRecord();
+            // if the fields are specified only include fields in map
+            if (fields) {
+                return fields.indexOf(name) >= 0;
+            }
 
-		Object.keys(updates).forEach(function(field) {
-			glideRecord.setValue(field, updates[field]);
-		});
-		glideRecord.update();
-		return glideRecord;
-	},
+            if (name == 'sys_id') {
+                return true;
+            } else if (name.startsWith('sys_')) {
+                return false;
+            } else {
+                return true;
+            }
+        }).forEach(function(element) {
+            var name = element.getName();
+            var displayName = name + '_display_value';
+            var writeName = name + '_canwrite';
+            var value = glideRecord.getValue(name);
+            var displayValue = glideRecord.getDisplayValue(name);
+            glideRecord[name] = value;
+            glideRecord[displayName] = displayValue;
+            glideRecord[writeName] = glideRecord[name].canWrite();
+        });
 
-	/**
-	 * Used to update records from tables only accessible in Global scope. Some tables
-	 * restrict write access to only Global so a scoped application can use this method
-	 * to update records in global scope they otherwise wouldn't be able to update. You
-	 * can pass the encodedQuery by generating an encodedQuery using a GlideRecord in the
-	 * current scope and pass it to this function
-	 * @param {string} tableName The table name to perform deletion
-	 * @param {string} encodedQuery An encoded query passed to this function to filter
-	 * @param {Object} updates An object containing the fields and values to update
-	 * @returns {string[]} An array of sys_ids of the records updated
-	 * @example var taskUpdate = new GlideRecord('task');
-	 * taskUpdate.addQuery(active, false);
-	 * new global.KLF_GlideRecord().updateRecord('incident', taskUpdate.getEncodedQuery(), {
-	 *   short_description: 'Updated description'
-	 * });
-	 */
-	updateRecord: function(tableName, encodedQuery, updates) {
-		if(!encodedQuery) {
-			throw 'encodedQuery is required';
-		}
-		if(!updates) {
-			throw 'updates is required';
-		}
-		
-		var glideRecord = new GlideRecord(tableName);
-		glideRecord.addEncodedQuery(encodedQuery);
-		glideRecord.query();
-		
-		/** @type {string[]} */
-		var updatedSysIds = [];
-		while(glideRecord.next()) {
-			Object.keys(updates).forEach(function(field) {
-				glideRecord.setValue(field, updates[field]);
-			});
-			glideRecord.update();
-			updatedSysIds.push(glideRecord.getUniqueValue());
-		}
+        return glideRecordMap;
+    },
 
-		return updatedSysIds;
-	}
+    /**
+     * Used to delete records from tables only accessible in Global scope. Some tables
+     * restrict delete access to only Global so a scoped application can use this method
+     * to delete records in global scope they otherwise wouldn't be able to delete. You
+     * can pass the encodedQuery by generating an encodedQuery using a GlideRecord in the
+     * current scope and pass it to this function
+     * @param {string} tableName The table name to perform deletion
+     * @param {string} encodedQuery An encoded query passed to this function to filter
+     * the records to delete
+     * query params before deletion. This is required
+     * @example var taskDelete = new GlideRecord('task');
+     * taskDelete.addQuery(active, false);
+     * new global.KLF_GlideRecord().deleteRecord('incident', taskDelete.getEncodedQuery());
+     */
+    deleteRecord: function(tableName, encodedQuery) {
+        if (!encodedQuery) {
+            throw 'encodedQuery is required';
+        }
+
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.addEncodedQuery(encodedQuery);
+        glideRecord.query();
+
+        while (glideRecord.next()) {
+            glideRecord.deleteRecord();
+        }
+    },
+
+    /**
+     * Used to insert records from tables only accessible in Global scope. Some tables
+     * restrict write access to only Global so a scoped application can use this method
+     * to insert records in global scope they otherwise wouldn't be able to update. 	
+     * @param {string} tableName The table name to perform deletion
+     * @param {*} updates An object containing the fields and values to update
+     * @example var taskInsert = new GlideRecord('task');
+     * new global.KLF_GlideRecord().insertRecord('incident', {
+     *   short_description: 'Updated description'
+     * });
+     */
+    insertRecord: function(tableName, updates) {
+        if (!updates) {
+            throw 'updates is required';
+        }
+
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.newRecord();
+
+        Object.keys(updates).forEach(function(field) {
+            glideRecord.setValue(field, updates[field]);
+        });
+        glideRecord.update();
+        return glideRecord;
+    },
+
+    /**
+     * Used to update records from tables only accessible in Global scope. Some tables
+     * restrict write access to only Global so a scoped application can use this method
+     * to update records in global scope they otherwise wouldn't be able to update. You
+     * can pass the encodedQuery by generating an encodedQuery using a GlideRecord in the
+     * current scope and pass it to this function
+     * @param {string} tableName The table name to perform deletion
+     * @param {string} encodedQuery An encoded query passed to this function to filter
+     * @param {*} updates An object containing the fields and values to update
+     * @returns {string[]} An array of sys_ids of the records updated
+     * @example var taskUpdate = new GlideRecord('task');
+     * taskUpdate.addQuery(active, false);
+     * new global.KLF_GlideRecord().updateRecord('incident', taskUpdate.getEncodedQuery(), {
+     *   short_description: 'Updated description'
+     * });
+     */
+    updateRecord: function(tableName, encodedQuery, updates) {
+        if (!encodedQuery) {
+            throw 'encodedQuery is required';
+        }
+        if (!updates) {
+            throw 'updates is required';
+        }
+
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.addEncodedQuery(encodedQuery);
+        glideRecord.query();
+
+        /** @type {string[]} */
+        var updatedSysIds = [];
+        while (glideRecord.next()) {
+            Object.keys(updates).forEach(function(field) {
+                glideRecord.setValue(field, updates[field]);
+            });
+            glideRecord.update();
+            updatedSysIds.push(glideRecord.getUniqueValue());
+        }
+
+        return updatedSysIds;
+    }
 
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-26 13:24:04</sys_created_on>
         <sys_id>5fc557ba97642150b2e1f97e6253af67</sys_id>
+        <sys_mod_count>11</sys_mod_count>
         <sys_name>KLF_GlideRecordUtils</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5fc557ba97642150b2e1f97e6253af67</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-02-25 16:03:01</sys_updated_on>
     </sys_script_include>
 </record_update>

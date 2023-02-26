@@ -8,7 +8,7 @@
         <description/>
         <name>KLF_SPUtils</name>
         <script><![CDATA[// @ts-ignore 
-var global = global || {}; 
+var global = global || {};
 /**
  * @class global.KLF_SPUtils
  * contains utility functions
@@ -16,15 +16,51 @@ var global = global || {};
 global.KLF_SPUtils = function() {};
 global.KLF_SPUtils.prototype = {
     /**
-     * Applies a sys_template to a GlideRecord
-     * @param {string} templateName Name of the template to apply
-     * @param {Object} spForm Form object to apply the template to
+     * Applies a sys_template to a ServicePortal form
+     * @param {string} templateName The name of the sys_template to apply
+     * @param {*} spForm The form returned from $sp.getForm
      */
     applyGlideRecordTemplate: function(templateName, spForm) {
-        var tableName = spForm.table;
-        var glideRecord = new GlideRecord(tableName);
-        glideRecord.applyTemplate(templateName);
+        var template = new GlideRecord('sys_template');
+        if (template.get('name', templateName)) {
+            var gr = new GlideRecord(spForm.table);
+            gr.applyTemplate(templateName);
+            var fields = spForm._fields;
+
+            Object.keys(fields).filter(function(fieldName) {
+                return !!gr.getValue(fieldName);
+            }).forEach(function(fieldName) {
+                var field = fields[fieldName];
+                if(field.value) return; // Don't overwrite existing values
+                if (field.type == 'boolean') {
+                    var booleanValue = gr.getValue(fieldName) == '1' ? 'true' : 'false';
+                    field.value = booleanValue;
+                    field.displayValue = booleanValue;
+                } else {
+                    field.value = gr.getValue(fieldName);
+                    field.displayValue = gr.getDisplayValue(fieldName);
+                }
+            });
+
+            // Apply dot walked values
+            // Be careful with these. Dot walked values are skipped in the default behavior
+            // I still wanted these to apply though. If you aren't careful you can mistakenly
+            // overwrite values in reference field tables
+            var nameValueStrings = template.getValue('template').split('^');
+            var nameValuePairs = nameValueStrings.map(function(nameValueString) {
+                return nameValueString.split('=');
+            });
+            var dotWalkedPairs = nameValuePairs.filter(function(nameValuePair) {
+                return nameValuePair[0].indexOf('.') >= 0;
+            });
+            dotWalkedPairs.forEach(function(nameValuePair) {
+                var field = fields[nameValuePair[0]];
+                field.value = nameValuePair[1];
+                field.displayValue = nameValuePair[1];
+            });
+        }
     },
+
     /**
      * substitute call for $sp.getStream. For some reason $sp.getStream was returning a
      * NullPointerException in Rome, so I replaced it with an equivalent call. This is used
@@ -96,6 +132,7 @@ global.KLF_SPUtils.prototype = {
         var walker = new sn_hw.HistoryWalker(tableName, sysld);
         walker.walkBackward();
         var current = walker.getWalkedRecordCopy();
+        /** @type {GlideRecord} */
         var previous;
         var history = [];
         while (walker.walkBackward()) {
@@ -180,23 +217,6 @@ global.KLF_SPUtils.prototype = {
             return entry.value;
         });
     },
-    /**
-     * @typedef {Object} SPAction
-     * An action that can be used in the data.f ._ui_actions list
-     * @property sys_id {string}
-     * @property action_name {string}
-     * @property form_style {string}
-     * @property hint {string}
-     * @property is_button {boolean}
-     * @property is_context {boolean}
-     * @property is_link {boolean}
-     * @property is_custom {boolean}
-     * @property display_order {number}
-     * @property name {string}
-     * @property fn {string}
-     * @property onclick {string}
-     * @property is_client {boolean}
-     */
     /**
      * Retrieves all the client actions for a table. This is used to display client actions in ServicePortal.
      * This will only retrieve client actions that are configured to be displayed on a ServicePortal view
@@ -326,13 +346,13 @@ global.KLF_SPUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
-        <sys_mod_count>1</sys_mod_count>
+        <sys_mod_count>8</sys_mod_count>
         <sys_name>KLF_SPUtils</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dc93e1d197682910b2e1f97e6253af1a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-02-20 07:51:20</sys_updated_on>
+        <sys_updated_on>2023-02-25 17:43:26</sys_updated_on>
     </sys_script_include>
 </record_update>

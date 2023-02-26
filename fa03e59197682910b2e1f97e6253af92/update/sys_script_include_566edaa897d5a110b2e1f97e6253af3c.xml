@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.MetricUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>MetricUtils</name>
+        <script><![CDATA[// @ts-ignore
+var global = global || {};
+
+global.MetricUtils = function () {};
+
+global.MetricUtils.prototype = {
+    /**
+     * @param {GlideRecord} glideRecord 
+     * @param {GlideRecord} metricDefinition 
+     * @returns {GlideRecord}
+     */
+    createMetricInstance: function (glideRecord, metricDefinition) {
+        var metricInstance = new GlideRecord('metric_instance');
+        metricInstance.newRecord();
+        metricInstance.table = glideRecord.getRecordClassName();
+        metricInstance.id = glideRecord.sys_id;
+        metricInstance.definition = metricDefinition.sys_id;
+        metricInstance.field = metricDefinition.field;
+        return metricInstance;
+    },
+
+    /**
+     * @param {string} table 
+     * @param {string} sysId 
+     */
+    clearMetricsByRelatedRecord: function (table, sysId) {
+        if (table && sysId) {
+            var metricInstance = new GlideRecord('metric_instance');
+            metricInstance.addQuery('table', table);
+            metricInstance.addQuery('id', sysId);
+            metricInstance.deleteMultiple();
+        }
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-02-25 16:12:56</sys_created_on>
+        <sys_id>566edaa897d5a110b2e1f97e6253af3c</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>MetricUtils</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_566edaa897d5a110b2e1f97e6253af3c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-02-25 18:52:28</sys_updated_on>
+    </sys_script_include>
+</record_update>

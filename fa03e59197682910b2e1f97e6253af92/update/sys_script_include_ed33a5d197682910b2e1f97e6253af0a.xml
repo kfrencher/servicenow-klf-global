@@ -77,9 +77,11 @@ global.KLF_LdapGroupService.prototype = {
      * @property {boolean} isAdGroup
      */
     /**
+     * @template T
      * @callback transformFn
      * @param {LdapResult} result A single result returned from an LDAP search
-     * @returns {(LdapGroup | *)} Result of transformation
+     * @param {string[]} [processedGroups]
+     * @returns {(T)} Result of transformation
      */
     /**
      * Refresh the membership of a set of groups based on the group types
@@ -160,7 +162,8 @@ global.KLF_LdapGroupService.prototype = {
             return '(cn=' + name + ')';
         });
         var query = '(|' + queryParts.join(' ') + ')';
-        var ldapGroups = this.searchAndTransform(query, 10000);
+        /** @type {LdapGroup[]} */
+        var ldapGroups = this.searchAndTransform(query, 10000, this.defaultTransformFn.bind(this));
         var me = this;
         return ldapGroups.map(function(ldapGroup) {
             var existingGroup = me.getGroupByDn(ldapGroup.dn);
@@ -183,7 +186,7 @@ global.KLF_LdapGroupService.prototype = {
         group.groupBy('sys_id');
         typeNames.forEach(function(name) {
             var type = me.getType(name);
-            if(type) {
+            if (type) {
                 group.addQuery('type', 'CONTAINS', type);
             }
         });
@@ -301,6 +304,7 @@ global.KLF_LdapGroupService.prototype = {
             // @ts-ignore
             var peopleCopy = [].concat(people);
             var userCondition;
+            /** @type {string[]} */
             var peopleEmployeeNumber = [];
             if (this.isActiveDirectoryGroups) {
                 peopleEmployeeNumber = this._getActiveDirectoryUserEmployeeNumbers(peopleCopy);
@@ -398,14 +402,15 @@ global.KLF_LdapGroupService.prototype = {
     },
     /**
      * Returns an LdapGroup for the given group name or null
+     * @template T
      * @param {string} groupName An individual group alias
-     * @param {?transformFn} [transformFn]
+     * @param {?transformFn<T>} [transformFn]
      * @param {?string[]} [processedGroups] List of processed groups by DN.
      * Used for recursive calls
-     * @returns {(LdapGroup|*)}
+     * @returns {(LdapGroup|T|null)}
      */
     getGroupByName: function(groupName, transformFn, processedGroups) {
-        var results = this.searchAndTransform('(cn=' + groupName + ')', 1, transformFn, processedGroups);
+        var results = this.searchAndTransform('(cn=' + groupName + ')', 1, this.defaultTransformFn.bind(this), processedGroups);
         if (results.length > 0) {
             return results[0];
         } else {
@@ -427,7 +432,7 @@ global.KLF_LdapGroupService.prototype = {
             return [];
         }
         var query = onlyMailGroups ? '(&(en=' + term + ' *)(descript i on=domino_whitepages_group))' : '(en=' + term + ' *)';
-        var groups = this.searchAndTransform(query, limit);
+        var groups = this.searchAndTransform(query, limit, this.defaultTransformFn.bind(this));
         if (limit != 0 && groups.length > limit) {
             groups.length = limit;
         }
@@ -452,7 +457,7 @@ global.KLF_LdapGroupService.prototype = {
             return [];
         }
         var query = onlyMailGroups ? '(&(en=*' + term + '*)(description=domino_whitepages_group))' : '(en=*' + term + '*)';
-        var groups = this.searchAndTransform(query, limit);
+        var groups = this.searchAndTransform(query, limit, this.defaultTransformFn.bind(this));
         if (limit != 0 && groups.length > limit) {
             groups.length = limit;
         }
@@ -473,35 +478,44 @@ global.KLF_LdapGroupService.prototype = {
         //that the entry is in the
         return /\bdc=ad\b/i.test(dn);
     },
+
+    /**
+     * A default implementation of a transform function used in searchAndTransform.
+     * @type {transformFn<LdapGroup>}
+     */
+    defaultTransformFn: function(result, processedGroups) {
+        var uniquemember = this.getUniqueMember(result);
+        var members = this.getMembers(result, processedGroups || null);
+        return {
+            cn: String(result.get('cn')),
+            dn: String(result.get('dn')),
+            uniquemember: uniquemember,
+            members: members,
+            isAdGroup: this.isActiveDirectoryGroup(String(result.get('dn')))
+        };
+    },
+
     /**
      * Searches LDAP using the provided query. Will only pull back groups
      * because there is a RDN filter placed on the search. Query must be a valid LDAP query
      * You can provide an optional transformFn. If not provided a transform will
      * be performed on the query results
+     * @template T
      * @param {string} query A valid LDAP query
      * @param {number} limit Maximum number of results
-     * @param {?transformFn} [transformFn] Function to transform the result of the LDAP query
+     * @param {transformFn<T>} transformFn Function to transform the result of the LDAP query
      * @param {?string[]} [processedGroups] Accumulator for recursive query
-     * @returns {(LdapGroup[]|*)} The list of found groups from LDAP
+     * @returns {T[]} The list of found groups from LDAP
      */
     searchAndTransform: function(query, limit, transformFn, processedGroups) {
         var me = this;
-        transformFn = transformFn || function(result) {
-            var uniquemember = me.getUniqueMember(result);
-            var members = me.getMembers(result, processedGroups || null);
-            return {
-                en: String(result.get('cn')),
-                dn: String(result.get('dn')),
-                uniquemember: uniquemember,
-                members: members,
-                isAdGroup: me.isActiveDirectoryGroup(String(result.get('dn')))
-            };
-        };
+
         //@ts-ignore
         var ldap = new GlideLDAP();
         ldap.setConfigID(this._getLdapServerSysId());
         var ldapResult = ldap.getMatching(this.getSearchRdn(), query, false, limit || 1000);
         var groups = [];
+        /** @type {Hashtable} */
         var result;
         while (ldapResult.hasMore()) {
             result = ldapResult.next();
@@ -554,7 +568,7 @@ global.KLF_LdapGroupService.prototype = {
      * @param {LdapResult} result Result from an LDAP search
      * @param {?string[]} processedGroups Accumulated list of already processed groups specified by DN.
      * Used for recursive calls
-     * @returns {?string[]} List of DNs of all the people in a group
+     * @returns {string[]} List of DNs of all the people in a group
      */
     getMembers: function(result, processedGroups) {
         var me = this;
@@ -687,8 +701,8 @@ global.KLF_LdapGroupService.prototype = {
         var query = '(|' + queryParts.join(' ') + ')';
         var results = this.searchAndTransform(query, 1000, function(ldapResult) {
             var employeeNumber = ldapResult.get('employeeNumber');
-            return employeeNumber ? String(employeeNumber) : null;
-        }).filter(function(employeeNumber) {
+            return employeeNumber ? String(employeeNumber) : '';
+        }).filter(function( /** @type {?string} */ employeeNumber) {
             return !!employeeNumber;
         });
         this.searchRdn = existingSearchRdn;
@@ -700,13 +714,13 @@ global.KLF_LdapGroupService.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:03:55</sys_created_on>
         <sys_id>ed33a5d197682910b2e1f97e6253af0a</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>16</sys_mod_count>
         <sys_name>KLF_LdapGroupService</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_ed33a5d197682910b2e1f97e6253af0a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-02-20 21:04:26</sys_updated_on>
+        <sys_updated_on>2023-02-25 14:40:39</sys_updated_on>
     </sys_script_include>
 </record_update>
