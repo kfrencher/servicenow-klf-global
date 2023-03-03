@@ -51,22 +51,21 @@ global.KLF_LdapGroupService = function(config) {
 
 global.KLF_LdapGroupService.prototype = {
     /**
-     * .These properties are not accessible directly. You must call
+     * These properties are not accessible directly. You must call
      * LdapResult.get to retrieve these values, and LdapResult.get does not
      * return a JavaScript string. I'm not exactly sure what this is returning,
      * but you need to wrap the return in a string constructor like
      * String(result.get('cn')). If you don't do this i've found some string methods
      * do not work correctly
-     * @typedef {Hashtable} LdapResult
-     * @property {string} en
-     * @property {string} dn
-     * @property {string} description Description of group
-     * @property {string} source DN with a prefix of 'ldap:'
-     * @property {string?} uniquemember Concatenated list of members.  Concatenated with 'A'. This will
+     * @typedef {Hashtable<'cn'|'dn'|'description'|'source'|'uniquemember'|'member'|'employeeNumber'>} LdapResult
+     * {string} en
+     * {string} dn
+     * {string} description Description of group
+     * {string} source DN with a prefix of 'ldap:'
+     * {string?} uniquemember Concatenated list of members.  Concatenated with 'A'. This will
      * be there for ou=Groups entries. Will be empty for dc=AD entries
-     * @property {string?} member Concatenated list of members. Concatenated with 'A'. This will be
+     * {string?} member Concatenated list of members. Concatenated with 'A'. This will be
      * therefor dc=AD entries and not for ou=Group entries
-     * @property {function} get Retrieves one of the properties
      */
     /**
      * @typedef LdapGroup
@@ -81,7 +80,7 @@ global.KLF_LdapGroupService.prototype = {
      * @callback transformFn
      * @param {LdapResult} result A single result returned from an LDAP search
      * @param {string[]} [processedGroups]
-     * @returns {(T)} Result of transformation
+     * @returns {T} Result of transformation
      */
     /**
      * Refresh the membership of a set of groups based on the group types
@@ -354,6 +353,8 @@ global.KLF_LdapGroupService.prototype = {
             var groupDNs = memberDNs.filter(function(member) {
                 return new RegExp(me.getGroupRegex(), 'i').test(member);
             });
+            /** @type {LdapGroup[]} */
+            //@ts-ignore
             var groups = groupDNs.filter(function(groupDN) {
                 var alreadyProcessed = _processedGroups.indexOf(groupDN) >= 0;
                 return !alreadyProcessed;
@@ -402,14 +403,12 @@ global.KLF_LdapGroupService.prototype = {
     },
     /**
      * Returns an LdapGroup for the given group name or null
-     * @template T
      * @param {string} groupName An individual group alias
-     * @param {?transformFn<T>} [transformFn]
      * @param {?string[]} [processedGroups] List of processed groups by DN.
      * Used for recursive calls
-     * @returns {(LdapGroup|T|null)}
+     * @returns {(LdapGroup|null)}
      */
-    getGroupByName: function(groupName, transformFn, processedGroups) {
+    getGroupByName: function(groupName, processedGroups) {
         var results = this.searchAndTransform('(cn=' + groupName + ')', 1, this.defaultTransformFn.bind(this), processedGroups);
         if (results.length > 0) {
             return results[0];
@@ -515,7 +514,7 @@ global.KLF_LdapGroupService.prototype = {
         ldap.setConfigID(this._getLdapServerSysId());
         var ldapResult = ldap.getMatching(this.getSearchRdn(), query, false, limit || 1000);
         var groups = [];
-        /** @type {Hashtable} */
+        /** @type {LdapResult} */
         var result;
         while (ldapResult.hasMore()) {
             result = ldapResult.next();
@@ -578,6 +577,7 @@ global.KLF_LdapGroupService.prototype = {
             return new RegExp(me.getPersonRegex(), 'i').test(member);
         });
         gs.debug('people:' + people.join('\n'));
+        /** @type {string[]} */
         var nestedPeople = [];
         if (this.includeNestedGroups) {
 
@@ -586,6 +586,8 @@ global.KLF_LdapGroupService.prototype = {
                 return new RegExp(me.getGroupRegex(), 'i').test(member);
             });
             gs.debug('groups: ' + groupDNs.join('\n'));
+            /** @type {LdapGroup[]} */
+            // @ts-ignore -- This is an LdapGroup[] but the type system doesn't know that
             var groups = groupDNs.filter(function(groupDN) {
                 var alreadyProcessed = _processedGroups.indexOf(groupDN) >= 0;
                 return !alreadyProcessed;
@@ -595,13 +597,13 @@ global.KLF_LdapGroupService.prototype = {
                 var cnParts = en.split('=');
                 var shortCn = cnParts[1];
                 _processedGroups.push(groupDN);
-                return me.getGroupByName(shortCn, null, _processedGroups);
+                return me.getGroupByName(shortCn, _processedGroups);
             }).filter(function(group) {
                 return !!group;
             });
             nestedPeople = groups.reduce(function(people, group) {
-                return [].concat(people, group.members);
-            }, []);
+                return /**@type{string[]}*/ ([]).concat(people, group.members);
+            }, /**@type{string[]}*/ ([]));
         }
         // @ts-ignore
         return new global.ArrayUtil().unique([].concat(people, nestedPeople));
@@ -714,13 +716,13 @@ global.KLF_LdapGroupService.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:03:55</sys_created_on>
         <sys_id>ed33a5d197682910b2e1f97e6253af0a</sys_id>
-        <sys_mod_count>16</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>KLF_LdapGroupService</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_ed33a5d197682910b2e1f97e6253af0a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-02-25 14:40:39</sys_updated_on>
+        <sys_updated_on>2023-03-02 08:24:26</sys_updated_on>
     </sys_script_include>
 </record_update>
