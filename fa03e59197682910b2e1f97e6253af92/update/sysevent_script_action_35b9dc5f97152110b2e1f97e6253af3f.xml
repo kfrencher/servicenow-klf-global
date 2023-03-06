@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sysevent_script_action">
+    <sysevent_script_action action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <condition_script/>
+        <description/>
+        <event_name>klf_commandprobe.response</event_name>
+        <name>KLF_CommandProbeAction</name>
+        <order>100</order>
+        <script><![CDATA[/**
+ * Script Action that handles events generated from KLF_CommandProbe
+ * @param {GlideRecord} event sysevent record
+ * @param {GlideRecord} current ecc_queue record
+ */
+(function( /** @type {GlideRecord} **/ event, /** @type {GlideRecord} **/ eccQueue) {
+    var outputJson = event.getValue('parm1');
+    if (outputJson) {
+        var output = JSON.parse(outputJson);
+        if (output.stderr) {
+            gs.log('KLF_CommandProbeAction: ERROR!!!! stderr=' + output.stderr);
+            return;
+        } else {
+            gs.log('KLF_CommandProbeAction: stdout=' + output.stdout);
+            return;
+        }
+    }
+    gs.log('KLF_CommandProbeAction: ERROR!!!!');
+
+    //@ts-ignore
+})(event, current);]]></script>
+        <synchronous>false</synchronous>
+        <sys_class_name>sysevent_script_action</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-03-05 19:36:28</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>35b9dc5f97152110b2e1f97e6253af3f</sys_id>
+        <sys_mod_count>8</sys_mod_count>
+        <sys_name>KLF_CommandProbeAction</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sysevent_script_action_35b9dc5f97152110b2e1f97e6253af3f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-03-06 12:50:49</sys_updated_on>
+    </sysevent_script_action>
+</record_update>

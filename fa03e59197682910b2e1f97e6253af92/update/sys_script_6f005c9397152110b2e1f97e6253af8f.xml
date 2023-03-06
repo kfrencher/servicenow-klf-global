@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sys_script">
+    <sys_script action="INSERT_OR_UPDATE">
+        <abort_action>false</abort_action>
+        <access>package_private</access>
+        <action_delete>false</action_delete>
+        <action_insert>true</action_insert>
+        <action_query>false</action_query>
+        <action_update>true</action_update>
+        <active>true</active>
+        <add_message>false</add_message>
+        <advanced>true</advanced>
+        <change_fields>false</change_fields>
+        <client_callable>false</client_callable>
+        <collection>ecc_queue</collection>
+        <condition/>
+        <description/>
+        <execute_function>false</execute_function>
+        <filter_condition table="ecc_queue">source=KLF_CommandProbe^stateCHANGESTOready^queue=input^EQ<item endquery="false" field="source" goto="false" newquery="false" operator="=" or="false" value="KLF_CommandProbe"/>
+            <item display_value="ready" endquery="false" field="state" goto="false" newquery="false" operator="CHANGESTO" or="false" value="ready"/>
+            <item display_value="input" endquery="false" field="queue" goto="false" newquery="false" operator="=" or="false" value="input"/>
+            <item endquery="true" field="" goto="false" newquery="false" operator="=" or="false" value=""/>
+        </filter_condition>
+        <is_rest>false</is_rest>
+        <message/>
+        <name>ECCQUEUE onKlfCommandInsert</name>
+        <order>100</order>
+        <priority>100</priority>
+        <rest_method/>
+        <rest_method_text/>
+        <rest_service/>
+        <rest_service_text/>
+        <rest_variables/>
+        <role_conditions/>
+        <script><![CDATA[(function executeRule(current, previous /*null when async*/ ) {
+
+    global.KLF_CommandProbe.onRecordInserted(current);
+
+})(current, previous);]]></script>
+        <sys_class_name>sys_script</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-03-05 19:06:12</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>6f005c9397152110b2e1f97e6253af8f</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>ECCQUEUE onKlfCommandInsert</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_6f005c9397152110b2e1f97e6253af8f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-03-06 15:07:53</sys_updated_on>
+        <template/>
+        <when>before</when>
+    </sys_script>
+    <sys_translated_text action="delete_multiple" query="documentkey=6f005c9397152110b2e1f97e6253af8f"/>
+</record_update>
