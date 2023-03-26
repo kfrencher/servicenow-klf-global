@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="ecc_agent_script_include">
+    <ecc_agent_script_include action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <description/>
+        <name>KLF_Zip</name>
+        <script><![CDATA[var KLF_Zip = (function (Packages) {
+	var File = Packages.java.io.File;
+	var FileInputStream = Packages.java.io.FileInputStream;
+	var FileOutputStream = Packages.java.io.FileOutputStream;
+	var IOException = Packages.java.io.IOException;
+	var ZipEntry = Packages.java.util.zip.ZipEntry;
+	var ZipOutputStream = Packages.java.util.zip.ZipOutputStream;
+	var JavaArray = Packages.java.lang.reflect.Array;
+	var Byte = Packages.java.lang.Byte;
+	return {
+		exec: function () {
+
+			// Define the folder path that needs to be zipped
+			var folderPath = probe.getParameter('folder_path');
+
+			// Create a new ZipOutputStream
+			var zipOut = new ZipOutputStream(new FileOutputStream(folderPath + '/' + probe.getParameter('archive_name')));
+
+			// Recursively add all the files in the folder to the zip archive
+			var folder = new File(folderPath);
+			var me = this;
+			folder.listFiles().forEach(function (file) {
+				if (file.isFile() && file.getName().endsWith(".json")) {
+					me.addToZip(folderPath, file, zipOut);
+				}
+			});
+
+			// Close the ZipOutputStream
+			zipOut.close();
+			return 'Created zip file';
+		},
+
+		addToZip: function (basePath, file, zipOut) {
+			// Create a new ZipEntry for the file
+			var zipEntryName = file.getName();
+			var zipEntry = new ZipEntry(zipEntryName);
+			zipOut.putNextEntry(zipEntry);
+
+			// Write the file content to the zip archive
+			var fileIn = new FileInputStream(file);
+			var buffer = JavaArray.newInstance(Byte.TYPE, 1024);
+			var bytesRead;
+			while ((bytesRead = fileIn.read(buffer)) != -1) {
+				zipOut.write(buffer, 0, bytesRead);
+			}
+			fileIn.close();
+
+			// Close the ZipEntry
+			zipOut.closeEntry();
+		}
+	};
+	// @ts-ignore -- this is a global variable
+})( /**@types{any}*/ Packages);]]></script>
+        <sys_class_name>ecc_agent_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-03-07 02:45:19</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>e625472b9715a110b2e1f97e6253af50</sys_id>
+        <sys_mod_count>28</sys_mod_count>
+        <sys_name>KLF_Zip</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>ecc_agent_script_include_e625472b9715a110b2e1f97e6253af50</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-03-10 00:05:07</sys_updated_on>
+    </ecc_agent_script_include>
+</record_update>
