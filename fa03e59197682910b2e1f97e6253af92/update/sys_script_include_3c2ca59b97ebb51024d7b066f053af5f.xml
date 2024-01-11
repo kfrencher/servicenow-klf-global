@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_GroupUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_GroupUtils</name>
+        <script><![CDATA[//@ts-ignore
+var global = global || {};
+
+global.KLF_GroupUtils = function() {};
+
+global.KLF_GroupUtils.prototype = {
+	
+	/**
+	 * Retrieves the sys_user_group based on a group alias. The alias can alson include
+	 * the ServiceNow concatenated alias.
+	 * @param {string} name One of the aliases for a group.
+	 * @returns {?GlideRecord} The sys_user_group or null
+	 */
+	getGroupByName: function(name) {
+		if(!name) return null;
+		
+		var group = new GlideRecord('sys_user_group');
+		group.addQuery('name', name)
+			.addOrCondition('name', 'CONTAINS', name + '^')
+			.addOrCondition('name', 'CONTAINS', '^' + name);
+		group.query();
+		while(group.next()) {
+			/** @type {string} **/
+			var groupName = group.name.toString();
+			if(groupName.split('^').length > 1) {
+				var aliases = groupName.split('^');
+				var match = aliases.some(function(alias) {
+					return name == alias;
+				});
+				if(match) {
+					return group;
+				}
+			} else {
+				return group; // exact match
+			}
+		}
+		
+		gs.warn('Cannot find group by name: ' + name);
+		
+		return null;
+	},
+	
+	/**
+	 * Data type returned from call to {@link GroupUtils.getGroupFields}
+	 * @typedef GroupField
+	 * @property {string} table The name of the table that contains the field
+	 * @property {string} type The type of the field from sys_dictionary
+	 * @property {string} columnName The column name of the field
+	 * @property {?string} [filter] A pass through optional filter. Used to query for records that contain the field
+	 */
+	
+	/**
+	 * Finds all the fields that reference sys_user_group in a scoped app. This attempts to find
+	 * all the group fields in the system. The group fields will include both reference fields and
+	 * list fields that reference sys_user_group
+	 * @param {string} scopeSysId sys_scope.sys_id
+	 * @param {string} [filter] GlideRecord encoded query
+	 * @returns {GroupField[]}
+	 */
+	getGroupFields: function(scopeSysId, filter) {
+		var fieldGr = new GlideRecord('sys_dictionary');
+		fieldGr.addQuery('sys_scope', scopeSysId);
+		fieldGr.addQuery('reference', 'sys_user_group');
+		fieldGr.query();
+		var fields = [];
+		while(fieldGr.next()) {
+			fields.push({
+				table: fieldGr.name.toString(),
+				type: fieldGr.internal_type.toString(),
+				columnName: fieldGr.element.toString(),
+				filter: filter
+			});
+		}
+		return fields;
+	},
+	
+	/**
+	 * Uses the field retrieved from {@link GroupUtils.getGroupFields}
+	 * to query for records and update the group name. The field
+	 * must be a list field. This will only update the specific group in the list
+	 * and leave the rest of the groups in place
+	 * @param {GroupField} field
+	 * @param {GlideRecord} oldGroup
+	 * @param {GlideRecord} newGroup
+	 * @returns {string[]} A list of sys_ids that have been updated
+	 */
+	updateListGroupField: function(field, oldGroup, newGroup) {
+		var gr = new GlideRecord(field.table);
+		gr.addQuery(field.columnName, oldGroup.sys_id.toString());
+		if(field.filter) {
+			gr.addEncodedQuery(field.filter);
+		}
+		gr.query();
+		var updates = [];
+		while(gr.next()) {
+			gr.setWorkflow(false);
+			gr.autoSysFields(false);
+			var groups = gr.getValue(field.columnName);
+			var updatedGroups = groups.split(',').map(function (sys_id) {
+				if(sys_id == oldGroup.sys_id.toString()) {
+					return newGroup.sys_id.toString();
+				} else {
+					return sys_id;
+				}
+			}).join(',');
+			gr.setValue(field.columnName, updatedGroups);
+			gr.update();
+			updates.push(gr.getUniqueValue());
+		}
+		return updates;
+	},
+	
+	/**
+	 * Uses the field retrieved from {@link GroupUtils.getGroupFields}
+	 * to query for records and update the group name. The field
+	 * must be a reference field
+	 * @param {GroupField} field
+	 * @param {GlideRecord} oldGroup
+	 * @param {GlideRecord} newGroup
+	 * @param {string[]} A list of sys_ids that have been updated
+	 */
+	updateReferenceGroupField: function(field, oldGroup, newGroup) {
+		var gr = new GlideRecord(field.table);
+		// only kill the workflow isf the table isn't tracked
+		gr.addQuery(field.columnName, oldGroup.sys_id.toString());
+		if(field.filter) {
+			gr.addEncodedQuery(field.filter);
+		}
+		gr.query();
+		var updates = [];
+		while(gr.next()) {
+			gr.setWorkflow(false);
+			gr.autoSysFields(false);
+			gr.setValue(field.columnName, newGroup.sys_id.toString());
+			gr.update();
+			updates.push(gr.getUniqueValue());
+		}
+		return updates;
+	},
+
+	/**
+	 * @typedef ReportEntry
+	 * @property {string} sysId The sys_id of the record that was updated
+	 * @property {string} table Table of the record that was updated
+	 * @property {string} column Column of the table that was updated
+	 * @property {string} oldName The old group name
+	 * @property {string} newName The new group name
+	 */
+
+	/**
+	 * This looks for all references to group oldName in the system and replaces
+	 * that group reference with the newName gorup. A GlideRecord encoded query can
+	 * be provided to filter for records that you want to target. If no filter is provided
+	 * all records in the system will attempt to be updated with the new name. This
+	 * method is useful when there are changes to group names. This method will
+	 * not look at sys_properties or any hardcoded sys_ids or group names you may directly have
+	 * in source code. It also doesn't look at notifications or email scripts.
+	 * To find references in code you may want to search sys_metadata using text search for the
+	 * old group name
+	 * @param {string} scopedAppName The name of the scoped application to query for group fields
+	 * @param {string} oldName The old name of the group
+	 * @param {string} newName The new name of the group
+	 * @param {string} [filter] GlideRecord encoded query
+	 * @returns {ReportEntry[]}
+	 */
+	changeGroupName: function(scopedAppName, oldName, newName, filter) {
+		var scopedApp = new GlideRecord('sys_scope');
+		if(!scopedApp.get('name', scopedAppName)) {
+			gs.error('Could not find scoped app using name: ' + scopedAppName);
+		}
+		var scopedAppSysId = scopedApp.getUniqueValue();
+
+		var me = this;
+		/** @type {ReportEntry[]} */
+		var report = [];
+		var oldGroup = /** @type {GlideRecord} */ (this.getGroupByName(oldName));
+		var newGroup = /** @type {GlideRecord} */ (this.getGroupByName(newGroup));
+
+		if(!oldGroup) {
+			gs.error('Cannot find group: ' + oldName);
+			return [];
+		}
+
+		if(!newGroup) {
+			gs.error('Cannot find group: ' + newName);
+			return [];
+		}
+
+		me.getGroupFields(scopedAppSysId, filter).forEach(function (field) {
+			if(field.type == 'reference') {
+				var updatedSysIds = me.updateReferenceGroupField(field, oldGroup, newGroup);
+				var referenceReport = updatedSysIds.map(function (sysId) {
+					return {
+						sysId: sysId,
+						table: field.table,
+						column: field.columnName,
+						oldName: oldName,
+						newName: newName
+					};
+				});
+				report = /** @type {ReportEntry[]} */ ([]).concat(report, referenceReport);
+			} else if (field.type == 'glide_list') {
+				var updatedListSysIds = me.updateListGroupField(field, oldGroup, newGroup);
+				var listReport = updatedListSysIds.map(function (sysId) {
+					return {
+						sysId: sysId,
+						table: field.table,
+						column: field.columnName,
+						oldName: oldName,
+						newName: newName
+					};
+				});
+
+				report = /** @type {Report[]} */ ([]).concat(report, listReport);
+			} else {
+				gs.error('Cannot update field: ' + field.table + '.' + field.columnName + ' : ' + field.type);
+			}
+		});
+
+		return report;
+	},
+
+	/**
+	 * This will make the membership of the parent group equal to the membership of its child groups. Child groups
+	 * are groups where the sys_user_group.parent field is set to the passed in parentGroupSysId
+	 * This will sync the membership exactly. If there is a member in the parent group that is not in one of the
+	 * child groups that member will be removed. All members of child groups will be added directly to the passed
+	 * in parent group
+	 * @param {string} parentGroupSysId
+	 */
+	syncChildGroupMembers: function(parentGroupSysId) {
+		var parentGroup = new GlideRecord('sys_user_group');
+		parentGroup.get(parentGroupSysId);
+
+		// This will hold the sys_ids of all the members of all the child groups of the parent
+		// group. I will initialize this with the current members of the parent group. These will
+		// be initialized to "false". If I see the current member in one of the child groups the
+		// flag will be set to "true". This is so I can clean up members that no longer exist in
+		// the child group
+		var members = {};
+
+		// Load up the current members
+		var currentMember = new GlideRecord('sys_user_grmember');
+		currentMember.addQuery('group', parentGroup.getUniqueValue());
+		currentMember.query();
+		while(currentMember.next()) {
+			// Default this to false. I'm using this later to see if
+			// the user is still in the aggregated parent group
+			members[currentMember.getValue('user')] = false;
+		}
+
+		// Go through all the child groups and populate the member object. Any member
+		// that is seen will be set to "true"
+		var childGroup = new GlideRecord('sys_user_group');
+		childGroup.addQuery('parent', parentGroup.getUniqueValue());
+		childGroup.query();
+		while(childGroup.next()) {
+			// Get members
+			var groupMember = new GlideRecord('sys_user_grmember');
+			groupMember.addQuery('group', childGroup.getUniqueValue());
+			groupMember.query();
+			while(groupMember.next()) {
+				members[groupMember.getValue('user')] = true;
+			}
+		}
+
+		var memberSysIds = Object.keys(members);
+
+		// Valid members are all members we saw in the child groups
+		var validMembers = memberSysIds.filter(function(memberSysId) {
+			return members[memberSysId];
+		});
+		addMembers(parentGroup.getUniqueValue(), validMembers);
+
+		// Invalid members are all members that are in the parent group that we didn't
+		// see in the child group
+		var invalidMembers = memberSysIds.filter(function(memberSysId) {
+			return !members[memberSysId];
+		});
+		removeMembers(parentGroup.getUniqueValue(), invalidMembers);
+
+		/**
+		 * Adds the list of users to the group
+		 * @param {string} groupSysId sys_user_group.sys_id
+		 * @param {string[]} memberSysIds sys_user.sys_id[]
+		 */
+		function addMembers(groupSysId, memberSysIds) {
+			memberSysIds.forEach(function(memberSysId) {
+				var groupMember = new GlideRecord('sys_user_group');
+				groupMember.addQuery('group', groupSysId);
+				groupMember.addQuery('user', memberSysId);
+				groupMember.query();
+				if(groupMember.getRowCount() === 0) {
+					groupMember.newRecord();
+					groupMember.group = groupSysId;
+					groupMember.user = memberSysId;
+					groupMember.update();
+				}
+			});
+		}
+
+		/**
+		 * Removes the list of users from the group
+		 * @param {string} groupSysId sys_user_group.sys_id
+		 * @param {string[]} memberSysIds sys_user.sys_id[]
+		 */
+		function removeMembers(groupSysId, memberSysIds) {
+			memberSysIds.forEach(function(memberSysId) {
+				var groupMember = new GlideRecord('sys_user_group');
+				groupMember.addQuery('group', groupSysId);
+				groupMember.addQuery('user', memberSysId);
+				groupMember.query();
+				if(groupMember.next()) {
+					groupMember.deleteRecord();
+				}
+			});
+		}
+	}
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-01-10 18:14:48</sys_created_on>
+        <sys_id>3c2ca59b97ebb51024d7b066f053af5f</sys_id>
+        <sys_mod_count>7</sys_mod_count>
+        <sys_name>KLF_GroupUtils</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_3c2ca59b97ebb51024d7b066f053af5f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-01-10 20:24:08</sys_updated_on>
+    </sys_script_include>
+</record_update>
