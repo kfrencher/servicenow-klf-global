@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_script">
+    <sys_ui_script action="INSERT_OR_UPDATE">
+        <active>false</active>
+        <description>test test again aga afa</description>
+        <global>true</global>
+        <ignore_in_now_experience>false</ignore_in_now_experience>
+        <name>KLF_RecordWatcher</name>
+        <script><![CDATA[var KLF_RecordWatcher = (function (amb) {
+    var watcherChannel;
+    var connected = false;
+    var diagnosticLog = true;
+
+    function getFilterString(filter) {
+        filter = filter
+            .replace(/\^EQ/g, "")
+            .replace(/\^ORDERBY(?:DESC)?[^^]*/g, "")
+            .replace(/^GOTO/, "");
+        return btoa(filter).replace(/=/g, "-");
+    }
+
+    function getChannelRW(table, filter) {
+        var t = "/rw/default/" + table + "/" + getFilterString(filter);
+        return amb.getChannel(t);
+    }
+
+    function initWatcher(table, sys_id, query) {
+        if (!table) return;
+
+        if (sys_id) var filter = "sys_id=" + sys_id;
+        else filter = query;
+
+        if (!filter) return;
+
+        return initChannel(table, filter);
+    }
+
+    function initList(table, query) {
+        if (!table) return;
+        query = query || "sys_idISNOTEMPTY";
+        return initChannel(table, query);
+    }
+
+    function initTaskList(list, prevChannel) {
+        if (prevChannel) prevChannel.unsubscribe();
+        var sys_ids = list.toString();
+        var filter = "sys_idIN" + sys_ids;
+        return initChannel("task", filter);
+    }
+
+    function initChannel(table, filter, onMessage) {
+        if (isBlockedTable(table)) {
+            log("Blocked from watching", table);
+            return null;
+        }
+
+        if (diagnosticLog) log(">>> init " + table + "?" + filter);
+
+        watcherChannel = getChannelRW(table, filter);
+        watcherChannel.subscribe(onMessage || defaultOnMessage);
+        amb.connect();
+        return watcherChannel;
+    }
+
+    function defaultOnMessage(message) {
+        var r = message.data;
+        var c = message.channel;
+        if (diagnosticLog) log(r);
+    }
+
+    function log(message) {
+        console.log(message);
+    }
+
+    function isBlockedTable(table) {
+        return table == "sys_amb_message" || table.startsWith("sys_rw");
+    }
+
+    return {
+        initTaskList: initTaskList,
+        initChannel: initChannel,
+        init: function (table, sys_id, query) {
+            initWatcher(table, sys_id, query);
+        },
+        initList: initList,
+        initRecord: function (table, sysId) {
+            initWatcher(table, sysId, null);
+        },
+    };
+})(window.top.g_ambClient);
+
+addRenderEvent(() => {
+    if (window.g_form) {
+        var table = g_form.getTableName();
+        var sysId = g_form.getUniqueValue();
+        var filter = "sys_id=" + sysId;
+        console.info("KLF_RecordWatcher: Starting to watch " + filter);
+        KLF_RecordWatcher.initChannel(table, filter, (message) => {
+            console.log(
+                "KLF_RecordWatcher: " + JSON.stringify(message, null, 4)
+            );
+            var auditRequest = new GlideAjax("x_53417_demo.Ajax");
+            auditRequest.addParam("sysparm_name", "createAuditEntry");
+            auditRequest.addParam("entry_data", JSON.stringify(message));
+            auditRequest.getXMLAnswer((answer) => {
+                console.info("KLF_RecordWatcher: saved audit entry");
+            });
+        });
+    } else {
+        console.info(
+            "KLF_RecordWatcher: g_form is not defined. Could not add render event"
+        );
+    }
+});
+]]></script>
+        <script_name/>
+        <sys_class_name>sys_ui_script</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2023-12-12 07:46:40</sys_created_on>
+        <sys_id>d3074af597c7f51024d7b066f053af97</sys_id>
+        <sys_mod_count>27</sys_mod_count>
+        <sys_name>KLF_RecordWatcher</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_ui_script_d3074af597c7f51024d7b066f053af97</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2023-12-27 13:14:30</sys_updated_on>
+        <ui_type>0</ui_type>
+        <use_scoped_format>false</use_scoped_format>
+    </sys_ui_script>
+</record_update>
