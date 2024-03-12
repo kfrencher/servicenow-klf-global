@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_DataTransferUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_DataTransferUtils</name>
+        <script><![CDATA[//@ts-ignore
+var global = global || {};
+// Add logging so have a better idea of what's going on
+
+/**
+ * Uses community supported 
+ * {@link https://developer.servicenow.com/connect.do#!/share/contents/9824957_add_to_update_set_utility?t=PRODUCT_DETAILS|Add to Update Set Utility}
+ * to export application data to an update set.
+ * 
+ * Primary methods are {@link KLF_DataTransferUtils.exportAllDataInTable} which exports all
+ * data in a table and {@link KLF_DataTransferUtils.enhancedAddToUpdateSet}. Exporting a record
+ * will include the related attachments, journal field data, currency data, price data, and
+ * audit data.
+ * 
+ * Before starting export you'll probably want to change the "display" value for sys_user to be
+ * sys_user.user_name. By default ServiceNow will try to match sys_user records based on the display value
+ * which may not be unique in the target instance of an export
+ * 
+ * There is also a function that will generate a summary of the record count for all the tables in the
+ * scoped application. This is useful estimating the amount of data that will be exported.
+ * {@link KLF_DataTransferUtils.generateExportSummary}
+ * 
+ * @example
+ * // Exporting all data in a table to update set
+ * var transferUtils = new global.KLF_DataTransferUtils();
+ * transferUtils.exportAllDataInTable('incident');
+ * 
+ * // Exporting one record to update set
+ * var incident = new GlideRecord('incident');
+ * incident.query();
+ * incident.next();
+ * var transferUtils = new global.KLF_DataTransferUtils();
+ * transferUtils.enhancedAddToUpdateSet(incident);
+ */
+global.KLF_DataTransferUtils = function() {
+
+};
+
+global.KLF_DataTransferUtils.prototype = {
+    example: function() {
+        var sysId = "8cf4884f9779311024d7b066f053af8c";
+        var tableName = "x_53417_demo_cat_breed";
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.get(sysId);
+        var transferUtils = new global.KLF_DataTransferUtils();
+        transferUtils.deleteAllRecordsAndRelatedRecords('x_53417_demo_cat_breed');
+        // transferUtils.enhancedAddToUpdateSet(glideRecord);
+        // transferUtils.exportAllDataInTable('x_53417_demo_cat_breed');
+        // deleteRecordAndRelatedRecords(sysId, tableName);
+        // gs.info(transferUtils.getTablesInScope('x_53417_demo'));
+    },
+
+    /**
+     * Generates a hierarchical map that contains the record count for each table in the scoped application
+     * the root will be the scoped application with the sum of the record count of all the tables in the scoped application
+     * Below is an example of the expected output
+     * {
+     *   "totalRecordCount": 2000, // Total record count of all the tables in the scoped application
+     *   "tables": {
+     *     "x_my_app_task": {
+     *       "totalRecordCount": 2000, // Record count of the recordCount and relatedRecordCount
+     *       "recordCount": 1000, // Record count of the table
+     *       "relatedRecordCount": 1000, // Record count of related tables
+     *       "relatedTables": {
+     *         "sys_journal_field": {
+     *           "totalRecordCount": 500
+     *           "recordCount": 500,
+     *           "relatedRecordCount": 0
+     *         },
+     *         "sys_attachment": {
+     *           "totalRecordCount": 500,
+     *           "recordCount": 500,
+     *           "relatedRecordCount": 0
+     *         }
+     *       }
+     *     }
+     *   }
+     * }
+     * @param {string} scopeName
+     * @returns {*}
+     */
+    generateExportSummary: function(scopeName) {
+        var me = this;
+
+        /**
+         * Returns the record count of related tables. This is the
+         * sum of the record count of records in
+         * sys_attachment, sys_attachment_doc, sys_journal_field, sys_audit, fx_currency_instance, and fx_price
+         */
+
+        /**
+         * Returns the record count of a table using GlideAggregate
+         * @param {string} tableName
+         * @param {string} [encodedQuery]
+         */
+        function getRecordCount(tableName, encodedQuery) {
+            // Use GlideAggregate to get the record count for each table
+            var aggregate = new GlideAggregate(tableName);
+            if (encodedQuery) {
+                aggregate.addEncodedQuery(encodedQuery);
+            }
+            aggregate.addAggregate("COUNT");
+            aggregate.query();
+            if (aggregate.next()) {
+                return parseInt(aggregate.getAggregate("COUNT")) || 0;
+            }
+            return 0;
+        }
+
+        /**
+         * Returns the record count of the passed in table using the encodedQuery and by
+         * expanding the encodedQuery to included any tables that extend the base table
+         * @param {string} tableName 
+         * @param {string} baseTableName A table that is potentially extended
+         * @param {*} [encodedQuery]
+         * @returns 
+         */
+        function getBaseRecordCount(tableName, baseTableName, encodedQuery) {
+            var _encodedQuery = encodedQuery || '';
+
+
+            // The table could be extended. Get all the tables in the hierarchy including the table
+            var extendedTables = me.getExtendingTables(baseTableName);
+            return extendedTables.reduce(function(recordCount, extendedTableName) {
+                // The encodedQuery could be an interpolated string. I allow the table name to be interpolated
+                // using the pattern {{tableName}}. Replace the pattern with the actual table name
+                var processedEncodedQuery = _encodedQuery.replace("{{tableName}}", extendedTableName);
+                return recordCount + getRecordCount(tableName, processedEncodedQuery);
+            }, 0);
+        }
+
+        var application = {
+            tables: {},
+            totalRecordCount: 0,
+            totalAuditCount: 0,
+            totalJournalCount: 0,
+            totalAttachmentCount: 0,
+            totalAttachmentDocCount: 0,
+            totalCurrencyCount: 0,
+            totalPriceCount: 0
+        };
+
+        var tables = this.getBaseTablesInScope(scopeName);
+        tables.reduce(function(application, tableName) {
+            function getRelatedTable(relatedTableName, encodedQuery) {
+                var table = {
+                    recordCount: getBaseRecordCount(relatedTableName, tableName, encodedQuery),
+                    relatedRecordCount: 0
+                };
+                table.totalRecordCount = table.recordCount + table.relatedRecordCount;
+                return table;
+            }
+
+            var table = {};
+            table.recordCount = getRecordCount(tableName); // This gets record count of the table
+
+            // I also need to get the record count of related tables
+            // The related tables are sys_attachment, sys_attachment_doc, sys_journal_field, sys_audit, fx_currency_instance, and fx_price
+            var relatedTables = {
+                sys_attachment: getRelatedTable("sys_attachment", "table_name={{tableName}}^ORtable_name=ZZ_YY{{tableName}}"), // ZZ_YY prefix is used when attachments are used on attachment fields
+                sys_attachment_doc: getRelatedTable("sys_attachment_doc", "sys_attachment.table_name={{tableName}}^ORsys_attachment.table_name=ZZ_YY{{tableName}}"), // ZZ_YY prefix is used when attachments are used on attachment fields
+                sys_journal_field: getRelatedTable("sys_journal_field", "name={{tableName}}"),
+                sys_audit: getRelatedTable("sys_audit", "tablename={{tableName}}"),
+                fx_currency_instance: getRelatedTable("fx_currency_instance", "table={{tableName}}"),
+                fx_price: getRelatedTable("fx_price", "table={{tableName}}")
+            };
+
+            table.relatedTables = relatedTables;
+
+            // Sum the record count of the related tables
+            table.relatedRecordCount = Object.keys(relatedTables).reduce(function(relatedRecordCount, relatedTable) {
+                return relatedRecordCount + relatedTables[relatedTable].totalRecordCount;
+            }, 0);
+
+            table.totalRecordCount = table.recordCount + table.relatedRecordCount;
+
+            application.totalRecordCount += table.totalRecordCount;
+            application.totalAuditCount += table.relatedTables.sys_audit.totalRecordCount;
+            application.totalJournalCount += table.relatedTables.sys_journal_field.totalRecordCount;
+            application.totalAttachmentCount += table.relatedTables.sys_attachment.totalRecordCount;
+            application.totalAttachmentDocCount += table.relatedTables.sys_attachment_doc.totalRecordCount;
+            application.totalCurrencyCount += table.relatedTables.fx_currency_instance.totalRecordCount;
+            application.totalPriceCount += table.relatedTables.fx_price.totalRecordCount;
+            application.tables[tableName] = table;
+            return application;
+        }, application);
+
+        return application;
+    },
+
+
+    /**
+     * Return a list of all the tables in the scoped application
+     *
+     * Exclude tables is a list of tables that will be removed from the list. Tables in the
+     * exclude list will exclude the excluded table and any table that extends the excluded table
+     * @param {string} scopeNamespace
+     * @param {string[]} [excludedTables]
+     */
+    getTablesInScope: function(scopeNamespace, excludedTables) {
+        var _excludedTables = excludedTables || [];
+        var me = this;
+
+        var tables = [];
+        var tableDefinition = new GlideRecord("sys_db_object");
+        tableDefinition.addQuery("sys_scope.scope", scopeNamespace);
+        tableDefinition.addQuery("scriptable_table", false);
+        tableDefinition.query();
+        while (tableDefinition.next()) {
+			var tableName = tableDefinition.name.toString();
+			// Make sure this table actually exists
+			if(new GlideRecord(tableName).isValid()) {
+				tables.push(tableName);
+			}
+        }
+        return tables.filter(function(table) {
+            var hierarchy = me.getTableAncestors(table);
+            // Check the hierarchy to make sure none of the excluded tables are in the hierarchy
+            return _excludedTables.every(function(excludedTable) {
+                return hierarchy.indexOf(excludedTable) == -1;
+            });
+        });
+    },
+
+    /**
+     * Returns list of tables that extend the table
+     * @param {string} table
+     * @returns {string[]}
+     */
+    getExtendingTables: function(table) {
+        return new global.ArrayUtil().convertArray(new global.TableUtils(table).getAllExtensions())
+            .map(function(table) {
+                return String(table);
+            });
+    },
+
+    /**
+     * Returns list of tables in the parent hierarchy including the table
+     * @param {string} table
+     * @returns {string[]}
+     */
+    getTableAncestors: function(table) {
+        return new global.ArrayUtil().convertArray(new global.TableUtils(table).getTables())
+            .map(function(table) {
+                return String(table);
+            });
+    },
+
+    /**
+     * Returns the name of a table that is in the application scope that this table extends.
+     * If the table does not extend a table it returns the table name
+     * @param {string} scopeNamespace 
+     * @param {string} table 
+     * @returns 
+     */
+    getBaseTableInScope: function(scopeNamespace, table) {
+        // hierarchy is arranged from extended table to base table. The absolute base table will be last in the list.
+        // This plucks the last table in the list until it finds one that matches the scopeNamespace
+        var hierarchy = this.getTableAncestors(table);
+        var baseInScope = '';
+        while (baseInScope = hierarchy.pop()) {
+            if (baseInScope.startsWith(scopeNamespace)) {
+                break;
+            }
+        }
+        return baseInScope;
+    },
+
+    /**
+     * This returns only the base tables in the scope. The difference between this and
+     * {@link KLF_DataTransferUtils.getTablesInScope} is that this method will filter out any
+     * table extensions and only include the base tables and any tables that aren't extended.
+     * 
+     * Exclude tables is a list of tables that will be removed from the list. Tables in the
+     * exclude list will exclude the excluded table and any table that extends the excluded table
+     * @param {string} scopeNamespace
+     * @param {string[]} [excludedTables]
+     */
+    getBaseTablesInScope: function(scopeNamespace, excludedTables) {
+        var _excludedTables = excludedTables || [];
+        var me = this;
+
+        // holds the unique list of base tables. the key is the base table name
+        // the value is not used
+        var baseTableMap = this.getTablesInScope(scopeNamespace).reduce(function(baseTables, table) {
+            baseTables[me.getBaseTableInScope(scopeNamespace, table)] = null;
+            return baseTables;
+        }, {});
+        return Object.keys(baseTableMap).filter(function(table) {
+            var hierarchy = me.getTableAncestors(table);
+            // Check the hierarchy to make sure none of the excluded tables are in the hierarchy
+            return _excludedTables.every(function(excludedTable) {
+                return hierarchy.indexOf(excludedTable) == -1;
+            });
+        });
+    },
+
+    /**
+     * Adds the record's related journal entries to the update set
+     * @param {GlideRecord} parent
+     */
+    addJournalEntries: function(parent) {
+        var journal = new GlideRecord("sys_journal_field");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        journal.addQuery("name", parent.getRecordClassName());
+        journal.addQuery("element_id", parent.getUniqueValue());
+        journal.query();
+        while (journal.next()) {
+            // Using saveRecord to add these records to the update set directly w/out
+            // going through all the things that addToUpdateSet does
+            new global.addToUpdateSetUtils().saveRecord(journal, true, false);
+        }
+    },
+
+    /**
+     * Adds the record's related audit entries to the update set
+     * @param {GlideRecord} parent
+     */
+    addAuditEntries: function(parent) {
+        var audit = new GlideRecord("sys_audit");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        audit.addQuery("tablename", parent.getRecordClassName());
+        audit.addQuery("documentkey", parent.getUniqueValue());
+        audit.query();
+        while (audit.next()) {
+            // Using saveRecord to add these records to the update set directly w/out
+            // going through all the things that addToUpdateSet does
+            new global.addToUpdateSetUtils().saveRecord(audit, true, false);
+        }
+    },
+
+    /**
+     * Adds the record's related currency entries to the update set
+     * @param {GlideRecord} parent
+     */
+    addCurrencyEntries: function(parent) {
+        var currency = new GlideRecord("fx_currency_instance");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        currency.addQuery("table", parent.getRecordClassName());
+        currency.addQuery("id", parent.getUniqueValue());
+        currency.query();
+        while (currency.next()) {
+            // Using saveRecord to add these records to the update set directly w/out
+            // going through all the things that addToUpdateSet does
+            new global.addToUpdateSetUtils().saveRecord(currency, true, false);
+        }
+    },
+
+    /**
+     * Adds the record's related currency entries to the update set
+     * @param {GlideRecord} parent
+     */
+    addPriceEntries: function(parent) {
+        var price = new GlideRecord("fx_price");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        price.addQuery("table", parent.getRecordClassName());
+        price.addQuery("id", parent.getUniqueValue());
+        price.query();
+        while (price.next()) {
+            // Using saveRecord to add these records to the update set directly w/out
+            // going through all the things that addToUpdateSet does
+            new global.addToUpdateSetUtils().saveRecord(price, true, false);
+        }
+    },
+
+    /**
+     * Adds the record and its related audit entries, journal entries, and attachments to the update set
+     * @param {GlideRecord} glideRecord
+     */
+    enhancedAddToUpdateSet: function(glideRecord) {
+        var _addToUpdateSetUtils = new global.addToUpdateSetUtils();
+        // Disable adding attachments to the update set. Attachments
+        // are already included in the base record XML for data records
+        _addToUpdateSetUtils.includeAttachments = false;
+        _addToUpdateSetUtils.addToUpdateSet(glideRecord);
+        this.addAuditEntries(glideRecord);
+        this.addJournalEntries(glideRecord);
+    },
+
+    /**
+     * Use {@link KLF_DataTransferUtils.enhancedAddToUpdateSet} to export all the data in a table
+     * @param {string} tableName
+     */
+    exportAllDataInTable: function(tableName) {
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.query();
+        while (glideRecord.next()) {
+            this.enhancedAddToUpdateSet(glideRecord);
+        }
+    },
+
+    /**
+     * Exportal all the data in the scope excluding any tables listed in the excluded table
+     * list
+     * @param {string} scopeNamespace
+     * @param {string[]} excludedTables
+     */
+    exportAllDataInScope: function(scopeNamespace, excludedTables) {
+        var tables = this.getBaseTablesInScope(scopeNamespace, excludedTables);
+        var me = this;
+        tables.forEach(function(table) {
+            me.exportAllDataInTable(table);
+        });
+    },
+
+    /**
+     * Deletes all records and related audit entries, journal entries, and attachments in a scope
+     * Useful for when you are testing loading data from a different instance and you want
+     * to delete the data before loading new data
+     * @param {string} scopeNamespace
+     * @param {string[]} excludedTables
+     */
+    deleteAllRecordsAndRelatedRecordsInScope: function(scopeNamespace, excludedTables) {
+        var tables = this.getTablesInScope(scopeNamespace, excludedTables);
+        var me = this;
+        tables.forEach(function(table) {
+            me.deleteAllRecordsAndRelatedRecords(table);
+        });
+    },
+
+    /**
+     * Deletes all records and related audit entries, journal entries, and attachments in a table
+     * Useful for when you are testing loading data from a different instance and you want
+     * to delete the data before loading new data
+     * @param {string} tableName
+     */
+    deleteAllRecordsAndRelatedRecords: function(tableName) {
+        var me = this;
+
+        if (!tableName) {
+            gs.error("tableName is required");
+            return;
+        }
+
+        var glideRecord = new GlideRecord(tableName);
+        glideRecord.query();
+        // Collect all sys_ids before deleting records
+        var sysIds = [];
+        while (glideRecord.next()) {
+            sysIds.push(glideRecord.getUniqueValue());
+        }
+
+        // Delete all the records at once
+        glideRecord.setWorkflow(false);
+        glideRecord.deleteMultiple();
+
+        // Delete related audit entries
+        sysIds.forEach(function(sysId) {
+            me.deleteRecordAndRelatedRecords(sysId, tableName);
+        });
+    },
+
+    /**
+     * Deletes a record and its related audit entries, journal entries, and attachments
+     * Useful for when you are testing loading data from a different instance and you want
+     * to delete the data before loading new data
+     * @param {string} sysId
+     */
+    deleteRecordAndRelatedRecords: function(sysId, tableName) {
+        if (!sysId || !tableName) {
+            gs.error("sysId and tableName are required");
+            return;
+        }
+
+        // Delete related audit entries
+        var audit = new GlideRecord("sys_audit");
+        audit.addQuery("tablename", tableName);
+        audit.addQuery("documentkey", sysId);
+        audit.deleteMultiple();
+
+        // Delete related journal entries
+        var journal = new GlideRecord("sys_journal_field");
+        journal.addQuery("name", tableName);
+        journal.addQuery("element_id", sysId);
+        journal.deleteMultiple();
+
+        // Delete related attachments
+        var attachment = new GlideRecord("sys_attachment");
+        attachment
+            .addQuery("table_name", tableName)
+            .addOrCondition("table_name", "ZZ_YY" + tableName);
+        attachment.addQuery("table_sys_id", sysId);
+        attachment.deleteMultiple();
+
+        // Delete related history entries
+        var historySet = new GlideRecord("sys_history_set");
+        historySet.addQuery("table", tableName);
+        historySet.addQuery("id", sysId);
+        historySet.deleteMultiple();
+
+        var record = new GlideRecord(tableName);
+        record.addQuery("sys_id", sysId);
+        record.deleteMultiple();
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-03-08 21:43:04</sys_created_on>
+        <sys_id>fe19c50a97f44a1024d7b066f053afdb</sys_id>
+        <sys_mod_count>53</sys_mod_count>
+        <sys_name>KLF_DataTransferUtils</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_fe19c50a97f44a1024d7b066f053afdb</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-03-11 16:56:47</sys_updated_on>
+    </sys_script_include>
+</record_update>
