@@ -10,8 +10,32 @@
         <script><![CDATA[//@ts-ignore
 var global = global || {};
 
-global.KLF_RecordSync = function() {
+/**
+ * Configuration object for the KLF_RecordSync class
+ * @typedef KLF_RecordSyncConnectionConfig
+ * @property {string} instanceUrl
+ * @property {string} username
+ * @property {string} password
+ */
 
+/**
+ * Object that provides methods to sync records between two ServiceNow instances
+ * The primary method is {@link global.KLF_RecordSync.syncTable} which syncs data from one 
+ * table in a ServiceNow instance to the same table in a different ServiceNow instance
+ * @class KLF_RecordSync
+ * @param {KLF_RecordSyncConnectionConfig} connectionConfig
+ */
+global.KLF_RecordSync = function(connectionConfig) {
+    this.connectionConfig = connectionConfig;
+};
+
+/**
+ * Imports a record into ServiceNow using GlideUpdateManager2
+ * @param {string} xml
+ */
+global.KLF_RecordSync.loadRecordByGlideUpdateManager2 = function(xml) {
+    var updateManager = new global.GlideUpdateManager2();
+    updateManager.loadXML(xml);
 };
 
 global.KLF_RecordSync.prototype = {
@@ -19,14 +43,13 @@ global.KLF_RecordSync.prototype = {
     /**
      * Syncs data from one table in a ServiceNow instance to the same table in a different ServiceNow instance 
      * @param {string} tableName
-     * @param {string} targetInstanceUrl
      */
-    syncTable: function(tableName, targetInstanceUrl) {
-        var chunkSize = 1000;
+    syncTable: function(tableName) {
+        var chunkSize = 10;
         // I want to transfer the data in chunks. So I will use the GlideRecord.setWindow method to query a batch of records at a time.
         // Use the tableName to query a batch of records from the source table
         var source = new GlideRecord(tableName);
-        source.setWindow(0, chunkSize);
+        source.chooseWindow(0, chunkSize);
         source.query();
 
         var sourceSysIds = [];
@@ -35,16 +58,14 @@ global.KLF_RecordSync.prototype = {
         }
 
         // Query the remote instance using the REST table API for the records that are in the sysIds array
-        var request = new sn_ws.RESTMessageV2();
+        var request = this.createRestMessage();
         request.setHttpMethod('GET');
-        request.setBasicAuth('admin', 'Pip33jord!');
-        request.setRequestHeader("Accept", "application/json");
         var endpointPath = '/api/now/table/' + tableName
         var query = [
             'sysparm_fields=sys_id',
             'sysparm_query=sys_idIN' + encodeURIComponent(sourceSysIds.join(','))
         ].join('&');
-        var endpoint = targetInstanceUrl + endpointPath + '?' + query;
+        var endpoint = request.getEndpoint() + endpointPath + '?' + query;
         request.setEndpoint(endpoint);
         var response = request.execute();
         gs.log(response.getBody());
@@ -69,6 +90,33 @@ global.KLF_RecordSync.prototype = {
         });
 
         gs.log('sysIdsToInsert: ' + sysIdsToInsert);
+        gs.info(tableName + ' Syncing ' + sysIdsToInsert.length + ' records: ');
+
+        // Requery the source for the records that need to be inserted into the target instance
+        var sourceToInsert = new GlideRecord(tableName);
+        sourceToInsert.addQuery('sys_id', 'IN', sysIdsToInsert.join(','));
+        sourceToInsert.query();
+        var unloadDocument = this.createUnloadDocument();
+        while (sourceToInsert.next()) {
+            // recordSync.documentToString(recordSync.unloadRecord(incident));
+            this.documentToString(this.unloadRecord(sourceToInsert, unloadDocument));
+        }
+
+        this.loadRecordByTableApi(tableName, this.documentToString(unloadDocument));
+
+        gs.info(this.documentToString(unloadDocument));
+    },
+
+    /**
+     * Returns a sn_ws.RESTMessageV2 object that is configured to make a request to the target instance
+     * @returns {sn_ws.RESTMessageV2}
+     */
+    createRestMessage: function() {
+        var request = new sn_ws.RESTMessageV2();
+        request.setRequestHeader("Accept", "application/json");
+        request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
+        request.setEndpoint(this.connectionConfig.instanceUrl);
+        return request;
     },
 
 
@@ -78,10 +126,9 @@ global.KLF_RecordSync.prototype = {
      */
     copyRecord: function(tableName, sysId) {
         // Get the XML payload of the source record
-        var request = new sn_ws.RESTMessageV2();
+        var request = this.createRestMessage();
         request.setHttpMethod('GET');
-        request.setBasicAuth('admin', 'Pip33jord!');
-        var instanceUrl = 'https://dev144209.service-now.com';
+        var instanceUrl = request.getEndpoint();
         var path = '/' + tableName + '_list.do?XML';
         var query = 'sysparm_query=' + encodeURIComponent('sys_id=' + sysId);
         var endpoint = instanceUrl + path + '&' + query;
@@ -98,6 +145,18 @@ global.KLF_RecordSync.prototype = {
 
         var payload = response.getBody();
         gs.info(payload);
+    },
+
+    /**
+     * Creates a document object that can be passed to {@link global.KLF_RecordSync.unloadRecord}
+     * This is useful when you want to add multiple unloaded records to the same document
+     * @returns {Document}
+     */
+    createUnloadDocument: function() {
+        var document = global.GlideXMLUtil.newDocument('unload');
+        var date = new GlideDateTime();
+        document.documentElement.setAttribute('unload_date', date.toString());
+        return document;
     },
 
     /**
@@ -143,24 +202,14 @@ global.KLF_RecordSync.prototype = {
     },
 
     /**
-     * Imports a record into ServiceNow using GlideUpdateManager2
-     * @param {string} xml
-     */
-    loadRecordByGlideUpdateManager2: function(xml) {
-        var updateManager = new global.GlideUpdateManager2();
-        updateManager.loadXML(xml);
-    },
-
-    /**
      * Imports a record into ServiceNow using the Table API.
      * @param {String} tableName 
      * @param {String} xml 
      */
     loadRecordByTableApi: function(tableName, xml) {
-        var request = new sn_ws.RESTMessageV2();
+        var request = this.createRestMessage();
         request.setHttpMethod('POST');
-        request.setBasicAuth('admin', 'Pip33jord!');
-        var instanceUrl = 'https://dev144209.service-now.com';
+        var instanceUrl = request.getEndpoint();
         var path = '/' + tableName + '_list.do';
         var endpoint = instanceUrl + path;
         gs.info('Using endpoint: ' + endpoint);
@@ -184,19 +233,31 @@ global.KLF_RecordSync.prototype = {
 
 };
 
+
 // new global.KLF_RecordSync().copyRecord('x_53417_demo_cat_breed', '8cf4884f9779311024d7b066f053af8c');
-new global.KLF_RecordSync().syncTable('x_53417_demo_cat_breed', 'https://dev144209.service-now.com');]]></script>
+// var recordSync = new global.KLF_RecordSync({
+//     username: 'admin',
+//     password: 'Pip33jord!',
+//     // instanceUrl: 'https://dev144209.service-now.com'
+//     instanceUrl: 'https://dev188047.service-now.com'
+// })
+
+// recordSync.syncTable('x_53417_demo_cat_breed');
+// var incident = new GlideRecord('incident');
+// incident.query();
+// incident.next();
+// gs.info(recordSync.documentToString(recordSync.unloadRecord(incident)));]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>37</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-03-19 13:05:59</sys_updated_on>
+        <sys_updated_on>2024-04-12 23:49:23</sys_updated_on>
     </sys_script_include>
 </record_update>
