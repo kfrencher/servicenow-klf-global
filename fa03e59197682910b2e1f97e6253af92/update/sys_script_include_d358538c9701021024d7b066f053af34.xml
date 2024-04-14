@@ -16,14 +16,46 @@ var global = global || {};
  * @property {string} instanceUrl
  * @property {string} username
  * @property {string} password
+ * @property {number} [chunkSize=1000] Optional. The number of records to sync at a time. Default is 1000
  */
 
 /**
+ * TODO: 
+ * - Possibly add ability to do incremental syncs where the mod count or sys_updated_on is used to determine if a record needs to be synced
+ * - Also may need a way to properly handle sys_user and sys_user_group references that aren't the same in the target instance or don't exist
+ * - Probably need better error handling. It's non-existent right now
+ * 
  * Object that provides methods to sync records between two ServiceNow instances
- * The primary method is {@link global.KLF_RecordSync.syncTable} which syncs data from one 
- * table in a ServiceNow instance to the same table in a different ServiceNow instance
+ * 
+ * NOTE: To use any of the sync methods you must install this application on the target
+ * instance. This scoped application contains the REST API that is used to import records into
+ * the target instance
+ * 
+ * The primary method is {@link global.KLF_RecordSync.syncAllDataInScope} which syncs all the data in
+ * a scoped application from one ServiceNow instance to the same application in a different ServiceNow instance
+ * 
+ * Other methods allow you to sync a single table or a single record
+ * {@link global.KLF_RecordSync.syncTable} and {@link global.KLF_RecordSync.syncRecord} respectively
+ * 
  * @class KLF_RecordSync
  * @param {KLF_RecordSyncConnectionConfig} connectionConfig
+ * @example
+ * var recordSync = new global.KLF_RecordSync({
+ *     username: 'admin',
+ *     password: 'Password!',
+ *     instanceUrl: 'https://dev188047.service-now.com',
+ *     chunkSize: 1000
+ * });
+ * 
+ * // Example of syncing all the data in a scope
+ * recordSync.syncAllDataInScope('x_53417_demo');
+ * 
+ * // Example of including approvals that are associated with the scope
+ * // This shows that you can also sync data that is outside of the scope as sysapproval_approver records
+ * // are in the global scope
+ * var demoApproval = new GlideRecord('sysapproval_approver');
+ * demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
+ * recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
  */
 global.KLF_RecordSync = function(connectionConfig) {
     this.connectionConfig = connectionConfig;
@@ -40,71 +72,127 @@ global.KLF_RecordSync.loadRecordByGlideUpdateManager2 = function(xml) {
 
 global.KLF_RecordSync.prototype = {
 
+    dataTransferUtils: new global.KLF_DataTransferUtils(),
+
+    /**
+     * Syncs all the data in the scope excluding any tables listed in the excluded table
+     * list
+     * @param {string} scopeNamespace
+     * @param {string[]} [excludedTables]
+     */
+    syncAllDataInScope: function(scopeNamespace, excludedTables) {
+        var tables = this.dataTransferUtils.getBaseTablesInScope(scopeNamespace, excludedTables);
+        var me = this;
+        tables.forEach(function(table) {
+            me.syncTable(table);
+        });
+    },
+
+    /**
+     * Syncs a single record from one table in a ServiceNow instance to the same table in a different ServiceNow instance 
+     * @param {GlideRecord} glideRecord
+     * @returns {string?}
+     */
+    syncRecord: function(glideRecord) {
+        var unloadDocument = this.createUnloadDocument();
+        this.documentToString(this.unloadRecordWithRelatedRecords(glideRecord, unloadDocument));
+        return this.sendToRemoteInstance(this.documentToString(unloadDocument));
+    },
+
     /**
      * Syncs data from one table in a ServiceNow instance to the same table in a different ServiceNow instance 
+     * You can provide an encoded query string to filter the records that are synced
+     * 
+     * One simple way to get the encoded query string is to use the filter navigator in ServiceNow
+     * Another is to build the query using GlideRecord and then call GlideRecord.getEncodedQuery()
      * @param {string} tableName
+     * @param {string} [encodedQueryString]
      */
-    syncTable: function(tableName) {
-        var chunkSize = 10;
-        // I want to transfer the data in chunks. So I will use the GlideRecord.setWindow method to query a batch of records at a time.
-        // Use the tableName to query a batch of records from the source table
-        var source = new GlideRecord(tableName);
-        source.chooseWindow(0, chunkSize);
-        source.query();
+    syncTable: function(tableName, encodedQueryString) {
+        var me = this;
 
-        var sourceSysIds = [];
-        while (source.next()) {
-            sourceSysIds.push(source.sys_id.toString());
+        function syncChunk(start, chunkSize) {
+            // I want to transfer the data in chunks. So I will use the GlideRecord.setWindow method to query a batch of records at a time.
+            // Use the tableName to query a batch of records from the source table
+            var source = new GlideRecord(tableName);
+            source.orderBy('sys_created_on');
+            source.chooseWindow(start, start + chunkSize);
+            if (encodedQueryString) {
+                source.addEncodedQuery(encodedQueryString);
+            }
+            source.query();
+
+            var sourceSysIds = [];
+            while (source.next()) {
+                sourceSysIds.push(source.sys_id.toString());
+            }
+
+            // Query the remote instance using the REST table API for the records that are in the sysIds array
+            var request = me.createRestMessage();
+            request.setHttpMethod('GET');
+            var endpointPath = '/api/now/table/' + tableName
+            var query = [
+                'sysparm_fields=sys_id',
+                'sysparm_query=sys_idIN' + encodeURIComponent(sourceSysIds.join(','))
+            ].join('&');
+            var endpoint = request.getEndpoint() + endpointPath + '?' + query;
+            request.setEndpoint(endpoint);
+            var response = request.execute();
+
+            if (response.getStatusCode() != 200) {
+                gs.error('Failed to get the records from the target instance');
+                gs.error('Received status code: ' + response.getStatusCode());
+                gs.error('Received body: ' + response.getBody());
+                return null;
+            }
+
+            // The sys_ids in the response represent records that already exist in the target instance
+            // Subtract the sys_ids in the response from the sysIds array to get the sys_ids that do not exist in the target instance
+            // This will be the sys_ids that need to be inserted into the target instance
+            var targetSysIds = [];
+            var responseBody = JSON.parse(response.getBody());
+            responseBody.result.forEach(function(record) {
+                targetSysIds.push(record.sys_id);
+            });
+            var sysIdsToInsert = sourceSysIds.filter(function(sysId) {
+                return targetSysIds.indexOf(sysId) === -1;
+            });
+
+            gs.info(tableName + ' Syncing ' + sysIdsToInsert.length + ' records: ');
+
+            // Requery the source for the records that need to be inserted into the target instance
+            var sourceToInsert = new GlideRecord(tableName);
+            sourceToInsert.addQuery('sys_id', 'IN', sysIdsToInsert.join(','));
+            sourceToInsert.query();
+            var unloadDocument = me.createUnloadDocument();
+            while (sourceToInsert.next()) {
+                // recordSync.documentToString(recordSync.unloadRecord(incident));
+                me.documentToString(me.unloadRecordWithRelatedRecords(sourceToInsert, unloadDocument));
+            }
+
+            me.sendToRemoteInstance(me.documentToString(unloadDocument));
         }
 
-        // Query the remote instance using the REST table API for the records that are in the sysIds array
-        var request = this.createRestMessage();
-        request.setHttpMethod('GET');
-        var endpointPath = '/api/now/table/' + tableName
-        var query = [
-            'sysparm_fields=sys_id',
-            'sysparm_query=sys_idIN' + encodeURIComponent(sourceSysIds.join(','))
-        ].join('&');
-        var endpoint = request.getEndpoint() + endpointPath + '?' + query;
-        request.setEndpoint(endpoint);
-        var response = request.execute();
-        gs.log(response.getBody());
-
-        if (response.getStatusCode() != 200) {
-            gs.error('Failed to get the records from the target instance');
-            gs.error('Received status code: ' + response.getStatusCode());
-            gs.error('Received body: ' + response.getBody());
-            return null;
+        var chunkSize = this.connectionConfig.chunkSize || 1000;
+        var glideRecord = new GlideRecord(tableName);
+        if (glideRecord.isValid()) {
+            // First get the size of the table
+            // Then sync records in chunks
+            if (encodedQueryString) {
+                gs.info(encodedQueryString);
+                glideRecord.addEncodedQuery(encodedQueryString);
+            }
+            glideRecord.query();
+            var totalRecords = glideRecord.getRowCount();
+            gs.info('Total records: ' + totalRecords);
+            var i = 0;
+            while (i < totalRecords) {
+                syncChunk(i, chunkSize);
+                i = i + chunkSize;
+            }
+        } else {
+            throw new Error('Invalid table name: ' + tableName);
         }
-
-        // The sys_ids in the response represent records that already exist in the target instance
-        // Subtract the sys_ids in the response from the sysIds array to get the sys_ids that do not exist in the target instance
-        // This will be the sys_ids that need to be inserted into the target instance
-        var targetSysIds = [];
-        var responseBody = JSON.parse(response.getBody());
-        responseBody.result.forEach(function(record) {
-            targetSysIds.push(record.sys_id);
-        });
-        var sysIdsToInsert = sourceSysIds.filter(function(sysId) {
-            return targetSysIds.indexOf(sysId) === -1;
-        });
-
-        gs.log('sysIdsToInsert: ' + sysIdsToInsert);
-        gs.info(tableName + ' Syncing ' + sysIdsToInsert.length + ' records: ');
-
-        // Requery the source for the records that need to be inserted into the target instance
-        var sourceToInsert = new GlideRecord(tableName);
-        sourceToInsert.addQuery('sys_id', 'IN', sysIdsToInsert.join(','));
-        sourceToInsert.query();
-        var unloadDocument = this.createUnloadDocument();
-        while (sourceToInsert.next()) {
-            // recordSync.documentToString(recordSync.unloadRecord(incident));
-            this.documentToString(this.unloadRecord(sourceToInsert, unloadDocument));
-        }
-
-        this.loadRecordByTableApi(tableName, this.documentToString(unloadDocument));
-
-        gs.info(this.documentToString(unloadDocument));
     },
 
     /**
@@ -117,34 +205,6 @@ global.KLF_RecordSync.prototype = {
         request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
         request.setEndpoint(this.connectionConfig.instanceUrl);
         return request;
-    },
-
-
-    /**
-     * Copies the GlideRecord from the source ServiceNow instance to the target ServiceNow instance
-     * using ServiceNow's Table API.
-     */
-    copyRecord: function(tableName, sysId) {
-        // Get the XML payload of the source record
-        var request = this.createRestMessage();
-        request.setHttpMethod('GET');
-        var instanceUrl = request.getEndpoint();
-        var path = '/' + tableName + '_list.do?XML';
-        var query = 'sysparm_query=' + encodeURIComponent('sys_id=' + sysId);
-        var endpoint = instanceUrl + path + '&' + query;
-        gs.info('Using endpoint: ' + endpoint);
-        request.setEndpoint(endpoint);
-
-        var response = request.execute();
-        if (response.getStatusCode() != 200) {
-            gs.error('Failed to get the record from the source instance');
-            gs.error('Received status code: ' + response.getStatusCode());
-            gs.error('Received body: ' + response.getBody());
-            return null;
-        }
-
-        var payload = response.getBody();
-        gs.info(payload);
     },
 
     /**
@@ -160,6 +220,74 @@ global.KLF_RecordSync.prototype = {
     },
 
     /**
+     * Adds the record's related journal entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     */
+    addJournalEntries: function(parent, document) {
+        var journal = new GlideRecord("sys_journal_field");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        journal.addQuery("name", parent.getRecordClassName());
+        journal.addQuery("element_id", parent.getUniqueValue());
+        journal.query();
+        while (journal.next()) {
+            this.unloadRecord(journal, document);
+        }
+    },
+
+    /**
+     * Adds the record's related audit entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     */
+    addAuditEntries: function(parent, document) {
+        var audit = new GlideRecord("sys_audit");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        audit.addQuery("tablename", parent.getRecordClassName());
+        audit.addQuery("documentkey", parent.getUniqueValue());
+        audit.query();
+        while (audit.next()) {
+            this.unloadRecord(audit, document);
+        }
+    },
+
+    /**
+     * Adds the record's related currency entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     */
+    addCurrencyEntries: function(parent, document) {
+        var currency = new GlideRecord("fx_currency_instance");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        currency.addQuery("table", parent.getRecordClassName());
+        currency.addQuery("id", parent.getUniqueValue());
+        currency.query();
+        while (currency.next()) {
+            this.unloadRecord(currency, document);
+        }
+    },
+
+    /**
+     * Adds the record's related currency entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     */
+    addPriceEntries: function(parent, document) {
+        var price = new GlideRecord("fx_price");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        price.addQuery("table", parent.getRecordClassName());
+        price.addQuery("id", parent.getUniqueValue());
+        price.query();
+        while (price.next()) {
+            this.unloadRecord(price, document);
+        }
+    },
+
+    /**
      * Generates XML from GlideRecord that is like the XML generated by exporting a record from ServiceNow.
      * This XML can be used to import a record into ServiceNow.
      * @param {GlideRecord} glideRecord 
@@ -168,9 +296,41 @@ global.KLF_RecordSync.prototype = {
      */
     unloadRecord: function(glideRecord, document) {
         var _document = document || global.GlideXMLUtil.newDocument('unload');
-        var date = new GlideDateTime();
-        _document.documentElement.setAttribute('unload_date', date.toString());
+        if (!document) {
+            // If the document was not passed in, then add the unload_date attribute
+            var date = new GlideDateTime();
+            _document.documentElement.setAttribute('unload_date', date.toString());
+        }
+
         new global.GlideUnloader().unloadGlideRecord(_document, glideRecord, 'INSERT_OR_UPDATE');
+        return _document;
+    },
+
+    /**
+     * Generates XML from GlideRecord that is like the XML generated by exporting a record from ServiceNow.
+     * This XML can be used to import a record into ServiceNow.
+     * 
+     * Adds the record and its related audit entries, journal entries, and attachments to the document
+     * @param {GlideRecord} glideRecord 
+     * @param {Document} [document]
+     */
+    unloadRecordWithRelatedRecords: function(glideRecord, document) {
+        var _document = document || global.GlideXMLUtil.newDocument('unload');
+        if (!document) {
+            // If the document was not passed in, then add the unload_date attribute
+            var date = new GlideDateTime();
+            _document.documentElement.setAttribute('unload_date', date.toString());
+        }
+
+        // Initially add the record to the document
+        this.unloadRecord(glideRecord, _document);
+
+        // Add related records to the document
+        this.addAuditEntries(glideRecord, _document);
+        this.addJournalEntries(glideRecord, _document);
+        this.addCurrencyEntries(glideRecord, _document);
+        this.addPriceEntries(glideRecord, _document);
+
         return _document;
     },
 
@@ -184,6 +344,11 @@ global.KLF_RecordSync.prototype = {
     },
 
     /**
+     * This isn't used right now. The thought is that it could be used to generate a custom version of the XML. You'd do
+     * that if you needed to do something special with the XML before sending it to the target instance. One use case I can
+     * think of is altering how the sys_user and sys_user_group references are handled because the sys_id values will be different
+     * in the target instance
+     * 
      * Generates XML from GlideRecord that is like the XML generated by exporting a record from ServiceNow.
      * This XML can be used to import a record into ServiceNow.
      * @param {GlideRecord} glideRecord 
@@ -203,19 +368,17 @@ global.KLF_RecordSync.prototype = {
 
     /**
      * Imports a record into ServiceNow using the Table API.
-     * @param {String} tableName 
-     * @param {String} xml 
+     * Returns whatever the response was or null if there was an error
+     * @param {string} xml 
+     * @returns {string?}
      */
-    loadRecordByTableApi: function(tableName, xml) {
+    sendToRemoteInstance: function(xml) {
         var request = this.createRestMessage();
         request.setHttpMethod('POST');
-        var instanceUrl = request.getEndpoint();
-        var path = '/' + tableName + '_list.do';
-        var endpoint = instanceUrl + path;
-        gs.info('Using endpoint: ' + endpoint);
+        request.setRequestHeader('Content-Type', 'application/xml');
+        var endpoint = request.getEndpoint() + '/api/53417/klf_import_xml';
         request.setEndpoint(endpoint);
         request.setRequestBody(xml);
-
         var response = request.execute();
         if (response.getStatusCode() != 200) {
             gs.error('Failed to load the record into the target instance');
@@ -225,39 +388,21 @@ global.KLF_RecordSync.prototype = {
         }
 
         var payload = response.getBody();
-        gs.info(payload);
-
         return payload;
     }
 
-
-};
-
-
-// new global.KLF_RecordSync().copyRecord('x_53417_demo_cat_breed', '8cf4884f9779311024d7b066f053af8c');
-// var recordSync = new global.KLF_RecordSync({
-//     username: 'admin',
-//     password: 'Pip33jord!',
-//     // instanceUrl: 'https://dev144209.service-now.com'
-//     instanceUrl: 'https://dev188047.service-now.com'
-// })
-
-// recordSync.syncTable('x_53417_demo_cat_breed');
-// var incident = new GlideRecord('incident');
-// incident.query();
-// incident.next();
-// gs.info(recordSync.documentToString(recordSync.unloadRecord(incident)));]]></script>
+};]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>37</sys_mod_count>
+        <sys_mod_count>85</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-04-12 23:49:23</sys_updated_on>
+        <sys_updated_on>2024-04-14 15:31:21</sys_updated_on>
     </sys_script_include>
 </record_update>
