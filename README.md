@@ -16,4 +16,10 @@ My suggestion is to modify RecordSync. RecordSync is sending data to the target 
 
 After the XML is ingested the manifest can be used to query for the data in the manifest to check to see if it was indeed inserted. Anything found not to exist could then be packaged in a response to notify the caller the specific records were not inserted. If all records are successfully inserted a simple message to the caller indicating that the insert is successful should be sufficient.
 
-# GroupUtil
+# Create GroupUtil to aid in making sure groups are in sync when transferring data between instances
+
+When transferring data between ServiceNow instances groups referenced in the data set may not exist in the target instance. This utility will check the data set for group references and make sure those groups exist in the target instance. If the group does not exist the utility will provide a list of groups that must be transferred so the referenced data is correct.
+
+This utility could also provide the ability to transfer the missing groups. Might be a good idea to tag any groups that are transferred by the utility so they are easy to locate in the target instance for debugging purposes later. For example, maybe after transferring the group membership no longer updates from LDAP.
+
+# Create UserUtil to aid in making sure groups are in sync when transferring data between instances
