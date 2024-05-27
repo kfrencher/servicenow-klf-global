@@ -13,10 +13,15 @@
 
 	// GlideScriptableInputStream
 	var xmlStream = body.dataStream;
-
-	var xmlDocument2 = new global.XMLDocument2(xmlStream);
-
-	var xml = xmlDocument2.toString();
+	var reader = new GlideTextReader(xmlStream);
+	
+	//get first line
+	var xml = '';
+	var line = reader.readLine();
+	while(typeof line == 'string') {
+		xml += line + '\n';
+		line = reader.readLine();
+	}
 
 	if(xml) {
 		global.KLF_RecordSync.loadRecordByGlideUpdateManager2(xml);
@@ -47,14 +52,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-04-12 22:33:58</sys_created_on>
         <sys_id>2163ed159725061024d7b066f053aff2</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>18</sys_mod_count>
         <sys_name>import</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ws_operation_2163ed159725061024d7b066f053aff2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-05-26 23:41:35</sys_updated_on>
+        <sys_updated_on>2024-05-27 14:04:00</sys_updated_on>
         <web_service_definition display_value="KLF Import XML">7323a9159725061024d7b066f053af7c</web_service_definition>
         <web_service_version/>
     </sys_ws_operation>
