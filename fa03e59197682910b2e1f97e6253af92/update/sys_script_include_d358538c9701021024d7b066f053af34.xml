@@ -64,6 +64,138 @@ global.KLF_RecordSync = function(connectionConfig) {
 };
 
 /**
+ * The manifest is an object that represents the data that is being transfered in a transaction. The keys
+ * in the manifest are the table name and the values are an object where the keys are the sys_ids of the records
+ * being transferred. It's a bit unconventional, but the reason the sys_ids are stored as keys in an object is because
+ * i want them to be unique.
+ * {
+ *    "incident": {"sys_id1": true, "sys_id2": true},
+ * }
+ * @typedef {{[tableName:string]: {[sysId:string]: boolean}}} KLFManifest
+ */
+global.KLF_RecordSync.Manifest = function() {
+    /** @type {KLFManifest} */
+    this.manifest = {};
+};
+
+global.KLF_RecordSync.Manifest.prototype = {
+    /**
+     * Adds a record to the manifest
+     * @param {string} tableName 
+     * @param {string} sysId 
+     */
+    addRecord: function(tableName, sysId) {
+        if (!this.manifest[tableName]) {
+            this.manifest[tableName] = {};
+        }
+        this.manifest[tableName][sysId] = true;
+    },
+
+    /**
+     * Adds multiple records to the manifest
+     * @param {string} tableName
+     * @param {string[]} sysIds
+     */
+    addRecords: function(tableName, sysIds) {
+        sysIds.forEach(function(sysId) {
+            JSON.stringify("manifest: " + this.manifest);
+            this.addRecord(tableName, sysId);
+        }, this);
+    },
+
+    /**
+     * Adds a record to the manifest by GlideRecord
+     * @param {GlideRecord} glideRecord 
+     */
+    addRecordByGlideRecord: function(glideRecord) {
+        this.addRecord(glideRecord.getTableName(), glideRecord.getUniqueValue());
+    },
+
+    /**
+     * Adds a manifest to the current manifest
+     * @param {global.KLF_RecordSync.Manifest} manifest
+     */
+    addManifest: function(manifest) {
+        manifest.getTables().forEach(function(tableName) {
+            manifest.getSysIdsForTable(tableName).forEach(function(sysId) {
+                this.addRecord(tableName, sysId);
+            }, this);
+        }, this);
+    },
+
+    /**
+     * Returns all the tables in the manifest
+     * @returns {string[]}
+     */
+    getTables: function() {
+        return Object.keys(this.manifest).sort();
+    },
+
+    /**
+     * Returns all the sys_ids for a table in the manifest
+     */
+    getSysIdsForTable: function(tableName) {
+        return Object.keys(this.manifest[tableName]).sort();
+    },
+
+    /**
+     * Returns a Object representation of the manifest. This is to facilitate JSON serialization
+     */
+    toObj: function() {
+        var manifest = {};
+        this.getTables().forEach(function(tableName) {
+            manifest[tableName] = this.getSysIdsForTable(tableName);
+        }, this);
+        return manifest;
+    },
+
+    /**
+     * Returns a JSON representation of the manifest
+     */
+    toJson: function() {
+        return JSON.stringify(this.toObj(), null, 4);
+    },
+
+    /**
+     * Validates the manifest against the local instance. It checks to see if the records exist in the local instance.
+     * It then builds a new manifest of records that do not exist in the local instance
+     * @returns {global.KLF_RecordSync.Manifest} A manifest of records that do not exist in the local instance
+     */
+    validate: function() {
+        var missingManifest = new global.KLF_RecordSync.Manifest();
+        this.getTables().forEach(function(tableName) {
+            var manifestSysIds = this.getSysIdsForTable(tableName);
+            var gr = new GlideAggregate(tableName);
+            gr.addQuery('sys_id', 'IN', manifestSysIds.join(','));
+            gr.groupBy('sys_id');
+            gr.query();
+            var foundSysIds = [];
+            while (gr.next()) {
+                foundSysIds.push(gr.getValue('sys_id'));
+            }
+            var missingSysIds = new global.ArrayUtil().diff(manifestSysIds, foundSysIds);
+            missingManifest.addRecords(tableName, missingSysIds);
+        }, this);
+        return missingManifest;
+    }
+};
+
+/**
+ * Creates a manifest from the JSON representation
+ * @param {string} jsonManifest
+ * @returns {global.KLF_RecordSync.Manifest}
+ */
+global.KLF_RecordSync.Manifest.createManifestFromJson = function(jsonManifest) {
+    var manifest = new global.KLF_RecordSync.Manifest();
+    var parsed = JSON.parse(jsonManifest);
+    for (var tableName in parsed) {
+        manifest.addRecords(tableName, parsed[tableName]);
+    }
+    return manifest;
+}
+
+
+/**
  * Imports a record into ServiceNow using GlideUpdateManager2
  * @param {string} xml
  */
@@ -106,7 +238,8 @@ global.KLF_RecordSync.prototype = {
      */
     syncRecord: function(glideRecord) {
         var unloadDocument = this.createUnloadDocument();
-        this.documentToString(this.unloadRecordWithRelatedRecords(glideRecord, unloadDocument));
+        var unloadedData = this.unloadRecordWithRelatedRecords(glideRecord, unloadDocument);
+        gs.info('Manifest: ' + unloadedData.manifest.toJson());
         return this.sendToRemoteInstance(this.documentToString(unloadDocument));
     },
 
@@ -176,12 +309,19 @@ global.KLF_RecordSync.prototype = {
             sourceToInsert.addQuery('sys_id', 'IN', sysIdsToInsert.join(','));
             sourceToInsert.query();
             var unloadDocument = me.createUnloadDocument();
+            var manifest = new global.KLF_RecordSync.Manifest();
             while (sourceToInsert.next()) {
-                // recordSync.documentToString(recordSync.unloadRecord(incident));
-                me.documentToString(me.unloadRecordWithRelatedRecords(sourceToInsert, unloadDocument));
+                var unloadedData = me.unloadRecordWithRelatedRecords(sourceToInsert, unloadDocument);
+                manifest.addManifest(unloadedData.manifest);
             }
 
-            me.sendToRemoteInstance(me.documentToString(unloadDocument));
+            if (sysIdsToInsert.length > 0) {
+                me.sendToRemoteInstance(me.documentToString(unloadDocument));
+                gs.info('Manifest for this chunk: ' + manifest.toJson());
+            } else {
+                gs.info('No records to sync for this chunk');
+            }
+
         }
 
         var chunkSize = this.connectionConfig.chunkSize || 220;
@@ -238,8 +378,11 @@ global.KLF_RecordSync.prototype = {
      * Adds the record's related journal entries to the update set
      * @param {GlideRecord} parent
      * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
      */
     addJournalEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
         var journal = new GlideRecord("sys_journal_field");
         // Intentionally using GlideRecord.getRecordClassName because it will correctly
         // handle returning the correct table name when dealing with extended records
@@ -247,16 +390,21 @@ global.KLF_RecordSync.prototype = {
         journal.addQuery("element_id", parent.getUniqueValue());
         journal.query();
         while (journal.next()) {
+            manifest.addRecordByGlideRecord(journal);
             this.unloadRecord(journal, document);
         }
+        return manifest;
     },
 
     /**
      * Adds the record's related audit entries to the update set
      * @param {GlideRecord} parent
      * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
      */
     addAuditEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
         var audit = new GlideRecord("sys_audit");
         // Intentionally using GlideRecord.getRecordClassName because it will correctly
         // handle returning the correct table name when dealing with extended records
@@ -264,16 +412,21 @@ global.KLF_RecordSync.prototype = {
         audit.addQuery("documentkey", parent.getUniqueValue());
         audit.query();
         while (audit.next()) {
+            manifest.addRecordByGlideRecord(audit);
             this.unloadRecord(audit, document);
         }
+        return manifest;
     },
 
     /**
      * Adds the record's related currency entries to the update set
      * @param {GlideRecord} parent
      * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
      */
     addCurrencyEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
         var currency = new GlideRecord("fx_currency_instance");
         // Intentionally using GlideRecord.getRecordClassName because it will correctly
         // handle returning the correct table name when dealing with extended records
@@ -281,16 +434,21 @@ global.KLF_RecordSync.prototype = {
         currency.addQuery("id", parent.getUniqueValue());
         currency.query();
         while (currency.next()) {
+            manifest.addRecordByGlideRecord(currency);
             this.unloadRecord(currency, document);
         }
+        return manifest;
     },
 
     /**
      * Adds the record's related currency entries to the update set
      * @param {GlideRecord} parent
      * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
      */
     addPriceEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
         var price = new GlideRecord("fx_price");
         // Intentionally using GlideRecord.getRecordClassName because it will correctly
         // handle returning the correct table name when dealing with extended records
@@ -298,8 +456,10 @@ global.KLF_RecordSync.prototype = {
         price.addQuery("id", parent.getUniqueValue());
         price.query();
         while (price.next()) {
+            manifest.addRecordByGlideRecord(price);
             this.unloadRecord(price, document);
         }
+        return manifest;
     },
 
     /**
@@ -337,8 +497,12 @@ global.KLF_RecordSync.prototype = {
      * Adds the record and its related audit entries, journal entries, and attachments to the document
      * @param {GlideRecord} glideRecord 
      * @param {Document} [document]
+     * @returns {{manifest:global.KLF_RecordSync.Manifest, document:Document}}
      */
     unloadRecordWithRelatedRecords: function(glideRecord, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+        manifest.addRecordByGlideRecord(glideRecord);
+
         var _document = document || global.GlideXMLUtil.newDocument('unload');
         if (!document) {
             // If the document was not passed in, then add the unload_date attribute
@@ -350,12 +514,35 @@ global.KLF_RecordSync.prototype = {
         this.unloadRecord(glideRecord, _document);
 
         // Add related records to the document
-        this.addAuditEntries(glideRecord, _document);
-        this.addJournalEntries(glideRecord, _document);
-        this.addCurrencyEntries(glideRecord, _document);
-        this.addPriceEntries(glideRecord, _document);
+        manifest.addManifest(this.addAuditEntries(glideRecord, _document));
+        manifest.addManifest(this.addJournalEntries(glideRecord, _document));
+        manifest.addManifest(this.addCurrencyEntries(glideRecord, _document));
+        manifest.addManifest(this.addPriceEntries(glideRecord, _document));
 
-        return _document;
+        return {
+            manifest: manifest,
+            document: _document
+        };
+    },
+
+    /**
+     * Merges two KLFManifest objects together. It merges the keys and the values of the two objects.
+     * The resulting objects will have the keys of both objects and the values will be the unique values
+     * of both objects based on the key.
+     * @param {KLFManifest} manifest1
+     * @param {KLFManifest} manifest2
+     * @returns {KLFManifest}
+     */
+    mergeManifests: function(manifest1, manifest2) {
+        for (var tableName in manifest2) {
+            if (!manifest1[tableName]) {
+                manifest1[tableName] = {};
+            }
+            for (var sysId in manifest2[tableName]) {
+                manifest1[tableName][sysId] = true;
+            }
+        }
+        return manifest1;
     },
 
     /**
@@ -413,6 +600,32 @@ global.KLF_RecordSync.prototype = {
 
         var payload = response.getBody();
         return payload;
+    },
+
+    /**
+     * Checks the target instance for the list of records specified in the manifest. If the records do not exist in the target instance
+     * then a new manifest is created that contains the records that do not exist in the target instance
+     * @param {global.KLF_RecordSync.Manifest} manifest
+     * @returns {global.KLF_RecordSync.Manifest?} A manifest of records that do not exist in the remote instance
+     */
+    validateSync: function(manifest) {
+        var request = this.createRestMessage();
+        request.setHttpMethod('POST');
+        request.setRequestHeader('Content-Type', 'application/json');
+        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync.endpoint.import.path') + '/validate_manifest';
+        request.setEndpoint(endpoint);
+        request.setRequestBody(manifest.toJson());
+        var response = request.execute();
+        if (response.getStatusCode() != 200) {
+            gs.error('Failed to validate manifest');
+            gs.error('Received status code: ' + response.getStatusCode());
+            gs.error('Received body: ' + response.getBody());
+            return null;
+        }
+
+        var payload = response.getBody();
+        var missingManifest = global.KLF_RecordSync.Manifest.createManifestFromJson(payload);
+        return missingManifest;
     }
 
 };]]></script>
@@ -420,13 +633,13 @@ global.KLF_RecordSync.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>99</sys_mod_count>
+        <sys_mod_count>124</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-04-16 12:44:54</sys_updated_on>
+        <sys_updated_on>2024-05-27 12:27:13</sys_updated_on>
     </sys_script_include>
 </record_update>
