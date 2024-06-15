@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description/>
+        <ignore_cache>true</ignore_cache>
+        <is_private>true</is_private>
+        <name>KLF_RecordSync_GroupUtils.mapping</name>
+        <read_roles/>
+        <suffix>global</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-06-02 16:27:36</sys_created_on>
+        <sys_id>6fd972ed97a6421024d7b066f053af12</sys_id>
+        <sys_mod_count>9</sys_mod_count>
+        <sys_name>KLF_RecordSync_GroupUtils.mapping</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_properties_6fd972ed97a6421024d7b066f053af12</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-06-07 17:48:10</sys_updated_on>
+        <type>string</type>
+        <value>{
+    "https://abspscpov2.service-now.com/:x_53417_demo": {
+        "success": true,
+        "hasMissingGroups": true,
+        "missingGroups": [
+            "86cfbd5197b8461024d7b066f053af35",
+            "6baf965b9742211024d7b066f053af9a",
+            "e3af965b9742211024d7b066f053af9c",
+            "testing if this works",
+            "6a42f4616fc331003b3c498f5d3ee46f"
+        ],
+        "mapping": {
+            "019ad92ec7230010393d265c95c260dd": "019ad92ec7230010393d265c95c260dd",
+            "287ee6fea9fe198100ada7950d0b1b73": "287ee6fea9fe198100ada7950d0b1b73",
+            "477a05d153013010b846ddeeff7b1225": "477a05d153013010b846ddeeff7b1225",
+            "8a5055c9c61122780043563ef53438e3": "8a5055c9c61122780043563ef53438e3"
+        }
+    }
+}</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=6fd972ed97a6421024d7b066f053af12"/>
+</record_update>
