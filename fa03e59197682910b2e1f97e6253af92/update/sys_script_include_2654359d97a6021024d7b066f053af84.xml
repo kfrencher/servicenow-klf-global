@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordSync_GroupUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_RecordSync_GroupUtils</name>
+        <script><![CDATA[/**
+ * Data type returned from call to {@link GroupUtils.getGroupFields}
+ * @typedef KLF_RecordSync_GroupField
+ * @property {string} table The name of the table that contains the field
+ * @property {string} type The type of the field from sys_dictionary
+ * @property {string} columnName The column name of the field
+ */
+
+/**
+ * @typedef KLF_RecordSync_GroupMapping
+ * @property {boolean} success true if there was a successful response from the remote system. false if there was an error response
+ * @property {boolean} hasMissingGroups true if there are missing groups
+ * @property {string[]} missingGroups The sys_ids of the groups that do not exist in the remote system
+ * @property {{[localGroupSysId:string]:string}} mapping The mapping of the sys_ids of the groups that exist in the local system to the remote system
+ * @property {string} [error] There error message if success is false
+ */
+
+/**
+ * @typedef {{sysId:string,name:string?,source:string?}} KLF_RecordSync_RemoteGroup
+ */
+
+/**
+ * @typedef {{
+ *   groupMapping:{[localGroupSysId:string]:string},
+ *   notificationSysIds:string[]
+ * }} KLF_RecordSync_UpdateRemoteNotificationsRequest
+ */
+
+/**
+ * Incomplete notifications is a mapping of the notification sys_id to the groups that were not found in the remote system
+ * @typedef {{
+ *   success:boolean,
+ *   error?:string,
+ *   updatedNotifications:string[],
+ *   notUpdatedNotifications:string[]
+ *   incompleteNotifications?: {[notificationSysId:string]: string[]}
+ * }} KLF_RecordSync_UpdateRemoteNotificationsResponse
+ */
+
+
+//@ts-ignore
+var global = global || {};
+
+/**
+ * 
+ * @param {KLF_RecordSyncConnectionConfig} connectionConfig 
+ */
+global.KLF_RecordSync_GroupUtils = function(connectionConfig) {
+    this.connectionConfig = connectionConfig;
+};
+
+/**
+ * Uses the {@link KLF_RecordSync_RemoteGroup[]} passed in from the remote system to create a {@link KLF_RecordSync_GroupMapping} object
+ * that maps the remote group sys_id to the local group sys_id
+ * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups 
+ * @returns {KLF_RecordSync_GroupMapping}
+ */
+global.KLF_RecordSync_GroupUtils.createMappingFromRemote = function(remoteGroups) {
+    /**
+     * Creates a mapping of the passed in fieldName to the sys_id of the remote group
+     * This is to make it easy to lookup the sys_id of the remote group by the provided
+     * field name without searching through the remoteGroups array each time
+     * @param {keyof KLF_RecordSync_RemoteGroup} fieldName 
+     * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups 
+     * @returns {{[name:string]:string}}
+     */
+    function createIndex(remoteGroups, fieldName) {
+        return remoteGroups.reduce(function(index, remoteGroup) {
+            var key = remoteGroup[fieldName];
+            if (key) {
+                index[key] = remoteGroup.sysId;
+            }
+            return index;
+        }, {});
+    }
+
+    /** 
+     * I am transforming the remoteGroups into an object that contains of the
+     * names, sys_ids, and sources of the remote groups so I can easily use those
+     * values in a GlideRecord query
+     * @type {{names:string[],sysIds:string[],sources:string[]}} 
+     **/
+    var namesSysIdsSources = remoteGroups.reduce(function(namesSysIdsSources, remoteGroup) {
+        // There should always be a sys_id. The name and source are optional
+        namesSysIdsSources.sysIds.push(remoteGroup.sysId);
+        if (remoteGroup.name) {
+            namesSysIdsSources.names.push(remoteGroup.name);
+        }
+        if (remoteGroup.source) {
+            namesSysIdsSources.sources.push(remoteGroup.source);
+        }
+        return namesSysIdsSources;
+    }, {
+        names: /** @type {string[]} **/ ([]),
+        sysIds: /** @type {string[]} **/ ([]),
+        sources: /** @type {string[]} **/ ([]),
+    });
+
+    var nameToSysId = createIndex(remoteGroups, 'name');
+    var sourceToSysId = createIndex(remoteGroups, 'source');
+    var sysIdToSysId = createIndex(remoteGroups, 'sysId');
+
+    var groupGr = new GlideRecord('sys_user_group');
+    groupGr.addQuery('sys_id', 'IN', namesSysIdsSources.sysIds)
+        .addOrCondition('source', 'IN', namesSysIdsSources.sources)
+        .addOrCondition('name', 'IN', namesSysIdsSources.names);
+    groupGr.query();
+    /** @type {{[localGroupSysId:string]:string}} */
+    var localToRemoteMapping = {};
+    while (groupGr.next()) {
+        // This is in order of priority. 
+        // If the sys_id is found, then that is used. 
+        // If the name is found, then that is used. 
+        // If the source is found, then that is used
+        if (sysIdToSysId[groupGr.getUniqueValue()]) {
+            localToRemoteMapping[sysIdToSysId[groupGr.getUniqueValue()]] = groupGr.getUniqueValue();
+        } else if (nameToSysId[groupGr.getValue('name')]) {
+            localToRemoteMapping[nameToSysId[groupGr.getValue('name')]] = groupGr.getUniqueValue();
+        } else if (sourceToSysId[groupGr.getValue('source')]) {
+            localToRemoteMapping[sourceToSysId[groupGr.getValue('source')]] = groupGr.getUniqueValue();
+        }
+    }
+
+    var mappedGroups = Object.keys(localToRemoteMapping);
+    var allGroups = Object.keys(sysIdToSysId);
+    var missingGroups = new global.ArrayUtil().diff(allGroups, mappedGroups);
+
+    return {
+        success: true,
+        hasMissingGroups: missingGroups.length > 0,
+        missingGroups: missingGroups,
+        mapping: localToRemoteMapping
+    };
+}
+
+/**
+ * The group sys_ids in notifications are not updated when the notifications are transferred to the remote system. This method
+ * uses the group mapping to update the notifications with the correct group sys_ids
+ * @param {KLF_RecordSync_GroupMapping} groupMapping 
+ * @param {string[]} notificationSysIds sysevent_email_action.sys_id[]
+ * @returns {KLF_RecordSync_UpdateRemoteNotificationsResponse}
+ */
+global.KLF_RecordSync_GroupUtils.updateNotifications = function(groupMapping, notificationSysIds) {
+    var mapping = groupMapping.mapping;
+
+    // Get notifications that use groups
+    var notification = new GlideRecord('sysevent_email_action');
+    notification.addQuery('sys_id', 'IN', notificationSysIds);
+    notification.addNotNullQuery('recipient_groups');
+    notification.query();
+
+    var hasIncompleteNotifications = false;
+    var incompleteNotifications = {};
+    var updatedNotifications = [];
+    while (notification.next()) {
+        var recipientGroups = notification.getValue('recipient_groups').split(',');
+        var updatedRecipientGroups = recipientGroups.map(function(group) {
+            return mapping[group] || group;
+        });
+        notification.recipient_groups = updatedRecipientGroups.join(',');
+        notification.update();
+
+        // Check to see if all the groups have been mapped
+        // If all the groups have not been mapped then
+        var group = new GlideRecord('sys_user_group');
+        group.addQuery('sys_id', 'IN', updatedRecipientGroups);
+        group.query();
+        var mappedGroups = [];
+        while (group.next()) {
+            mappedGroups.push(group.getUniqueValue());
+        }
+
+        var unmappedGroups = new global.ArrayUtil().diff(updatedRecipientGroups, mappedGroups);
+        if (unmappedGroups.length > 0) {
+            hasIncompleteNotifications = true;
+            incompleteNotifications[notification.getUniqueValue()] = unmappedGroups;
+        }
+
+        updatedNotifications.push(notification.getUniqueValue());
+    }
+
+    var notUpdatedNotifications = new global.ArrayUtil().diff(notificationSysIds, updatedNotifications);
+
+    // Needs to return updated notifications and notifications that were not updated
+    var response = {
+        success: true,
+        updatedNotifications: updatedNotifications,
+        notUpdatedNotifications: notUpdatedNotifications
+    };
+
+    if (hasIncompleteNotifications) {
+        response.incompleteNotifications = incompleteNotifications;
+    }
+
+    return response;
+
+}
+
+global.KLF_RecordSync_GroupUtils.prototype = {
+    logInfo: function(message) {
+        gs.log(message, 'KLF_RecordSync_GroupUtils');
+    },
+    logError: function(message) {
+        gs.logError(message, 'KLF_RecordSync_GroupUtils');
+    },
+
+    /**
+     * Finds all the fields that reference sys_user_group in a scoped app. This attempts to find
+     * all the group fields in the system. The group fields will include both reference fields and
+     * list fields that reference sys_user_group
+     * @param {string} scopeSysId sys_scope.sys_id
+     * @returns {KLF_RecordSync_GroupField[]}
+     */
+    getGroupFieldsInScope: function(scopeSysId) {
+        var me = this;
+        var dataTransferUtils = new global.KLF_DataTransferUtils();
+        var tables = dataTransferUtils.getTablesInScope(scopeSysId);
+        return tables.reduce(function(allFields, tableName) {
+            return allFields.concat(me.getGroupFieldsInTable(tableName));
+        }, []);
+    },
+
+    /**
+     * Finds all the fields that reference sys_user_group in a table. This attempts to find
+     * all the group fields in table. The group fields will include both reference fields and
+     * list fields that reference sys_user_group
+     * @param {string} tableName 
+     * @returns {KLF_RecordSync_GroupField[]}
+     */
+    getGroupFieldsInTable: function(tableName) {
+        var arrayUtil = new global.ArrayUtil()
+        var tableUtils = new global.TableUtils(tableName);
+        var tables = arrayUtil.convertArray(tableUtils.getHierarchy());
+        return tables.reduce(function(allFields, tableName) {
+            var fieldGr = new GlideRecord('sys_dictionary');
+            fieldGr.addQuery('name', tableName);
+            fieldGr.addQuery('reference', 'sys_user_group');
+            fieldGr.query();
+            var fields = [];
+            while (fieldGr.next()) {
+                fields.push({
+                    table: fieldGr.name.toString(),
+                    type: fieldGr.internal_type.toString(),
+                    columnName: fieldGr.element.toString(),
+                });
+            }
+            return allFields.concat(fields);
+        }, []);
+    },
+
+    /**
+     * Finds all the unique groups that are referenced in a table by using the group fields
+     * that are returned from {@link GroupUtils.getGroupFields}
+     * @param {string} tableName
+     * @param {string} [filter] GlideRecord encoded query
+     * @returns {string[]} The unique group sys_ids
+     */
+    getUniqueGroupsInTable: function(tableName, filter) {
+        var fields = this.getGroupFieldsInTable(tableName);
+        var gr = new GlideRecord(tableName);
+        if (filter) {
+            gr.addEncodedQuery(filter);
+        }
+        gr.query();
+        /** @type {{[fieldName:string]: boolean}} */
+        var groups = {};
+        while (gr.next()) {
+            fields.forEach(function(field) {
+                var columnName = field.columnName;
+                if (gr[columnName].nil()) {
+                    return;
+                }
+
+                if (field.type === 'reference') {
+                    groups[gr.getValue(columnName)] = true;
+                } else if (field.type === 'glide_list') {
+                    var groupList = gr.getValue(columnName).split(',');
+                    groupList.forEach(function(group) {
+                        groups[group] = true;
+                    });
+                } else {
+                    throw 'Unsupported field type: ' + field.type;
+                }
+            });
+        }
+        return Object.keys(groups);
+    },
+
+    /**
+     * Finds all the unique groups that are referenced in a scope by using the group fields
+     * that are returned from {@link GroupUtils.getGroupFields}
+     * @param {string} scope
+     * @returns {string[]} The unique group sys_ids
+     */
+    getUniqueGroupsInScope: function(scope) {
+        var me = this;
+        var dataTransferUtils = new global.KLF_DataTransferUtils();
+        var tables = dataTransferUtils.getTablesInScope(scope);
+        return new global.ArrayUtil().unique(tables.reduce(function(allGroups, tableName) {
+            return allGroups.concat(me.getUniqueGroupsInTable(tableName));
+        }, []));
+    },
+
+    /**
+     * Returns a sn_ws.RESTMessageV2 object that is configured to make a request to the target instance
+     * @returns {sn_ws.RESTMessageV2}
+     */
+    createRestMessage: function() {
+        var request = new sn_ws.RESTMessageV2();
+        request.setRequestHeader("Accept", "application/json");
+        var authHeader = 'Basic ' + GlideStringUtil.base64Encode(this.connectionConfig.username + ':' + this.connectionConfig.password);
+        request.setRequestHeader('Authorization', authHeader);
+        // Do not use setBasicAuth. This does not work with mutual auth for some reason
+        // request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
+        request.setEndpoint(this.connectionConfig.instanceUrl);
+        return request;
+    },
+
+    cachePropertyName: 'KLF_RecordSync_GroupUtils.mapping',
+
+    /**
+     * Returns the group mapping that was created by calling {@link global.KLF_RecordSync_GroupUtils.createGroupMapping}. When calling
+     * {@link global.KLF_RecordSync_GroupUtils.createGroupMapping}, the cache will be updated with the group mapping
+     * @param {string} mappingName The mapping name used to store the mapping when calling {@link global.KLF_RecordSync_GroupUtils.createGroupMapping}
+     */
+    getGroupMapping: function(mappingName) {
+        var cacheJson = gs.getProperty(this.cachePropertyName);
+        var cache = JSON.parse(cacheJson);
+        var mapping = cache[this.getCacheKey(mappingName)];
+        if (!mapping) {
+            throw 'Call createGroupMapping first to create the group mapping';
+        }
+        return mapping;
+    },
+
+    /**
+     * Returns a mappingName that is used to store / retrieve a group mapping from the cache
+     * See {@link global.KLF_RecordSync_GroupUtils.getGroupMapping} and {@link global.KLF_RecordSync_GroupUtils.createGroupMapping}
+     * @param {string} mappingName 
+     * @returns {string}
+     */
+    getCacheKey: function(mappingName) {
+        return this.connectionConfig.instanceUrl + ':' + mappingName;
+    },
+
+    /**
+     * Uses the sys_ids of the groups in the local system to find the sys_ids of the groups that exist in the remote system. This returns
+     * a mapping of the local group sys_id to the remote group sys_id. If a group does not exist in the remote system, the remote group sys_id will be null
+     * 
+     * By default the results are cached. If you want to bypass the cache, set useCache to false. When using the cache a mappingName is required. This is used
+     * when you retrieve the group mapping using {@link global.KLF_RecordSync_GroupUtils.getGroupMapping}
+     * @param {string[]} groupSysIds
+     * @param {boolean} [useCache=true] If true, the cache will be used to store the group mappings. true by default
+     * @param {string} [mappingName] A mapping name to store the group mapping under. This is not needed if useCache is false. Typically this would be the application scope, for example: x_example_app
+     * @returns {KLF_RecordSync_GroupMapping} The sys_ids of the groups that do not exist in the remote system
+     */
+    createGroupMapping: function(groupSysIds, mappingName, useCache) {
+        var _useCache = useCache === undefined ? true : useCache;
+        var groupRecords = new GlideRecord('sys_user_group');
+        groupRecords.addQuery('sys_id', 'IN', groupSysIds);
+        groupRecords.query();
+
+        /** @type {KLF_RecordSync_RemoteGroup[]} */
+        var groups = [];
+        var foundGroups = [];
+        while (groupRecords.next()) {
+            foundGroups.push(groupRecords.getUniqueValue());
+            groups.push({
+                sysId: groupRecords.getValue('sys_id'),
+                name: groupRecords.getValue('name'),
+                source: groupRecords.getValue('source')
+            });
+        }
+
+        // Add the missing groups. These groups don't really exist in the local system for some reason
+        // I will still attempt to find them in the remote system
+        var missingGroupSysIds = new global.ArrayUtil().diff(groupSysIds, foundGroups);
+        missingGroupSysIds.forEach(function(sysId) {
+            groups.push({
+                sysId: sysId,
+                name: '',
+                source: ''
+            });
+        });
+
+        // Make a  request to sys_user_group
+        var request = this.createRestMessage();
+        request.setRequestHeader('Content-Type', 'application/json')
+        request.setHttpMethod('POST');
+        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_GroupUtils.endpoint.mapping.path');
+        request.setEndpoint(endpoint);
+        this.logInfo('Creating group mapping using RemoteGroups:\n\n' + JSON.stringify(groups, null, 4));
+        request.setRequestBody(JSON.stringify(groups));
+
+        var response = request.execute();
+        if (response.getStatusCode() != 200) {
+            this.logError('Failed to group mapping using groups: ' + groupSysIds.join(', '));
+            this.logError('Received status code: ' + response.getStatusCode());
+            this.logError('Received body: ' + response.getBody());
+            if (_useCache) {
+                gs.setProperty(this.cachePropertyName, '');
+            }
+            return {
+                success: false,
+                error: response.getBody(),
+                hasMissingGroups: true,
+                missingGroups: [],
+                mapping: {}
+            };
+        }
+
+        var payload = response.getBody();
+        this.logInfo('Received group mapping response:\n\n' + payload);
+        if (payload) {
+            var parsedPayload = JSON.parse(payload);
+            /** @type {KLF_RecordSync_GroupMapping} */
+            var groupMapping = parsedPayload.result;
+            if (_useCache) {
+                if (!mappingName) {
+                    throw 'KLF_RecordSync_GroupUtils: A mapping name is required when using the cache';
+                }
+                var cacheJson = gs.getProperty(this.cachePropertyName, '{}');
+                var cache = JSON.parse(cacheJson);
+                cache[this.getCacheKey(mappingName)] = groupMapping;
+                gs.setProperty(this.cachePropertyName, JSON.stringify(cache, null, 4));
+            }
+            return groupMapping;
+        } else {
+            if (_useCache) {
+                gs.setProperty(this.cachePropertyName, '');
+            }
+            return {
+                success: false,
+                error: 'No response body was received from the remote system',
+                hasMissingGroups: true,
+                missingGroups: [],
+                mapping: {}
+            };
+        }
+    },
+
+    /**
+     * Syncs the specified groups by their sys_user_group.sys_id in the local system with the remote system.
+     * 
+     * This will throw an exception if there are groups that don't exist in the group list unless
+     * the quiet parameter is set to true
+     * 
+     * This will return null if the method finds that there are no groups to sync
+     * @param {string[]} groupSysIds sys_user_group.sys_id[]
+     * @param {boolean} [quiet=false] If true then sync will proceed even if there are groups that don't exist in the group list
+     * @returns {KLF_SendToRemoteInstanceResponse?}
+     */
+    syncGroups: function(groupSysIds, quiet) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+        var recordSync = new global.KLF_RecordSync(this.connectionConfig);
+        var document = recordSync.createUnloadDocument();
+        var group = new GlideRecord('sys_user_group');
+        group.addQuery('sys_id', 'IN', groupSysIds);
+        group.query();
+        var foundGroupSysIds = [];
+        while (group.next()) {
+            foundGroupSysIds.push(group.getUniqueValue());
+            recordSync.unloadRecord(group, document);
+            manifest.addRecordByGlideRecord(group);
+        }
+
+        var missingGroupSysIds = new global.ArrayUtil().diff(groupSysIds, foundGroupSysIds);
+        if (missingGroupSysIds.length > 0) {
+            var errorMessage = 'The following groups were not found in the group list:\n' + missingGroupSysIds.join(',') + '\n';
+            if (quiet) {
+                this.logError(errorMessage);
+            } else {
+                throw errorMessage;
+            }
+        }
+
+        if (foundGroupSysIds.length === 0) {
+            return null;
+        } else {
+            return recordSync.syncDocument(document, manifest);
+        }
+    },
+
+    /**
+     * Returns a list of sys_ids of notifications in the provided scope that use groups as one of the recipients.
+     * Useful to use in combination with {@link global.KLF_RecordSync_GroupUtils.updateRemoteNotifications}
+     * @param {string} scope 
+     * @returns {string[]} sysevent_email_action.sys_id[]
+     */
+    getNotificationsUsingGroupsInScope: function(scope) {
+        var notification = new GlideRecord('sysevent_email_action');
+        notification.addQuery('sys_scope.scope', scope);
+        notification.addNotNullQuery('recipient_groups');
+        notification.query();
+        var notifications = [];
+        while (notification.next()) {
+            notifications.push(notification.getUniqueValue());
+        }
+        return notifications;
+    },
+
+    /**
+     * Returns a list of sys_user_group.sys_id of the groups that are used in the specified notifications
+     * @param {string[]} notificationSysIds sysevent_email_action.sys_id[]
+     * @returns {string[]} sys_user_group.sys_id[]
+     */
+    getGroupsUsedInNotifications: function(notificationSysIds) {
+        var notification = new GlideRecord('sysevent_email_action');
+        notification.addQuery('sys_id', 'IN', notificationSysIds);
+        notification.addNotNullQuery('recipient_groups');
+        notification.query();
+        var groups = [];
+        while (notification.next()) {
+            var recipientGroups = notification.getValue('recipient_groups').split(',');
+            groups = groups.concat(recipientGroups);
+        }
+        return new global.ArrayUtil().unique(groups);
+    },
+
+    /**
+     * The group sys_ids in notifications are not updated when the notifications are transferred to the remote system. This method
+     * uses the group mapping to update the notifications with the correct group sys_ids on the remote system
+     * @param {KLF_RecordSync_GroupMapping} groupMapping 
+     * @param {string[]} notificationSysIds sysevent_email_action.sys_id[]
+     * @returns {KLF_RecordSync_UpdateRemoteNotificationsResponse}
+     */
+    updateRemoteNotifications: function(groupMapping, notificationSysIds) {
+        var request = this.createRestMessage();
+        request.setHttpMethod('POST');
+        request.setEndpoint(request.getEndpoint() + gs.getProperty('KLF_RecordSync_GroupUtils.endpoint.notifications.path'));
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.setRequestBody(JSON.stringify({
+            groupMapping: groupMapping,
+            notificationSysIds: notificationSysIds
+        }));
+        var response = request.execute();
+        if (response.getStatusCode() != 200) {
+            this.logError('Failed to update remote notifications');
+            this.logError('Received status code: ' + response.getStatusCode());
+            this.logError('Received body: ' + response.getBody());
+            return {
+                success: false,
+                error: response.getBody(),
+                updatedNotifications: [],
+                notUpdatedNotifications: []
+            };
+        }
+
+        return JSON.parse(response.getBody());
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-06-01 16:45:24</sys_created_on>
+        <sys_id>2654359d97a6021024d7b066f053af84</sys_id>
+        <sys_mod_count>85</sys_mod_count>
+        <sys_name>KLF_RecordSync_GroupUtils</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_2654359d97a6021024d7b066f053af84</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-06-07 18:52:19</sys_updated_on>
+    </sys_script_include>
+</record_update>
