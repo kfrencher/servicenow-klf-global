@@ -6,7 +6,7 @@
         <default_operation_uri/>
         <enforce_acl>cf9d01d3e73003009d6247e603f6a990</enforce_acl>
         <http_method>POST</http_method>
-        <name>import</name>
+        <name>Import</name>
         <operation_script><![CDATA[(function process(/*RESTAPIRequest (glide-rest.ScriptableServiceRequest) */ request, /*RESTAPIResponse*/ response) {
 	// ScriptableServiceRequestBody
 	var body = request.body;
@@ -17,7 +17,7 @@
 	
 	// get first line
 	// I'm using an Array to hold the lines because if you use one string you can run into a string size limit
-	// ServiceNow limits the size of one string to 32MB. Using the string allows me to hold the data in multiple
+	// ServiceNow limits the size of one string to 32MB. Using the Array allows me to hold the data in multiple
 	// strings until I have to pass it to another method
 	//
 	// I also tried using XmlDocument2 to read the inputstream, but couldn't get it to read the input stream
@@ -45,28 +45,126 @@
 
 })(request, response);]]></operation_script>
         <operation_uri>/api/53417/klf_import_xml</operation_uri>
-        <produces>application/json,application/xml,text/xml</produces>
-        <produces_customized>false</produces_customized>
+        <produces>application/json</produces>
+        <produces_customized>true</produces_customized>
         <relative_path>/</relative_path>
-        <request_example/>
+        <request_example>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&#13;
+&lt;xml&gt;&#13;
+    &lt;incident&gt;&#13;
+        &lt;active&gt;true&lt;/active&gt;&#13;
+        &lt;activity_due&gt;2024-06-15 12:53:44&lt;/activity_due&gt;&#13;
+        &lt;additional_assignee_list /&gt;&#13;
+        &lt;approval&gt;not requested&lt;/approval&gt;&#13;
+        &lt;approval_history /&gt;&#13;
+        &lt;approval_set /&gt;&#13;
+        &lt;assigned_to display_value="beth.anglin"&gt;46d44a23a9fe19810012d100cca80666&lt;/assigned_to&gt;&#13;
+        &lt;assignment_group display_value="Hardware" name="Hardware"&gt;8a5055c9c61122780043563ef53438e3&lt;/assignment_group&gt;&#13;
+        &lt;business_duration /&gt;&#13;
+        &lt;business_impact /&gt;&#13;
+        &lt;business_service /&gt;&#13;
+        &lt;business_stc /&gt;&#13;
+        &lt;calendar_duration /&gt;&#13;
+        &lt;calendar_stc /&gt;&#13;
+        &lt;caller_id display_value="jerrod.bennett"&gt;5b7c200d0a640069006b3845b5d0fa7c&lt;/caller_id&gt;&#13;
+        &lt;category&gt;inquiry&lt;/category&gt;&#13;
+        &lt;cause /&gt;&#13;
+        &lt;caused_by /&gt;&#13;
+        &lt;child_incidents /&gt;&#13;
+        &lt;close_code /&gt;&#13;
+        &lt;close_notes /&gt;&#13;
+        &lt;closed_at /&gt;&#13;
+        &lt;closed_by /&gt;&#13;
+        &lt;cmdb_ci display_value="EXCH-SD-05"&gt;281190e3c0a8000b003f593aa3f20ca6&lt;/cmdb_ci&gt;&#13;
+        &lt;comments /&gt;&#13;
+        &lt;comments_and_work_notes /&gt;&#13;
+        &lt;company display_value="ACME North America"&gt;31bea3d53790200044e0bfc8bcbe5dec&lt;/company&gt;&#13;
+        &lt;contact_type&gt;phone&lt;/contact_type&gt;&#13;
+        &lt;contract /&gt;&#13;
+        &lt;correlation_display /&gt;&#13;
+        &lt;correlation_id /&gt;&#13;
+        &lt;delivery_plan /&gt;&#13;
+        &lt;delivery_task /&gt;&#13;
+        &lt;description&gt;Can't connect to Exchange. Login credentials and network connection are working&#13;
+            though.&lt;/description&gt;&#13;
+        &lt;due_date /&gt;&#13;
+        &lt;escalation&gt;0&lt;/escalation&gt;&#13;
+        &lt;expected_start /&gt;&#13;
+        &lt;follow_up /&gt;&#13;
+        &lt;group_list /&gt;&#13;
+        &lt;hold_reason /&gt;&#13;
+        &lt;impact&gt;1&lt;/impact&gt;&#13;
+        &lt;incident_state&gt;2&lt;/incident_state&gt;&#13;
+        &lt;knowledge&gt;false&lt;/knowledge&gt;&#13;
+        &lt;location display_value="San Diego"&gt;108752c8c611227501d4ab0e392ba97f&lt;/location&gt;&#13;
+        &lt;made_sla&gt;true&lt;/made_sla&gt;&#13;
+        &lt;notify&gt;1&lt;/notify&gt;&#13;
+        &lt;number&gt;INC0000050&lt;/number&gt;&#13;
+        &lt;opened_at&gt;2023-02-20 21:58:24&lt;/opened_at&gt;&#13;
+        &lt;opened_by display_value=""&gt;glide.maint&lt;/opened_by&gt;&#13;
+        &lt;order /&gt;&#13;
+        &lt;origin_id /&gt;&#13;
+        &lt;origin_table /&gt;&#13;
+        &lt;parent /&gt;&#13;
+        &lt;parent_incident /&gt;&#13;
+        &lt;priority&gt;1&lt;/priority&gt;&#13;
+        &lt;problem_id /&gt;&#13;
+        &lt;reassignment_count&gt;0&lt;/reassignment_count&gt;&#13;
+        &lt;rejection_goto /&gt;&#13;
+        &lt;reopen_count /&gt;&#13;
+        &lt;reopened_by /&gt;&#13;
+        &lt;reopened_time /&gt;&#13;
+        &lt;resolved_at /&gt;&#13;
+        &lt;resolved_by /&gt;&#13;
+        &lt;rfc /&gt;&#13;
+        &lt;route_reason /&gt;&#13;
+        &lt;service_offering /&gt;&#13;
+        &lt;severity&gt;3&lt;/severity&gt;&#13;
+        &lt;short_description&gt;Can't access Exchange server - is it down?&lt;/short_description&gt;&#13;
+        &lt;skills /&gt;&#13;
+        &lt;sla_due&gt;2024-10-23 05:58:24&lt;/sla_due&gt;&#13;
+        &lt;state&gt;2&lt;/state&gt;&#13;
+        &lt;subcategory /&gt;&#13;
+        &lt;sys_class_name&gt;incident&lt;/sys_class_name&gt;&#13;
+        &lt;sys_created_by&gt;glide.maint&lt;/sys_created_by&gt;&#13;
+        &lt;sys_created_on&gt;2023-02-20 18:05:40&lt;/sys_created_on&gt;&#13;
+        &lt;sys_domain&gt;global&lt;/sys_domain&gt;&#13;
+        &lt;sys_domain_path&gt;/&lt;/sys_domain_path&gt;&#13;
+        &lt;sys_id&gt;ef43c6d40a0a0b5700c77f9bf387afe3&lt;/sys_id&gt;&#13;
+        &lt;sys_mod_count&gt;2461&lt;/sys_mod_count&gt;&#13;
+        &lt;sys_updated_by&gt;system&lt;/sys_updated_by&gt;&#13;
+        &lt;sys_updated_on&gt;2024-06-15 10:53:45&lt;/sys_updated_on&gt;&#13;
+        &lt;task_effective_number&gt;INC0000050&lt;/task_effective_number&gt;&#13;
+        &lt;time_worked /&gt;&#13;
+        &lt;universal_request /&gt;&#13;
+        &lt;upon_approval&gt;proceed&lt;/upon_approval&gt;&#13;
+        &lt;upon_reject&gt;cancel&lt;/upon_reject&gt;&#13;
+        &lt;urgency&gt;1&lt;/urgency&gt;&#13;
+        &lt;user_input /&gt;&#13;
+        &lt;variables /&gt;&#13;
+        &lt;watch_list /&gt;&#13;
+        &lt;wf_activity /&gt;&#13;
+        &lt;work_end /&gt;&#13;
+        &lt;work_notes /&gt;&#13;
+        &lt;work_notes_list /&gt;&#13;
+        &lt;work_start /&gt;&#13;
+    &lt;/incident&gt;&#13;
+&lt;/xml&gt;</request_example>
         <requires_acl_authorization>true</requires_acl_authorization>
         <requires_authentication>true</requires_authentication>
         <requires_snc_internal_role>true</requires_snc_internal_role>
-        <short_description/>
+        <short_description>Imports records using the same format as export XML</short_description>
         <sys_class_name>sys_ws_operation</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-04-12 22:33:58</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>2163ed159725061024d7b066f053aff2</sys_id>
-        <sys_mod_count>19</sys_mod_count>
-        <sys_name>import</sys_name>
+        <sys_mod_count>23</sys_mod_count>
+        <sys_name>Import</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ws_operation_2163ed159725061024d7b066f053aff2</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-05-28 12:40:25</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-06-15 11:57:47</sys_updated_on>
         <web_service_definition display_value="KLF Import XML">7323a9159725061024d7b066f053af7c</web_service_definition>
         <web_service_version/>
     </sys_ws_operation>

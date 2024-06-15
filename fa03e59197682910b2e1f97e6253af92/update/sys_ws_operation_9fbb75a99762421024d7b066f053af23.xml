@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ws_operation">
+    <sys_ws_operation action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <consumes>application/json</consumes>
+        <consumes_customized>true</consumes_customized>
+        <default_operation_uri/>
+        <enforce_acl>cf9d01d3e73003009d6247e603f6a990</enforce_acl>
+        <http_method>POST</http_method>
+        <name>Group Mapping</name>
+        <operation_script><![CDATA[(function process( /*RESTAPIRequest*/ request, /*RESTAPIResponse*/ response) {
+
+    // ScriptableServiceRequestBody
+    var body = request.body;
+    var bodyJSON = body.dataString;
+
+    // Groups object should contain list of sys_user_group.sys_id that need to be mapped
+    // to local groups
+    /** @type {KLF_RecordSync_RemoteGroup[]} */
+    var groups = JSON.parse(bodyJSON);
+    var groupMapping = global.KLF_RecordSync_GroupUtils.createMappingFromRemote(groups);
+
+    response.setStatus('200');
+    response.setBody(groupMapping);
+
+})(request, response);]]></operation_script>
+        <operation_uri>/api/53417/klf_import_xml/group_mapping</operation_uri>
+        <produces>application/json</produces>
+        <produces_customized>true</produces_customized>
+        <relative_path>/group_mapping</relative_path>
+        <request_example>[&#13;
+    {&#13;
+        "sysId": "019ad92ec7230010393d265c95c260dd",&#13;
+        "name": "Analytics Settings Managers",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "287ee6fea9fe198100ada7950d0b1b73",&#13;
+        "name": "Database",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "477a05d153013010b846ddeeff7b1225",&#13;
+        "name": "App Engine Admins",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "5dc5889a976a061024d7b066f053afa8",&#13;
+        "name": "Notification Group",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "86cfbd5197b8461024d7b066f053af35",&#13;
+        "name": "Test Group",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "8a5055c9c61122780043563ef53438e3",&#13;
+        "name": "Hardware",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "b629199f97e68a1024d7b066f053af07",&#13;
+        "name": "New Group PDI",&#13;
+        "source": null&#13;
+    },&#13;
+    {&#13;
+        "sysId": "6baf965b9742211024d7b066f053af9a",&#13;
+        "name": "",&#13;
+        "source": ""&#13;
+    },&#13;
+    {&#13;
+        "sysId": "e3af965b9742211024d7b066f053af9c",&#13;
+        "name": "",&#13;
+        "source": ""&#13;
+    },&#13;
+    {&#13;
+        "sysId": "testing if this works",&#13;
+        "name": "",&#13;
+        "source": ""&#13;
+    },&#13;
+    {&#13;
+        "sysId": "6a42f4616fc331003b3c498f5d3ee46f",&#13;
+        "name": "",&#13;
+        "source": ""&#13;
+    }&#13;
+]</request_example>
+        <requires_acl_authorization>true</requires_acl_authorization>
+        <requires_authentication>true</requires_authentication>
+        <requires_snc_internal_role>true</requires_snc_internal_role>
+        <short_description>Creates a group mapping based on the provided list of groups</short_description>
+        <sys_class_name>sys_ws_operation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-06-02 11:57:14</sys_created_on>
+        <sys_id>9fbb75a99762421024d7b066f053af23</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>Group Mapping</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_ws_operation_9fbb75a99762421024d7b066f053af23</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-06-15 22:01:24</sys_updated_on>
+        <web_service_definition display_value="KLF Import XML">7323a9159725061024d7b066f053af7c</web_service_definition>
+        <web_service_version/>
+    </sys_ws_operation>
+</record_update>
