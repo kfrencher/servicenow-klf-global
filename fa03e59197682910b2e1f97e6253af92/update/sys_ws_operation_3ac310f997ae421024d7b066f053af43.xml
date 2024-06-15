@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ws_operation">
+    <sys_ws_operation action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <consumes>application/json</consumes>
+        <consumes_customized>true</consumes_customized>
+        <default_operation_uri/>
+        <enforce_acl>cf9d01d3e73003009d6247e603f6a990</enforce_acl>
+        <http_method>POST</http_method>
+        <name>Notifications</name>
+        <operation_script><![CDATA[(function process( /*RESTAPIRequest*/ request, /*RESTAPIResponse*/ response) {
+
+    var body = request.body;
+    var bodyJSON = body.dataString;
+
+    /** 
+     * Refer to {@link global.KLF_RecordSync_GroupUtils.updateRemoteNotifications}. That function generates
+     * the request object that is expected here.
+     * @type {KLF_RecordSync_UpdateRemoteNotificationsRequest} 
+     */
+    var updateNotificationsRequest = JSON.parse(bodyJSON);
+    var result =
+        global.KLF_RecordSync_GroupUtils.updateNotifications(updateNotificationsRequest.groupMapping, updateNotificationsRequest.notificationSysIds);
+
+    response.setStatus('200');
+    response.setBody(result);
+
+})(request, response);]]></operation_script>
+        <operation_uri>/api/53417/klf_import_xml/notifications</operation_uri>
+        <produces>application/json</produces>
+        <produces_customized>true</produces_customized>
+        <relative_path>/notifications</relative_path>
+        <request_example/>
+        <requires_acl_authorization>true</requires_acl_authorization>
+        <requires_authentication>true</requires_authentication>
+        <requires_snc_internal_role>true</requires_snc_internal_role>
+        <short_description/>
+        <sys_class_name>sys_ws_operation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-06-02 23:00:30</sys_created_on>
+        <sys_id>3ac310f997ae421024d7b066f053af43</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>Notifications</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_ws_operation_3ac310f997ae421024d7b066f053af43</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-06-03 12:14:18</sys_updated_on>
+        <web_service_definition display_value="KLF Import XML">7323a9159725061024d7b066f053af7c</web_service_definition>
+        <web_service_version/>
+    </sys_ws_operation>
+</record_update>
