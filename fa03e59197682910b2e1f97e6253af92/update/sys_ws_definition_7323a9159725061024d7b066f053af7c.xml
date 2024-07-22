@@ -4,27 +4,27 @@
         <base_uri>/api/53417/klf_import_xml</base_uri>
         <consumes>application/json,application/xml,text/xml</consumes>
         <consumes_customized>true</consumes_customized>
-        <default_version>No active default version</default_version>
-        <doc_link/>
+        <default_version>v1</default_version>
+        <doc_link>https://dev144209.service-now.com/sys_attachment.do?sys_id=289ee3e9972b4a5424d7b066f053af6e</doc_link>
         <enforce_acl>cf9d01d3e73003009d6247e603f6a990</enforce_acl>
-        <is_versioned>false</is_versioned>
+        <is_versioned>true</is_versioned>
         <name>KLF Import XML</name>
         <namespace>53417</namespace>
         <produces>application/json,application/xml,text/xml</produces>
         <produces_customized>false</produces_customized>
         <service_id>klf_import_xml</service_id>
-        <short_description/>
+        <short_description>Open API Spec</short_description>
         <sys_class_name>sys_ws_definition</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-04-12 22:27:57</sys_created_on>
         <sys_id>7323a9159725061024d7b066f053af7c</sys_id>
-        <sys_mod_count>2</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>KLF Import XML</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ws_definition_7323a9159725061024d7b066f053af7c</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-04-12 22:51:14</sys_updated_on>
+        <sys_updated_on>2024-07-22 13:22:46</sys_updated_on>
     </sys_ws_definition>
 </record_update>
