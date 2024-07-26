@@ -1,0 +1,294 @@
+openapi: 3.0.3
+info:
+  title: KLF Import XML
+  description: >
+    Service endpoints that need to be installed on the target instance to use global.KLF_RecordSync
+    and global.KLF_DataTransferUtils script includes to transfer application data between a source
+    and target instance
+  version: 1.0.0
+servers:
+  - url: https://dev144209.service-now.com/api/53417/v1/klf_import_xml
+paths:
+  /:
+    post:
+      description: Imports records using the same format as export XML
+      parameters: []
+      requestBody:
+        description: >
+          XML Data to be imported in the same format that is used to import data through the Import XML feature in ServiceNow.
+          Refer to global.KLF_RecordSync.unloadRecord to see how to programatically generate this XML
+        content:
+          application/xml:
+            schema:
+              type: object
+              format: xml
+              xml: { "name": "incident" }
+            examples:
+              incident: { $ref: "#/components/examples/GlideRecordXML" }
+      responses:
+        "200":
+          description: >
+            200 response doesn't necessarily mean all data was imported. It just means the XML was processed. To actually verify
+            the data was imported you must use the /validate_manifest service.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: "boolean" }
+                  message: { type: "string" }
+                example: { "success": true, "message": "Records processed" }
+  /group_mapping:
+    post:
+      description: >
+        Uses the KLF_RecordSync_RemoteGroup passed in from the remote system to create a KLF_RecordSync_GroupMapping object
+        that maps the remote group sys_id to the local group sys_id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: "#/components/schemas/KLF_RecordSync_RemoteGroup" }
+            example:
+              [
+                {
+                  "sysId": "019ad92ec7230010393d265c95c260dd",
+                  "name": "Analytics Settings Managers",
+                  "source": null,
+                },
+                {
+                  "sysId": "287ee6fea9fe198100ada7950d0b1b73",
+                  "name": "Database",
+                  "source": null,
+                },
+              ]
+      responses:
+        "200":
+          description: >
+            An object that specifies the mapping of a group from the source to target system
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/KLF_RecordSync_GroupMapping" }
+  /notifications:
+    post:
+      description: >
+        The group sys_ids in notifications are not updated when the notifications are transferred to the remote system. This endpoint
+        uses the group mapping to update the notifications with the correct group sys_ids
+      requestBody:
+        content:
+          application/json:
+            schema:
+              {
+                $ref: "#/components/schemas/KLF_RecordSync_UpdateRemoteNotificationsRequest",
+              }
+      responses:
+        "200":
+          description: >
+            The results of the updates to the list of notifications
+            Incomplete notifications is a mapping of the notification sys_id to the groups that were not found in the remote system
+          content:
+            application/json:
+              schema:
+                {
+                  $ref: "#/components/schemas/KLF_RecordSync_UpdateRemoteNotificationsResponse",
+                }
+  /validate_manifest:
+    post:
+      description: >
+        Validates that the records in the provided manifest exist in the
+        local instance. A manifest is provided in the request body that represents the records
+        that should exist, and a manifest is returned that represents any records that do not
+        exist in the provided manifest
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/KLF_RecordSync_Manifest" }
+      responses:
+        "200":
+          description: A manifest that represents the records that don't exist
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KLF_RecordSync_Manifest" }
+components:
+  schemas:
+    KLF_RecordSync_RemoteGroup:
+      description: Represents a sys_user_group that is being transferred from one instance to another
+      type: object
+      properties:
+        sysId: { type: "string" }
+        name: { type: "string" }
+        source: { type: "string" }
+      required: ["sysId"]
+    KLF_RecordSync_GroupMapping:
+      description: The response from a group_mapping request
+      type: object
+      properties:
+        success:
+          {
+            type: "boolean",
+            description: "true if there was a successful response from the remote system. false if there was an error response",
+          }
+        hasMissingGroups:
+          { type: "boolean", description: "true if there are missing groups" }
+        missingGroups:
+          {
+            type: "array",
+            items: { type: "string" },
+            description: "The sys_ids of the groups that do not exist in the remote system",
+          }
+        mapping:
+          type: object
+          description: The mapping of the sys_ids of the groups that exist in the local system to the remote system
+          additionalProperties: { type: "string" }
+        error:
+          {
+            type: "string",
+            description: "There error message if success is false",
+          }
+      required: ["success", "hasMissingGroups", "missingGroups", "mapping"]
+      example:
+        {
+          success: true,
+          hasMissingGroups: false,
+          missingGroups: [],
+          mapping:
+            {
+              "ef43c6d40a0a0b5700c77f9bf387afe3": "019ad92ec7230010393d265c95c260dd",
+              "15578da6978fb91024d7b066f053aff6": "47064b68a9fe19810186793eefffc9b7",
+              "20bcec5997b2f51024d7b066f053af38": "9e7f9864532023004247ddeeff7b121f",
+            },
+        }
+    KLF_RecordSync_UpdateRemoteNotificationsRequest:
+      type: object
+      properties:
+        groupMapping:
+          type: object
+          additionalProperties:
+            description: >
+              Object where the keys are sys_user_group.sys_id from the source system and the
+              values are the sys_user_group.sys_id of the target system
+            type: string
+        notificationSysIds:
+          description: List of sysevent_email_action.sys_id[] to be updated in target system
+          type: array
+          items: { type: "string" }
+      example:
+        {
+          "groupMapping":
+            {
+              "ef43c6d40a0a0b5700c77f9bf387afe3": "019ad92ec7230010393d265c95c260dd",
+              "15578da6978fb91024d7b066f053aff6": "47064b68a9fe19810186793eefffc9b7",
+              "20bcec5997b2f51024d7b066f053af38": "9e7f9864532023004247ddeeff7b121f",
+            },
+          "notificationSysIds":
+            [
+              "e329de99731423002728660c4cf6a73c",
+              "f12ca184735123002728660c4cf6a7ef",
+              "9c573169c611228700193229fff72400",
+              "46f6ede0a9fe198100e10154c34a0c2a",
+            ],
+        }
+    KLF_RecordSync_UpdateRemoteNotificationsResponse:
+      type: object
+      properties:
+        success: { type: "boolean" }
+        error: { type: "string" }
+        updatedNotifications: { type: array, items: { type: "string" } }
+        notUpdatedNotifications: { type: array, items: { type: "string" } }
+        incompleteNotifications:
+          type: object
+          additionalProperties: { type: array, items: { type: "string" } }
+      example:
+        {
+          "success": true,
+          "updatedNotifications":
+            [
+              "b629199f97e68a1024d7b066f053af07",
+              "5dc5889a976a061024d7b066f053afa8",
+              "86cfbd5197b8461024d7b066f053af35",
+              "679434f053231300e321ddeeff7b12d8",
+              "1c590685c0a8018b2a473a7159ff5d9a",
+            ],
+          "notUpdatedNotifications": ["0a52d3dcd7011200f2d224837e6103f2"],
+          "incompleteNotifications":
+            {
+              "679434f053231300e321ddeeff7b12d8":
+                [
+                  "287ebd7da9fe198100f92cc8d1d2154e",
+                  "72910dd8779050108a370870a81061a9",
+                ],
+            },
+        }
+    KLF_RecordSync_Manifest:
+      description: >
+        Manifest is an object where the keys are ServiceNow table names and the values are
+        the list of sys_id in the table. The manifest is used in other places to validate that
+        the records in the manifest exist, or to specify a group of records across different tables.
+      type: object
+      additionalProperties: { type: "array", items: { type: "string" } }
+      example:
+        {
+          "incident":
+            [
+              "e329de99731423002728660c4cf6a73c",
+              "f12ca184735123002728660c4cf6a7ef",
+            ],
+          "sys_user_group":
+            [
+              "b629199f97e68a1024d7b066f053af07",
+              "5dc5889a976a061024d7b066f053afa8",
+              "86cfbd5197b8461024d7b066f053af35",
+            ],
+        }
+  examples:
+    GlideRecordXML:
+      description: GlideRecord exported as XML
+      value: |
+        <xml>
+          <incident>
+            <active>true</active>
+            <activity_due>2024-07-22 12:53:44</activity_due>
+            <additional_assignee_list/>
+            <approval>not requested</approval>
+            <approval_history/>
+            <approval_set/>
+            <assigned_to display_value="beth.anglin">46d44a23a9fe19810012d100cca80666</assigned_to>
+            <assignment_group display_value="Hardware" name="Hardware">8a5055c9c61122780043563ef53438e3</assignment_group>
+            <business_duration/>
+            <business_impact/>
+            <business_service/>
+            <business_stc/>
+            <calendar_duration/>
+            <calendar_stc/>
+            <caller_id display_value="jerrod.bennett">5b7c200d0a640069006b3845b5d0fa7c</caller_id>
+            <category>inquiry</category>
+            <cmdb_ci display_value="EXCH-SD-05">281190e3c0a8000b003f593aa3f20ca6</cmdb_ci>
+            <company display_value="ACME North America">31bea3d53790200044e0bfc8bcbe5dec</company>
+            <description>Can't connect to Exchange. Login credentials and network connection are working though.</description>
+            <escalation>0</escalation>
+            <incident_state>2</incident_state>
+            <knowledge>false</knowledge>
+            <location display_value="San Diego">108752c8c611227501d4ab0e392ba97f</location>
+            <made_sla>true</made_sla>
+            <notify>1</notify>
+            <number>INC0000050</number>
+            <opened_at>2023-02-20 21:58:24</opened_at>
+            <opened_by display_value="">glide.maint</opened_by>
+            <priority>1</priority>
+            <reassignment_count>0</reassignment_count>
+            <short_description>Can't access Exchange server - is it down?</short_description>
+            <sla_due>2024-10-23 05:58:24</sla_due>
+            <state>2</state>
+            <sys_class_name>incident</sys_class_name>
+            <sys_created_by>glide.maint</sys_created_by>
+            <sys_created_on>2023-02-20 18:05:40</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>ef43c6d40a0a0b5700c77f9bf387afe3</sys_id>
+            <sys_mod_count>2905</sys_mod_count>
+            <sys_updated_by>system</sys_updated_by>
+            <sys_updated_on>2024-07-22 10:53:44</sys_updated_on>
+            <task_effective_number>INC0000050</task_effective_number>
+          </incident>
+        </xml>
