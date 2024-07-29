@@ -149,7 +149,7 @@ global.KLF_DataTransferUtils.prototype = {
          * expanding the encodedQuery to included any tables that extend the base table
          * @param {string} baseTableName A table that is potentially extended
          * @param {*} [encodedQuery]
-         * @returns {long} The size of all the attachments on the table
+         * @returns {number} The size of all the attachments on the table
          */
         function getAttachmentSize(baseTableName, encodedQuery) {
             var _encodedQuery = encodedQuery || '';
@@ -203,8 +203,49 @@ global.KLF_DataTransferUtils.prototype = {
             }, 0);
         }
 
+        /**
+         * This is the type definition for the table object that is contained in the application object
+         * @typedef {{
+         *  recordCount: number;
+         *  relatedTables: {
+         *      sys_attachment: {
+         *          recordCount: number;
+         *          relatedRecordCount: number;
+         *          totalRecordCount: number;
+         *      };
+         *      sys_attachment_doc: {
+         *          recordCount: number;
+         *          relatedRecordCount: number;
+         *          totalRecordCount: number;
+         *      };
+         *      sys_journal_field: {
+         *          recordCount: number;
+         *          relatedRecordCount: number;
+         *          totalRecordCount: number;
+         *      };
+         *      sys_audit: {
+         *          recordCount: number;
+         *          relatedRecordCount: number;
+         *          totalRecordCount: number;
+         *      };
+         *      fx_currency_instance: {
+         *          recordCount: number;
+         *          relatedRecordCount: number;
+         *          totalRecordCount: number;
+         *      };
+         *      fx_price: {
+         *          recordCount: number;
+         *          relatedRecordCount: number;
+         *          totalRecordCount: number;
+         *      };
+         *  };
+         *  relatedRecordCount: number;
+         *  totalRecordCount: number;
+         * }} _Table
+         */
+
         var application = {
-            tables: {},
+            tables: /** @type {{[tableName:string]:_Table}} */ ({}),
             totalRecordCount: 0,
             totalAuditCount: 0,
             totalJournalCount: 0,
@@ -216,19 +257,26 @@ global.KLF_DataTransferUtils.prototype = {
         };
 
         var tables = this.getBaseTablesInScope(scopeName);
-        tables.reduce(function(application, tableName) {
+        tables.reduce(function(application, /** @type {string} */ tableName) {
+            /**
+             * @param {string} relatedTableName 
+             * @param {string} [encodedQuery]
+             */
             function getRelatedTable(relatedTableName, encodedQuery) {
                 var table = {
                     recordCount: getBaseRecordCount(relatedTableName, tableName, encodedQuery),
-                    relatedRecordCount: 0
+                    relatedRecordCount: 0,
+                    totalRecordCount: 0
                 };
                 if (relatedTableName == 'sys_attachment') {
+                    // @ts-ignore
                     table.totalAttachmentSize = getAttachmentSize(tableName, encodedQuery);
                 }
                 table.totalRecordCount = table.recordCount + table.relatedRecordCount;
                 return table;
             }
 
+            /** @type {_Table} */
             var table = {};
             table.recordCount = getRecordCount(tableName); // This gets record count of the table
 
@@ -247,6 +295,7 @@ global.KLF_DataTransferUtils.prototype = {
 
             // Sum the record count of the related tables
             table.relatedRecordCount = Object.keys(relatedTables).reduce(function(relatedRecordCount, relatedTable) {
+                // @ts-ignore
                 return relatedRecordCount + relatedTables[relatedTable].totalRecordCount;
             }, 0);
 
@@ -256,6 +305,7 @@ global.KLF_DataTransferUtils.prototype = {
             application.totalAuditCount += table.relatedTables.sys_audit.totalRecordCount;
             application.totalJournalCount += table.relatedTables.sys_journal_field.totalRecordCount;
             application.totalAttachmentCount += table.relatedTables.sys_attachment.totalRecordCount;
+            // @ts-ignore
             application.totalAttachmentSize += table.relatedTables.sys_attachment.totalAttachmentSize;
             application.totalAttachmentDocCount += table.relatedTables.sys_attachment_doc.totalRecordCount;
             application.totalCurrencyCount += table.relatedTables.fx_currency_instance.totalRecordCount;
@@ -265,6 +315,7 @@ global.KLF_DataTransferUtils.prototype = {
         }, application);
 
         // convert attachment size to a human readable number
+        // @ts-ignore
         application.totalAttachmentSize = this.getReadableFileSizeString(application.totalAttachmentSize);
 
         return application;
@@ -347,6 +398,7 @@ global.KLF_DataTransferUtils.prototype = {
         // This plucks the last table in the list until it finds one that matches the scopeNamespace
         var hierarchy = this.getTableAncestors(table);
         var baseInScope = '';
+        // @ts-ignore
         while (baseInScope = hierarchy.pop()) {
             if (baseInScope.startsWith(scopeNamespace)) {
                 break;
@@ -557,6 +609,7 @@ global.KLF_DataTransferUtils.prototype = {
      * Useful for when you are testing loading data from a different instance and you want
      * to delete the data before loading new data
      * @param {string} sysId
+     * @param {string} tableName
      */
     deleteRecordAndRelatedRecords: function(sysId, tableName) {
         if (!sysId || !tableName) {
@@ -615,13 +668,13 @@ global.KLF_DataTransferUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-08 21:43:04</sys_created_on>
         <sys_id>fe19c50a97f44a1024d7b066f053afdb</sys_id>
-        <sys_mod_count>77</sys_mod_count>
+        <sys_mod_count>83</sys_mod_count>
         <sys_name>KLF_DataTransferUtils</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_fe19c50a97f44a1024d7b066f053afdb</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-04-14 13:33:07</sys_updated_on>
+        <sys_updated_on>2024-07-29 12:14:17</sys_updated_on>
     </sys_script_include>
 </record_update>

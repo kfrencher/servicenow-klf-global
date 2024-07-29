@@ -8,6 +8,17 @@
         <description/>
         <name>KLF_RecordSync_GroupUtils</name>
         <script><![CDATA[/**
+ * When transferring data between ServiceNow instances groups referenced in the source data set may not exist 
+ * in the target instance. This utility contains functions to help manage the group data when transferring
+ * data between instances.
+ * 
+ * With this utility you can:
+ * - Create a mapping of the groups in the local system to the groups in the remote system {@link global.KLF_RecordSync_GroupUtils.createGroupMapping}
+ * - Sync the groups in the local system with the remote system {@link global.KLF_RecordSync_GroupUtils.syncGroups}
+ * - Update the group sys_ids in notifications that are transferred to the remote system {@link global.KLF_RecordSync_GroupUtils.updateRemoteNotifications}
+ */
+
+/**
  * Data type returned from call to {@link GroupUtils.getGroupFields}
  * @typedef KLF_RecordSync_GroupField
  * @property {string} table The name of the table that contains the field
@@ -80,7 +91,7 @@ global.KLF_RecordSync_GroupUtils.createMappingFromRemote = function(remoteGroups
                 index[key] = remoteGroup.sysId;
             }
             return index;
-        }, {});
+        }, /** @type {{[indexName:string]:string}} */ ({}));
     }
 
     /** 
@@ -159,7 +170,7 @@ global.KLF_RecordSync_GroupUtils.updateNotifications = function(groupMapping, no
     notification.query();
 
     var hasIncompleteNotifications = false;
-    var incompleteNotifications = {};
+    var incompleteNotifications = /** @type {{[notificationSysId:string]:string[]}} */ ({});
     var updatedNotifications = [];
     while (notification.next()) {
         var recipientGroups = notification.getValue('recipient_groups').split(',');
@@ -198,6 +209,7 @@ global.KLF_RecordSync_GroupUtils.updateNotifications = function(groupMapping, no
     };
 
     if (hasIncompleteNotifications) {
+        // @ts-ignore
         response.incompleteNotifications = incompleteNotifications;
     }
 
@@ -206,9 +218,15 @@ global.KLF_RecordSync_GroupUtils.updateNotifications = function(groupMapping, no
 }
 
 global.KLF_RecordSync_GroupUtils.prototype = {
+    /**
+     * @param {string} message 
+     */
     logInfo: function(message) {
         gs.log(message, 'KLF_RecordSync_GroupUtils');
     },
+    /**
+     * @param {string} message 
+     */
     logError: function(message) {
         gs.logError(message, 'KLF_RecordSync_GroupUtils');
     },
@@ -238,6 +256,7 @@ global.KLF_RecordSync_GroupUtils.prototype = {
      */
     getGroupFieldsInTable: function(tableName) {
         var arrayUtil = new global.ArrayUtil()
+        // @ts-ignore
         var tableUtils = new global.TableUtils(tableName);
         var tables = arrayUtil.convertArray(tableUtils.getHierarchy());
         return tables.reduce(function(allFields, tableName) {
@@ -518,7 +537,7 @@ global.KLF_RecordSync_GroupUtils.prototype = {
         notification.addQuery('sys_id', 'IN', notificationSysIds);
         notification.addNotNullQuery('recipient_groups');
         notification.query();
-        var groups = [];
+        var groups = /** @type string[] */ ([]);
         while (notification.next()) {
             var recipientGroups = notification.getValue('recipient_groups').split(',');
             groups = groups.concat(recipientGroups);
@@ -562,13 +581,13 @@ global.KLF_RecordSync_GroupUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-06-01 16:45:24</sys_created_on>
         <sys_id>2654359d97a6021024d7b066f053af84</sys_id>
-        <sys_mod_count>85</sys_mod_count>
+        <sys_mod_count>91</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtils</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_2654359d97a6021024d7b066f053af84</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-06-07 18:52:19</sys_updated_on>
+        <sys_updated_on>2024-07-29 12:42:00</sys_updated_on>
     </sys_script_include>
 </record_update>
