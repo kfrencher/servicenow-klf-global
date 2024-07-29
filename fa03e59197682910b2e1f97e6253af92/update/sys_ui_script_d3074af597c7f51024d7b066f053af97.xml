@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_script">
     <sys_ui_script action="INSERT_OR_UPDATE">
         <active>false</active>
-        <description>test test again aga afa</description>
+        <description/>
         <global>true</global>
         <ignore_in_now_experience>false</ignore_in_now_experience>
         <name>KLF_RecordWatcher</name>
@@ -117,14 +117,14 @@ addRenderEvent(() => {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-12-12 07:46:40</sys_created_on>
         <sys_id>d3074af597c7f51024d7b066f053af97</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>KLF_RecordWatcher</sys_name>
         <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ui_script_d3074af597c7f51024d7b066f053af97</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-12-27 13:14:30</sys_updated_on>
+        <sys_updated_on>2024-07-26 15:07:15</sys_updated_on>
         <ui_type>0</ui_type>
         <use_scoped_format>false</use_scoped_format>
     </sys_ui_script>
