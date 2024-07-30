@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordSync_UserUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_RecordSync_UserUtils</name>
+        <script><![CDATA[/**
+ * When transferring data between ServiceNow instances users referenced in the source data set may not exist 
+ * in the target instance. This utility contains functions to help manage the user data when transferring
+ * data between instances.
+ * 
+ * With this utility you can:
+ * - Create a mapping of the users in the local system to the users in the remote system {@link global.KLF_RecordSync_UserUtils.createUserMapping}
+ */
+
+/**
+ * Data type returned from call to {@link global.KLF_RecordSync_UserUtils.getUserFields}
+ * @typedef KLF_RecordSync_UserField
+ * @property {string} table The name of the table that contains the field
+ * @property {string} type The type of the field from sys_dictionary
+ * @property {string} columnName The column name of the field
+ */
+
+/**
+ * @typedef KLF_RecordSync_UserMapping
+ * @property {boolean} success true if there was a successful response from the remote system. false if there was an error response
+ * @property {boolean} hasMissingUsers true if there are missing users
+ * @property {string[]} missingUsers The sys_ids of the users that do not exist in the remote system
+ * @property {{[localUserSysId:string]:string}} mapping The mapping of the sys_ids of the users that exist in the local system to the remote system
+ * @property {string} [error] There error message if success is false
+ */
+
+/**
+ * @typedef {{sysId:string,username:string?,source:string?}} KLF_RecordSync_RemoteUser
+ */
+
+//@ts-ignore
+var global = global || {};
+
+/**
+ * 
+ * @param {KLF_RecordSyncConnectionConfig} connectionConfig 
+ */
+global.KLF_RecordSync_UserUtils = function(connectionConfig) {
+    this.connectionConfig = connectionConfig;
+};
+
+/**
+ * Uses the {@link KLF_RecordSync_RemoteUser[]} passed in from the remote system to create a {@link KLF_RecordSync_UserMapping} object
+ * that maps the remote user sys_id to the local user sys_id
+ * @param {KLF_RecordSync_RemoteUser[]} remoteUsers 
+ * @returns {KLF_RecordSync_UserMapping}
+ */
+global.KLF_RecordSync_UserUtils.createMappingFromRemote = function(remoteUsers) {
+    /**
+     * Creates a mapping of the passed in fieldName to the sys_id of the remote user
+     * This is to make it easy to lookup the sys_id of the remote user by the provided
+     * field name without searching through the remoteUsers array each time
+     * @param {keyof KLF_RecordSync_RemoteUser} fieldName 
+     * @param {KLF_RecordSync_RemoteUser[]} remoteUsers 
+     * @returns {{[name:string]:string}}
+     */
+    function createIndex(remoteUsers, fieldName) {
+        return remoteUsers.reduce(function(index, remoteUser) {
+            var key = remoteUser[fieldName];
+            if (key) {
+                index[key] = remoteUser.sysId;
+            }
+            return index;
+        }, /** @type {{[indexName:string]:string}} */ ({}));
+    }
+
+    /** 
+     * I am transforming the remoteUsers into an object that contains of the
+     * names, sys_ids, and sources of the remote users so I can easily use those
+     * values in a GlideRecord query
+     * @type {{usernames:string[],sysIds:string[],sources:string[]}} 
+     **/
+    var usernamesSysIdsSources = remoteUsers.reduce(function(namesSysIdsSources, remoteUser) {
+        // There should always be a sys_id. The name and source are optional
+        namesSysIdsSources.sysIds.push(remoteUser.sysId);
+        if (remoteUser.username) {
+            namesSysIdsSources.usernames.push(remoteUser.username);
+        }
+        if (remoteUser.source) {
+            namesSysIdsSources.sources.push(remoteUser.source);
+        }
+        return namesSysIdsSources;
+    }, {
+        usernames: /** @type {string[]} **/ ([]),
+        sysIds: /** @type {string[]} **/ ([]),
+        sources: /** @type {string[]} **/ ([]),
+    });
+
+    var usernameToSysId = createIndex(remoteUsers, 'username');
+    var sourceToSysId = createIndex(remoteUsers, 'source');
+    var sysIdToSysId = createIndex(remoteUsers, 'sysId');
+
+    var userGr = new GlideRecord('sys_user');
+    userGr.addQuery('sys_id', 'IN', usernamesSysIdsSources.sysIds)
+        .addOrCondition('source', 'IN', usernamesSysIdsSources.sources)
+        .addOrCondition('user_name', 'IN', usernamesSysIdsSources.usernames);
+    userGr.query();
+    /** @type {{[localUserSysId:string]:string}} */
+    var localToRemoteMapping = {};
+    while (userGr.next()) {
+        // This is in order of priority. 
+        // If the sys_id is found, then that is used. 
+        // If the name is found, then that is used. 
+        // If the source is found, then that is used
+        if (sysIdToSysId[userGr.getUniqueValue()]) {
+            localToRemoteMapping[sysIdToSysId[userGr.getUniqueValue()]] = userGr.getUniqueValue();
+        } else if (usernameToSysId[userGr.getValue('user_name')]) {
+            localToRemoteMapping[usernameToSysId[userGr.getValue('user_name')]] = userGr.getUniqueValue();
+        } else if (sourceToSysId[userGr.getValue('source')]) {
+            localToRemoteMapping[sourceToSysId[userGr.getValue('source')]] = userGr.getUniqueValue();
+        }
+    }
+
+    var mappedUsers = Object.keys(localToRemoteMapping);
+    var allUsers = Object.keys(sysIdToSysId);
+    var missingUsers = new global.ArrayUtil().diff(allUsers, mappedUsers);
+
+    return {
+        success: true,
+        hasMissingUsers: missingUsers.length > 0,
+        missingUsers: missingUsers,
+        mapping: localToRemoteMapping
+    };
+}
+
+global.KLF_RecordSync_UserUtils.prototype = {
+    /**
+     * @param {string} message 
+     */
+    logInfo: function(message) {
+        gs.log(message, 'KLF_RecordSync_UserUtils');
+    },
+    /**
+     * @param {string} message 
+     */
+    logError: function(message) {
+        gs.logError(message, 'KLF_RecordSync_UserUtils');
+    },
+
+    /**
+     * Checks sys_user display field to make sure it is set to sys_user.user_name
+     * Returns true if the display field is set to sys_user.user_name false otherwise
+     * @returns {boolean}
+     */
+    checkSysUserDisplayField: function() {
+        var field = new GlideRecord('sys_dictionary');
+        field.addQuery('name', 'sys_user');
+        field.addQuery('element', 'user_name');
+        field.addQuery('display', true);
+        field.query();
+
+        return field.getRowCount() > 0;
+    },
+
+    /**
+     * Clears the sys_user display field. This is typically used when the sys_user table is configured to pick a default display field.
+     * Probably sys_user.name
+     */
+    clearSysUserDisplayField: function() {
+        var displayField = new GlideRecord('sys_dictionary');
+        displayField.addQuery('name', 'sys_user');
+        displayField.addQuery('display', true);
+        displayField.setWorkflow(false);
+        displayField.autoSysFields(false);
+        displayField.setValue('display', false);
+        displayField.updateMultiple();
+    },
+
+    /**
+     * When transferring sys_user data between instances the sys_user display value may be used to match users
+     * 
+     * This changes sys_user display value to sys_user.user_name instead of sys_user.name. This
+     * is because the sys_user.user_name field is unique and the sys_user.name field is not.
+     * 
+     * When transferring data between instances, the sys_user.name field is not guaranteed to be unique
+     * which could cause subtle bugs when trying to match users by name
+     * 
+     * @param {string} fieldName The field name to update the sys_user display field to
+     * @returns {string} The previous display field name
+     */
+    updateSysUserDisplayField: function(fieldName) {
+        // Make sure we can get the field using the field name
+        if (!fieldName) {
+            throw 'KLF_RecordSync_UserUtils.updateSysUserDisplayField: Field name is required';
+        }
+
+        var field = new GlideRecord('sys_dictionary');
+        field.addQuery('name', 'sys_user');
+        field.addQuery('element', fieldName);
+        field.query();
+        if (!field.next()) {
+            throw 'KLF_RecordSync_UserUtils.updateSysUserDisplayField: Field not found';
+        }
+
+        // Set the display field to false
+        var currentDisplayFieldName = '';
+        // Check to see if there is a current display field
+        var currentDisplayField = new GlideRecord('sys_dictionary');
+        currentDisplayField.addQuery('name', 'sys_user');
+        currentDisplayField.addQuery('display', true);
+        currentDisplayField.query();
+        if (currentDisplayField.next()) {
+            // We have a current display field
+            // Set this to false so we can update the display field
+            currentDisplayFieldName = currentDisplayField.getValue('element');
+            if (currentDisplayFieldName == fieldName) {
+                return currentDisplayFieldName;
+            }
+            currentDisplayField.setWorkflow(false);
+            currentDisplayField.autoSysFields(false);
+            currentDisplayField.display = false;
+            currentDisplayField.update();
+        }
+
+        // Update the field to be the display field
+        field.setWorkflow(false);
+        field.autoSysFields(false);
+        field.display = true;
+        field.update();
+
+        return currentDisplayFieldName;
+    },
+
+    /**
+     * Finds all the fields that reference sys_user in a scoped app. This attempts to find
+     * all the user fields in the system. The user fields will include both reference fields and
+     * list fields that reference sys_user
+     * 
+     * @param {string} scopeSysId sys_scope.sys_id
+     * @param {string} [filter] GlideRecord encoded query
+     * @returns {KLF_RecordSync_UserField[]}
+     */
+    getUserFields: function(scopeSysId, filter) {
+        var fieldGr = new GlideRecord('sys_dictionary');
+        fieldGr.addQuery('sys_scope', scopeSysId);
+        fieldGr.addQuery('reference', 'sys_user');
+        fieldGr.query();
+        var fields = [];
+        while (fieldGr.next()) {
+            fields.push({
+                table: fieldGr.name.toString(),
+                type: fieldGr.internal_type.toString(),
+                columnName: fieldGr.element.toString(),
+                filter: filter
+            });
+        }
+        return fields;
+    },
+
+    /**
+     * Finds all the fields that reference sys_user in a scoped app. This attempts to find
+     * all the user fields in the system. The user fields will include both reference fields and
+     * list fields that reference sys_user
+     * @param {string} scopeSysId sys_scope.sys_id
+     * @returns {KLF_RecordSync_UserField[]}
+     */
+    getUserFieldsInScope: function(scopeSysId) {
+        var me = this;
+        var dataTransferUtils = new global.KLF_DataTransferUtils();
+        var tables = dataTransferUtils.getTablesInScope(scopeSysId);
+        return tables.reduce(function(allFields, tableName) {
+            return allFields.concat(me.getUserFieldsInTable(tableName));
+        }, []);
+    },
+
+    /**
+     * Finds all the fields that reference sys_user in a table. This attempts to find
+     * all the user fields in table. The user fields will include both reference fields and
+     * list fields that reference sys_user
+     * @param {string} tableName 
+     * @returns {KLF_RecordSync_UserField[]}
+     */
+    getUserFieldsInTable: function(tableName) {
+        var arrayUtil = new global.ArrayUtil()
+        // @ts-ignore
+        var tableUtils = new global.TableUtils(tableName);
+        var tables = arrayUtil.convertArray(tableUtils.getHierarchy());
+        return tables.reduce(function(allFields, tableName) {
+            var fieldGr = new GlideRecord('sys_dictionary');
+            fieldGr.addQuery('name', tableName);
+            fieldGr.addQuery('reference', 'sys_user');
+            fieldGr.query();
+            var fields = [];
+            while (fieldGr.next()) {
+                fields.push({
+                    table: fieldGr.name.toString(),
+                    type: fieldGr.internal_type.toString(),
+                    columnName: fieldGr.element.toString(),
+                });
+            }
+            return allFields.concat(fields);
+        }, []);
+    },
+
+    /**
+     * Finds all the unique users that are referenced in a table by using the user fields
+     * that are returned from {@link UserUtils.getUserFields}
+     * @param {string} tableName
+     * @param {string} [filter] GlideRecord encoded query
+     * @returns {string[]} The unique user sys_ids
+     */
+    getUniqueUsersInTable: function(tableName, filter) {
+        var fields = this.getUserFieldsInTable(tableName);
+        var gr = new GlideRecord(tableName);
+        if (filter) {
+            gr.addEncodedQuery(filter);
+        }
+        gr.query();
+        /** @type {{[fieldName:string]: boolean}} */
+        var users = {};
+        while (gr.next()) {
+            fields.forEach(function(field) {
+                var columnName = field.columnName;
+                if (gr[columnName].nil()) {
+                    return;
+                }
+
+                if (field.type === 'reference') {
+                    users[gr.getValue(columnName)] = true;
+                } else if (field.type === 'glide_list') {
+                    var userList = gr.getValue(columnName).split(',');
+                    userList.forEach(function(user) {
+                        users[user] = true;
+                    });
+                } else {
+                    throw 'Unsupported field type: ' + field.type;
+                }
+            });
+        }
+        return Object.keys(users);
+    },
+
+    /**
+     * Finds all the unique users that are referenced in a scope by using the user fields
+     * that are returned from {@link UserUtils.getUserFields}
+     * @param {string} scope
+     * @returns {string[]} The unique user sys_ids
+     */
+    getUniqueUsersInScope: function(scope) {
+        var me = this;
+        var dataTransferUtils = new global.KLF_DataTransferUtils();
+        var tables = dataTransferUtils.getTablesInScope(scope);
+        return new global.ArrayUtil().unique(tables.reduce(function(allUsers, tableName) {
+            return allUsers.concat(me.getUniqueUsersInTable(tableName));
+        }, []));
+    },
+
+    /**
+     * Returns a sn_ws.RESTMessageV2 object that is configured to make a request to the target instance
+     * @returns {sn_ws.RESTMessageV2}
+     */
+    createRestMessage: function() {
+        var request = new sn_ws.RESTMessageV2();
+        request.setRequestHeader("Accept", "application/json");
+        var authHeader = 'Basic ' + GlideStringUtil.base64Encode(this.connectionConfig.username + ':' + this.connectionConfig.password);
+        request.setRequestHeader('Authorization', authHeader);
+        // Do not use setBasicAuth. This does not work with mutual auth for some reason
+        // request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
+        request.setEndpoint(this.connectionConfig.instanceUrl);
+        return request;
+    },
+
+    cachePropertyName: 'KLF_RecordSync_UserUtils.mapping',
+
+    /**
+     * Returns the user mapping that was created by calling {@link global.KLF_RecordSync_UserUtils.createUserMapping}. When calling
+     * {@link global.KLF_RecordSync_UserUtils.createUserMapping}, the cache will be updated with the user mapping
+     * @param {string} mappingName The mapping name used to store the mapping when calling {@link global.KLF_RecordSync_UserUtils.createUserMapping}
+     */
+    getUserMapping: function(mappingName) {
+        var cacheJson = gs.getProperty(this.cachePropertyName);
+        var cache = JSON.parse(cacheJson);
+        var mapping = cache[this.getCacheKey(mappingName)];
+        if (!mapping) {
+            throw 'Call createUserMapping first to create the user mapping';
+        }
+        return mapping;
+    },
+
+    /**
+     * Returns a mappingName that is used to store / retrieve a user mapping from the cache
+     * See {@link global.KLF_RecordSync_UserUtils.getUserMapping} and {@link global.KLF_RecordSync_UserUtils.createUserMapping}
+     * @param {string} mappingName 
+     * @returns {string}
+     */
+    getCacheKey: function(mappingName) {
+        return this.connectionConfig.instanceUrl + ':' + mappingName;
+    },
+
+    /**
+     * Uses the sys_ids of the users in the local system to find the sys_ids of the users that exist in the remote system. This returns
+     * a mapping of the local user sys_id to the remote user sys_id. If a user does not exist in the remote system, the remote user sys_id will be null
+     * 
+     * By default the results are cached. If you want to bypass the cache, set useCache to false. When using the cache a mappingName is required. This is used
+     * when you retrieve the user mapping using {@link global.KLF_RecordSync_UserUtils.getUserMapping}
+     * @param {string[]} userSysIds
+     * @param {boolean} [useCache=true] If true, the cache will be used to store the user mappings. true by default
+     * @param {string} [mappingName] A mapping name to store the user mapping under. This is not needed if useCache is false. Typically this would be the application scope, for example: x_example_app
+     * @returns {KLF_RecordSync_UserMapping} The sys_ids of the users that do not exist in the remote system
+     */
+    createUserMapping: function(userSysIds, mappingName, useCache) {
+        var _useCache = useCache === undefined ? true : useCache;
+        var userRecords = new GlideRecord('sys_user_user');
+        userRecords.addQuery('sys_id', 'IN', userSysIds);
+        userRecords.query();
+
+        /** @type {KLF_RecordSync_RemoteUser[]} */
+        var users = [];
+        var foundUsers = [];
+        while (userRecords.next()) {
+            foundUsers.push(userRecords.getUniqueValue());
+            users.push({
+                sysId: userRecords.getValue('sys_id'),
+                username: userRecords.getValue('user_name'),
+                source: userRecords.getValue('source')
+            });
+        }
+
+        // Add the missing users. These users don't really exist in the local system for some reason
+        // I will still attempt to find them in the remote system
+        var missingUserSysIds = new global.ArrayUtil().diff(userSysIds, foundUsers);
+        missingUserSysIds.forEach(function(sysId) {
+            users.push({
+                sysId: sysId,
+                username: '',
+                source: ''
+            });
+        });
+
+        // Make a  request to sys_user_user
+        var request = this.createRestMessage();
+        request.setRequestHeader('Content-Type', 'application/json')
+        request.setHttpMethod('POST');
+        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_UserUtils.endpoint.mapping.path');
+        request.setEndpoint(endpoint);
+        this.logInfo('Creating user mapping using RemoteUsers:\n\n' + JSON.stringify(users, null, 4));
+        request.setRequestBody(JSON.stringify(users));
+
+        var response = request.execute();
+        if (response.getStatusCode() != 200) {
+            this.logError('Failed to user mapping using users: ' + userSysIds.join(', '));
+            this.logError('Received status code: ' + response.getStatusCode());
+            this.logError('Received body: ' + response.getBody());
+            if (_useCache) {
+                gs.setProperty(this.cachePropertyName, '');
+            }
+            return {
+                success: false,
+                error: response.getBody(),
+                hasMissingUsers: true,
+                missingUsers: [],
+                mapping: {}
+            };
+        }
+
+        var payload = response.getBody();
+        this.logInfo('Received user mapping response:\n\n' + payload);
+        if (payload) {
+            var parsedPayload = JSON.parse(payload);
+            /** @type {KLF_RecordSync_UserMapping} */
+            var userMapping = parsedPayload.result;
+            if (_useCache) {
+                if (!mappingName) {
+                    throw 'KLF_RecordSync_UserUtils: A mapping name is required when using the cache';
+                }
+                var cacheJson = gs.getProperty(this.cachePropertyName, '{}');
+                var cache = JSON.parse(cacheJson);
+                cache[this.getCacheKey(mappingName)] = userMapping;
+                gs.setProperty(this.cachePropertyName, JSON.stringify(cache, null, 4));
+            }
+            return userMapping;
+        } else {
+            if (_useCache) {
+                gs.setProperty(this.cachePropertyName, '');
+            }
+            return {
+                success: false,
+                error: 'No response body was received from the remote system',
+                hasMissingUsers: true,
+                missingUsers: [],
+                mapping: {}
+            };
+        }
+    },
+
+    /**
+     * This probably doesn't need to be used. Each ServiceNow instance should have a full list of users so
+     * the users should be able to be found in the remote system.
+     * 
+     * Syncs the specified users by their sys_user.sys_id in the local system with the remote system.
+     * 
+     * This will throw an exception if there are users that don't exist in the user list unless
+     * the quiet parameter is set to true
+     * 
+     * This will return null if the method finds that there are no users to sync
+     * @param {string[]} userSysIds sys_user_user.sys_id[]
+     * @param {boolean} [quiet=false] If true then sync will proceed even if there are users that don't exist in the user list
+     * @returns {KLF_SendToRemoteInstanceResponse?}
+     */
+    syncUsers: function(userSysIds, quiet) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+        var recordSync = new global.KLF_RecordSync(this.connectionConfig);
+        var document = recordSync.createUnloadDocument();
+        var user = new GlideRecord('sys_user');
+        user.addQuery('sys_id', 'IN', userSysIds);
+        user.query();
+        var foundUserSysIds = [];
+        while (user.next()) {
+            foundUserSysIds.push(user.getUniqueValue());
+            recordSync.unloadRecord(user, document);
+            manifest.addRecordByGlideRecord(user);
+        }
+
+        var missingUserSysIds = new global.ArrayUtil().diff(userSysIds, foundUserSysIds);
+        if (missingUserSysIds.length > 0) {
+            var errorMessage = 'The following users were not found in the user list:\n' + missingUserSysIds.join(',') + '\n';
+            if (quiet) {
+                this.logError(errorMessage);
+            } else {
+                throw errorMessage;
+            }
+        }
+
+        if (foundUserSysIds.length === 0) {
+            return null;
+        } else {
+            return recordSync.syncDocument(document, manifest);
+        }
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-07-30 12:03:43</sys_created_on>
+        <sys_id>dfa92c90477b461058ceeb02d16d43a6</sys_id>
+        <sys_mod_count>11</sys_mod_count>
+        <sys_name>KLF_RecordSync_UserUtils</sys_name>
+        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_dfa92c90477b461058ceeb02d16d43a6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-30 13:18:04</sys_updated_on>
+    </sys_script_include>
+</record_update>
