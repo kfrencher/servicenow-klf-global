@@ -28,7 +28,19 @@ This script is specifically used to create the entries for the US Federal Govern
 year and quarters.
 
 ## KLF_CommandProbe
+
+This script is used to send commands to a mid server. It provides a mechanism to send the command to the midserver and
+process the result of the command after the mid server executes the command
+
 ## KLF_GlideRecordUtils
+
+This utility object provides a convenient way to execute GlideRecord operations from a scoped application
+on globally scoped tables. This is useful when you need to perform operations on tables that are restricted
+to global scope.
+
+It also provides a function to transform a GlideRecord into a map. This is useful when you need to pass
+GlideRecord data to a client script. The map can be easily converted to JSON and passed to the client spt.
+
 ## KLF_GroupUtils
 ## KLF_LdapGroupService
 
