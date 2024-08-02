@@ -13,6 +13,10 @@ These are script includes that execute in the `global` scope. They are used acro
 
 ## KLF_AtfAddStepsHelper
 
+Contains utility functions for dynamically creating ATF tests. The original use case for these utility methods was to
+generate a baseline test template. Then using this script you could potentially generate copies of that template to
+quickly create new tests.
+
 ## KLF_CalendarCreator
 
 ServiceNow has a module called Business Calendar. Business Calendars are used to define time
