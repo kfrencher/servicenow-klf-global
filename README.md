@@ -1,15 +1,15 @@
 # Global KLF Utilities
 
 These are script includes that execute in the `global` scope. They are used across applications. There is a brief description of each utility below. A more detailed description is included inside each script include.
-- [KLF_AtfAddStepsHelper](#KLF_RecordSync)
-- [KLF_CalendarCreator](#KLF_RecordSync)
-- [KLF_CommandProbe](#KLF_RecordSync)
-- [KLF_GlideRecordUtils](#KLF_RecordSync)
-- [KLF_GroupUtils](#KLF_RecordSync)
-- [KLF_LdapGroupService](#KLF_RecordSync)
+- [KLF_AtfAddStepsHelper](#KLF_AtfAddStepsHelper)
+- [KLF_CalendarCreator](#KLF_CalendarCreator)
+- [KLF_CommandProbe](#KLF_CommandProbe)
+- [KLF_GlideRecordUtils](#KLF_GlideRecordUtils)
+- [KLF_GroupUtils](#KLF_GroupUtils)
+- [KLF_LdapGroupService](#KLF_LdapGroupService)
 - [KLF_RecordSync](#KLF_RecordSync)
-- [KLF_SPUtils](#KLF_RecordSync)
-- [KLF_TestUtils](#KLF_RecordSync)
+- [KLF_SPUtils](#KLF_SPUtils)
+- [KLF_TestUtils](#KLF_TestUtils)
 
 ## KLF_AtfAddStepsHelper
 
