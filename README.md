@@ -42,6 +42,16 @@ It also provides a function to transform a GlideRecord into a map. This is usefu
 GlideRecord data to a client script. The map can be easily converted to JSON and passed to the client spt.
 
 ## KLF_GroupUtils
+
+This script contains general functions that help with group management in ServiceNow.
+- getGroupByName: Retrieves the sys_user_group based on a group name or alias.
+- getGroupFields: Finds all the fields that reference sys_user_group in a scoped app.
+- changeGroupName: This looks for all references to group `oldName` in the system and replaces 
+that group reference with the `newName` group. This is useful for when an application needs to update all the references of an old group
+to a new group
+- syncChildGroupMembers: This will make the membership of the parent group equal to the membership of its child groups. Basically, it copies the child group membership
+into the parent group
+
 ## KLF_LdapGroupService
 
 ## KLF_RecordSync
