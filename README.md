@@ -75,3 +75,16 @@ data between instances.
 
 ## KLF_SPUtils
 ## KLF_TestUtils
+
+This script include provides utility functions for unit testing.
+
+It is intended to be used in conjunction with ATF. There are some general things that you might want to do when writing tests.
+Like creating a user, creating a group, deleting records created by a user, impersonating a user etc.
+
+It includes functions that allow you to:
+- Delete records created by a specific user so that you can clean up after a test
+- Run a function as a specific user so that you can test functionality that requires a specific user
+- Create a common user that has no roles or groups
+- Impersonate the common user
+- Create a group, including adding users to the group
+- Create a user
