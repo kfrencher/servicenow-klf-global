@@ -27,6 +27,25 @@ provides a way to create the entries for a fiscal quarter and fiscal year busine
 This script is specifically used to create the entries for the US Federal Government fiscal
 year and quarters.
 
+Example Usage:
+```javascript
+// This will generate Fiscal Year calendar for the years 1999 to 2040
+// This must be run in global scope
+// You will receive the error: "Could not find calendar using name: Fiscal Year"
+// if you have not created a calendar with the name "Fiscal Year" in the system
+// before calling this method
+global.KLF_CalendarCreator.createFiscalYearNameEntries(1999, 2040);
+global.KLF_CalendarCreator.createFiscalYearEntries(1999, 2040); 
+
+// This will generate Fiscal Quarter calendar for the years 1999 to 2040
+// This must be run in global scope
+// You will receive the error: "Could not find calendar using name: Fiscal Year"
+// if you have not created a calendar with the name "Fiscal Quarter" in the system
+// before calling this method
+global.KLF_CalendarCreator.createFiscalYearNameEntries(1999, 2040);
+global.KLF_CalendarCreator.createFiscalYearEntries(1999, 2040);
+```
+
 ## KLF_CommandProbe
 
 This script is used to send commands to a mid server. It provides a mechanism to send the command to the midserver and
@@ -74,6 +93,31 @@ and there is no need to manually export and import data.
 instance and the source instance. This scoped application contains the REST API that is used to import records into
 the target instance. The open API spec for the REST API is located at 
 [KLF Import XML Spec](klf_import_xml_openapi.yaml)
+
+Example Usage:
+```javascript
+/**
+ * When initializing the KLF_RecordSync object you must pass in a configuration object
+ * that contains connection information to the target instance.
+ */
+var recordSync = new global.KLF_RecordSync({
+    username: 'admin',
+    password: gs.getProperty('KLF_RecordSync.user.password'), // Retrieve password from encoded password property
+    instanceUrl: 'https://dev188047.service-now.com',
+    chunkSize: 220
+});
+
+// Example of syncing all the data in a scope
+// This will find all tables in the x_53417_demo scope and sync all the data in those tables
+recordSync.syncAllDataInScope('x_53417_demo');
+
+// Example of including approvals that are associated with the scope
+// This shows that you can also sync data that is outside of the scope as sysapproval_approver records
+// are in the global scope
+var demoApproval = new GlideRecord('sysapproval_approver');
+demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
+recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
+```
 
 #### KLF_RecordSync_UserUtils
 
