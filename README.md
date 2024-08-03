@@ -63,10 +63,17 @@ groups based on the group type names or sys_ids.
 
 ## KLF_RecordSync
 
+Object that provides methods to sync records between two ServiceNow instances
+
 ServiceNow natively supports transferring application code between instances but does not expose an API to efficiently transfer data between instances.
 This script include provides a way to transfer data between instances using the REST API. The basic idea is to script the data transfer in a way that
 that is repeatable so the script can be written up front and then run whenever data needs to be transferred. This way the data transfer is automated
 and there is no need to manually export and import data.
+
+> NOTE: To use any of the sync methods you must install this application on the target
+instance and the source instance. This scoped application contains the REST API that is used to import records into
+the target instance. The open API spec for the REST API is located at 
+[KLF Import XML Spec](klf_import_xml_spec.yaml)
 
 #### KLF_RecordSync_UserUtils
 
