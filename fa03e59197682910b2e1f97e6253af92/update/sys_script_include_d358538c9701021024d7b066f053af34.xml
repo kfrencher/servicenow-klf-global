@@ -11,25 +11,10 @@
 var global = global || {};
 
 /**
- * @typedef {{success:boolean, payload:string, missingManifest:global.KLF_RecordSync.Manifest?}} KLF_SendToRemoteInstanceResponse
- */
-
-/**
- * Configuration object for the KLF_RecordSync class
- * @typedef KLF_RecordSyncConnectionConfig
- * @property {string} instanceUrl
- * @property {string} username
- * @property {string} password
- * @property {number} [chunkSize=220] Optional. The number of records to sync at a time. Default is 220. 220 was chosen
- * intentionally because there is a limitation on some ServiceNow instances that will throw a 400 error if the URL is too long
- */
-
-/**
- * TODO: 
- * - Modify syncTable to properly support extended tables because when exporting an extended table record attachments are not properly handled
- * - Possibly add ability to do incremental syncs where the mod count or sys_updated_on is used to determine if a record needs to be synced
- * - Also may need a way to properly handle sys_user and sys_user_group references that aren't the same in the target instance or don't exist
- * - Probably need better error handling. It's non-existent right now
+ * ServiceNow natively supports transferring application code between instances but does not expose an API to efficiently transfer data between instances.
+ * This script include provides a way to transfer data between instances using the REST API. The basic idea is to script the data transfer in a way that
+ * that is repeatable so the script can be written up front and then run whenever data needs to be transferred. This way the data transfer is automated
+ * and there is no need to manually export and import data.
  * 
  * Object that provides methods to sync records between two ServiceNow instances
  * 
@@ -42,6 +27,11 @@ var global = global || {};
  * 
  * Other methods allow you to sync a single table or a single record
  * {@link global.KLF_RecordSync.syncTable} and {@link global.KLF_RecordSync.syncRecord} respectively
+ * 
+ * TODO: 
+ * - Possibly add ability to do incremental syncs where the mod count or sys_updated_on is used to determine if a record needs to be synced
+ * - Also may need a way to properly handle sys_user and sys_user_group references that aren't the same in the target instance or don't exist
+ * - Probably need better error handling. It's non-existent right now
  * 
  * @class KLF_RecordSync
  * @param {KLF_RecordSyncConnectionConfig} connectionConfig
@@ -83,6 +73,20 @@ global.KLF_RecordSync.Manifest = function() {
     /** @type {KLF_Manifest} */
     this.manifest = {};
 };
+
+/**
+ * @typedef {{success:boolean, payload:string, missingManifest:global.KLF_RecordSync.Manifest?}} KLF_SendToRemoteInstanceResponse
+ */
+
+/**
+ * Configuration object for the KLF_RecordSync class
+ * @typedef KLF_RecordSyncConnectionConfig
+ * @property {string} instanceUrl
+ * @property {string} username
+ * @property {string} password
+ * @property {number} [chunkSize=220] Optional. The number of records to sync at a time. Default is 220. 220 was chosen
+ * intentionally because there is a limitation on some ServiceNow instances that will throw a 400 error if the URL is too long
+ */
 
 global.KLF_RecordSync.Manifest.prototype = {
     /**
@@ -789,13 +793,13 @@ global.KLF_RecordSync.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>155</sys_mod_count>
+        <sys_mod_count>157</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-29 11:40:53</sys_updated_on>
+        <sys_updated_on>2024-08-02 22:39:02</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -7,7 +7,22 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_CommandProbe</name>
-        <script><![CDATA[var global = global || {};
+        <script><![CDATA[/**
+ * This class is used to execute shell commands on a mid server. The command is executed by sending an
+ * ecc_queue record to the mid server by {@link global.KLF_CommandProbe#executeCommand}. 
+ * The mid server processes the command and sends the output back to
+ * the ecc_queue. 
+ * 
+ * The ecc_queue table is used to send messages between the application server and the mid server.
+ * The ecc_queue table has a topic field that is used to determine what processing is done on the ecc_queue
+ * record. In this case the topic is "KLF_CommandProbe". "KLF_CommandProbe" topics are picked up by the
+ * business rule {@link global.KLF_CommandProbe.onRecordInserted} that processes the command output.
+ * 
+ * Once the command output is processed by {@link global.KLF_CommandProbe.onRecordInserted} an event is
+ * created that can be handled by a Script Action. The event name is "klf_commandprobe.response".
+ */
+
+var global = global || {};
 
 /**
  * For details on how to use this class refer to the {@link global.KLF_CommandProbe#executeCommand} function
@@ -138,13 +153,13 @@ global.KLF_CommandProbe.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-03-05 15:48:29</sys_created_on>
         <sys_id>56852b4f97112110b2e1f97e6253afc5</sys_id>
-        <sys_mod_count>50</sys_mod_count>
+        <sys_mod_count>51</sys_mod_count>
         <sys_name>KLF_CommandProbe</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_56852b4f97112110b2e1f97e6253afc5</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-03-06 15:09:48</sys_updated_on>
+        <sys_updated_on>2024-08-02 23:20:33</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -7,7 +7,18 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_GroupUtils</name>
-        <script><![CDATA[//@ts-ignore
+        <script><![CDATA[/**
+ * This script contains general functions that help with group management in ServiceNow.
+ * - getGroupByName: Retrieves the sys_user_group based on a group name or alias.
+ * - getGroupFields: Finds all the fields that reference sys_user_group in a scoped app.
+ * - changeGroupName: This looks for all references to group `oldName` in the system and replaces 
+ * that group reference with the `newName` group. This is useful for when an application needs to update all the references of an old group
+ * to a new group
+ * - syncChildGroupMembers: This will make the membership of the parent group equal to the membership of its child groups. Basically, it copies the child group membership
+ * into the parent group
+ */
+
+//@ts-ignore
 var global = global || {};
 
 global.KLF_GroupUtils = function() {};
@@ -330,13 +341,13 @@ global.KLF_GroupUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-01-10 18:14:48</sys_created_on>
         <sys_id>3c2ca59b97ebb51024d7b066f053af5f</sys_id>
-        <sys_mod_count>9</sys_mod_count>
+        <sys_mod_count>12</sys_mod_count>
         <sys_name>KLF_GroupUtils</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_3c2ca59b97ebb51024d7b066f053af5f</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-29 11:23:00</sys_updated_on>
+        <sys_updated_on>2024-08-02 23:39:54</sys_updated_on>
     </sys_script_include>
 </record_update>

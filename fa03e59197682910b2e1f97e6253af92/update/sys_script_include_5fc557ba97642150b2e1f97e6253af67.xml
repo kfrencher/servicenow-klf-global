@@ -7,7 +7,16 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_GlideRecordUtils</name>
-        <script><![CDATA[//@ts-ignore
+        <script><![CDATA[/**
+ * This utility object provides a convenient way to execute GlideRecord operations from a scoped application
+ * on globally scoped tables. This is useful when you need to perform operations on tables that are restricted
+ * to global scope.
+ * 
+ * It also provides a function to transform a GlideRecord into a map. This is useful when you need to pass
+ * GlideRecord data to a client script. The map can be easily converted to JSON and passed to the client script.
+ */
+
+//@ts-ignore
 var global = global || {};
 global.KLF_GlideRecordUtils = function() {};
 
@@ -155,13 +164,13 @@ global.KLF_GlideRecordUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-26 13:24:04</sys_created_on>
         <sys_id>5fc557ba97642150b2e1f97e6253af67</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>15</sys_mod_count>
         <sys_name>KLF_GlideRecordUtils</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5fc557ba97642150b2e1f97e6253af67</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-03-04 15:54:19</sys_updated_on>
+        <sys_updated_on>2024-08-02 23:26:47</sys_updated_on>
     </sys_script_include>
 </record_update>

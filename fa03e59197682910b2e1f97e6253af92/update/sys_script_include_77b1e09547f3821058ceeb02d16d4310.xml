@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_CalendarCreator</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_CalendarCreator</name>
+        <script><![CDATA[//@ts-ignore -- I know this throws an error, but it allows VSCode to autocomplete the methods
+var global = global || {};
+
+/**
+ * ServiceNow has a module called Business Calendar. Business Calendars are used to define time
+ * periods that are significant to the business that differ from the standard calendar year.
+ * 
+ * Creating all the entries in a business calendar can be a tedious task. This script include
+ * provides a way to create the entries for a fiscal quarter and fiscal year business calendar.
+ * This script is specifically used to create the entries for the US Federal Government fiscal
+ * year and quarters.
+ * 
+ * The significant methods are:
+ * {@link global.KLF_CalendarCreator.createFiscalQuarterNameEntries} Creates the fiscal quarter name entries for a Business Calendar. The names of the entries must exist before creating the entries.
+ * NOTE: You must create a business_calendar named "Fiscal Year" before calling this method.
+ * {@link global.KLF_CalendarCreator.createFiscalQuarterEntries} Creates the fiscal quarter entries for a Business Calendar (business_calendar) called "Fiscal Quarter".
+ * NOTE: You must create a business_calendar named "Fiscal Quarter" before creating the entries.
+ * 
+ * {@link global.KLF_CalendarCreator.createFiscalYearNameEntries} Creates the year name entries for a Business Calendar. The names of the entries must exist before creating the entries.
+ * NOTE: You must create a business_calendar named "Fiscal Year" before calling this method.
+ * {@link global.KLF_CalendarCreator.createFiscalYearEntries} Creates the fiscal year entries for a Business Calendar (business_calendar) called "Fiscal Year"
+ * NOTE: You must create a business_calendar named "Fiscal Year" before creating the entries.
+ * 
+ * 
+ * @example
+ * // This will generate Fiscal Year calendar for the years 1999 to 2040
+ * // This must be run in global scope
+ * // You will receive the error: "Could not find calendar using name: Fiscal Year"
+ * // if you have not created a calendar with the name "Fiscal Year" in the system
+ * // before calling this method
+ * global.KLF_CalendarCreator.createFiscalYearNameEntries(1999, 2040);
+ * global.KLF_CalendarCreator.createFiscalYearEntries(1999, 2040); 
+ * 
+ * // This will generate Fiscal Quarter calendar for the years 1999 to 2040
+ * // This must be run in global scope
+ * // You will receive the error: "Could not find calendar using name: Fiscal Year"
+ * // if you have not created a calendar with the name "Fiscal Quarter" in the system
+ * // before calling this method
+ * global.KLF_CalendarCreator.createFiscalYearNameEntries(1999, 2040);
+ * global.KLF_CalendarCreator.createFiscalYearEntries(1999, 2040); 
+ */
+
+global.KLF_CalendarCreator = (function() {
+    return {
+        fiscalQuarterCalendarName: 'Fiscal Quarter',
+        /**
+         * business_calendar that holds calendar data
+         * @param {string} calendarName
+         * @returns {GlideRecord} business_calendar
+         */
+        getCalendarByName: function(calendarName) {
+            var calender = new GlideRecord('business_calendar');
+            if (calender.get('calendar_name', calendarName)) {
+                return calender;
+            } else {
+                throw 'Could not find calendar using name: ' + calendarName;
+            }
+        },
+        /**
+         * Returns the span name
+         * @param {string} quarterName One of Q1, Q2, Q3, or Q4
+         * @param {number} year
+         * @returns {GlideRecord} business_calendar_span_name
+         */
+        getQuarterSpanName: function(quarterName, year) {
+            var calendar = this.getCalendarByName(this.fiscalQuarterCalendarName);
+            var quarter = new GlideRecord('business_calendar_span_name');
+            quarter.addQuery('calendar', calendar.getUniqueValue());
+            quarter.addQuery('short_name', this.getFiscalQuarterSpanNameShortName(quarterName, year));
+            quarter.query();
+            if (quarter.next()) {
+                return quarter;
+            } else {
+                throw 'Could not find quarter name using calendar: ' + calendar.getDisplayValue() + ' and quarter: ' + quarterName + ' and year: ' + year;
+            }
+        },
+        /**
+         * Uses the quarter and year to return a pair that represent the start and end
+         * date of the quarter
+         * @param {string} quarterName One of Q1, Q2, Q3, Q4
+         * @param {number} year
+         * @returns {[string,string]} A pair representing the start and end date
+         */
+        getQuarterDateRange: function(quarterName, year) {
+            if (quarterName == 'Q1') {
+                return [year - 1 + '-10-01 00:00:00', year + '-01-01 00:00:00'];
+            } else if (quarterName == 'Q2') {
+                return [year + '-01-01 00:00:00', year + '-04-01 00:00:00'];
+            } else if (quarterName == 'Q3') {
+                return [year + '-04-01 00:00:00', year + '-07-01 00:00:00'];
+            } else if (quarterName == 'Q4') {
+                return [year + '-07-01 00:00:00', year + '-10-01 00:00:00'];
+            } else {
+                throw 'No date range defined for quarter: ' + quarterName;
+            }
+        },
+        /**
+         * Creates a business calendar span for the quarter and
+         * year
+         * @param {string} quarterName One of Q1, Q2, Q3, Q4
+         * @param {number} year
+         * @returns {GlideRecord} a persisted business_calendar_span
+         */
+        createQuarter: function(quarterName, year) {
+            var calendarSysId = this.getCalendarByName(this.fiscalQuarterCalendarName).getUniqueValue();
+            var spanNameSysId = this.getQuarterSpanName(quarterName, year).getUniqueValue();
+            var calendarSpan = new GlideRecord('business_calendar_span');
+            var dateRange = this.getQuarterDateRange(quarterName, year);
+            calendarSpan.addQuery('calendar', calendarSysId);
+            calendarSpan.addQuery('start', dateRange[0]);
+            calendarSpan.addQuery('end', dateRange[1]);
+            calendarSpan.query();
+            if (!calendarSpan.next()) {
+                calendarSpan.newRecord();
+            }
+            calendarSpan.start = dateRange[0];
+            calendarSpan.end = dateRange[1];
+            calendarSpan.calendar = calendarSysId;
+            calendarSpan.span_name = spanNameSysId;
+            calendarSpan.update();
+            return calendarSpan;
+        },
+        /**
+         * Creates 4 fiscal quarters for the provided year. The quarters
+         * are business_calendar_span records
+         * @param {number} year
+         * @returns {[GlideRecord, GlideRecord, GlideRecord, GlideRecord]} the four fiscal quarters business_calendar_span
+         */
+        createFiscalYearByQuarters: function(year) {
+            return [
+                this.createQuarter('Q1', year),
+                this.createQuarter('Q2', year),
+                this.createQuarter('Q3', year),
+                this.createQuarter('Q4', year)
+            ];
+        },
+        /**
+         * Creates the fiscal quarter entries for a Business Calendar (business_calendar) called "Fiscal Quarter".
+         * NOTE: You must create a business_calendar named "Fiscal Quarter" before creating the entries.
+         * 
+         * Creates all the calendar entries by quarter beginning at the start year
+         * and ending at the end year
+         * @param {number} startYear
+         * @param {number} endYear
+         */
+        createFiscalQuarterEntries: function(startYear, endYear) {
+            for (var year = startYear; year <= endYear; year++) {
+                this.createFiscalYearByQuarters(year);
+            }
+        },
+        /**
+         * Creates the span names for the fiscal quarters for a calendar year
+         * @param {number} startYear
+         * @param {number} endYear
+         */
+        createFiscalQuarterNameEntries: function(startYear, endYear) {
+            for (var year = startYear; year <= endYear; year++) {
+                this.createFiscalQuartersNameEntriesByYear(year);
+            }
+        },
+        /**
+        * Creates 4 fiscal quarter span names for the provided year. The names
+        * are business_calendar_span_name records. They serve as the labels for the
+        * calendar entries
+        * @param {number} year
+        * @returns {[GlideRecord, GlideRecord, GlideRecord, GlideRecord]}
+        the four fiscal quarters business_calendar_span
+        */
+        createFiscalQuartersNameEntriesByYear: function(year) {
+            return [
+                this.createFiscalQuarterName('Q1', year),
+                this.createFiscalQuarterName('Q2', year),
+                this.createFiscalQuarterName('Q3', year),
+                this.createFiscalQuarterName('Q4', year)
+            ];
+        },
+        /**
+         * Returns the fiscal quarter span name short name
+         * @param {string} quarter One of Q1, Q2, Q3, or Q4
+         * @param {number} year
+         * @returns {string}
+         */
+        getFiscalQuarterSpanNameShortName: function(quarter, year) {
+            return year + ' ' + quarter;
+        },
+
+        /**
+         * @param {string} quarter
+         * @param {number} year
+         */
+        createFiscalQuarterName: function(quarter, year) {
+            var calendarSysId = this.getCalendarByName(this.fiscalQuarterCalendarName).getUniqueValue();
+            var spanName = new GlideRecord('business_calendar_span_name');
+            var shortName = this.getFiscalQuarterSpanNameShortName(quarter, year);
+            spanName.addQuery('short_name', shortName);
+            spanName.addQuery('calendar', calendarSysId);
+            spanName.query();
+            if (!spanName.next()) {
+                spanName.newRecord();
+            }
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Quarter ' + quarter;
+            spanName.label = 'FY ' + year + ' ' + quarter;
+            spanName.calendar = calendarSysId;
+            spanName.update();
+            return spanName;
+        },
+
+        fiscalYearCalendarName: 'Fiscal Year',
+
+        /**
+         * Uses the year to return a pair that represent the start and end
+         * date of the year
+         * @param {number} year
+         * @returns {[string,string]} A pair representing the start and end
+         */
+        getYearDateRange: function(year) {
+            return [year - 1 + '-10-01 00:00:00', year + '-10-01'];
+        },
+
+        /**
+         * Returns the span name
+         * @param {number} year
+         * @returns {GlideRecord} business_calendar_span_name
+         */
+        getYearSpanName: function(year) {
+            var calendar = this.getCalendarByName(this.fiscalYearCalendarName);
+            var yearSpanName = new GlideRecord('business_calendar_span_name');
+            yearSpanName.addQuery('calendar', calendar.getUniqueValue());
+            yearSpanName.addQuery('short_name', year.toString());
+            yearSpanName.query();
+            if (yearSpanName.next()) {
+                return yearSpanName;
+            } else {
+                throw 'Could not find year name using calendar: ' +
+                    calendar.getDisplayValue() + ' and year: ' + year;
+            }
+        },
+        /** 
+         * Creates a business calendar span for the quarter and
+         * year
+         * @param {number} year
+         * @returns {GlideRecord} a persisted business_calendar_span
+         */
+        createYear: function(year) {
+            var calendarSysId = this.getCalendarByName(this.fiscalYearCalendarName).getUniqueValue();
+            var spanNameSysId = this.getYearSpanName(year).getUniqueValue();
+            var calendarSpan = new GlideRecord('business_calendar_span');
+            var dateRange = this.getYearDateRange(year);
+            calendarSpan.addQuery('calendar', calendarSysId);
+            calendarSpan.addQuery('start', dateRange[0]);
+            calendarSpan.addQuery('end', dateRange[1]);
+            calendarSpan.query();
+            if (!calendarSpan.next()) {
+                calendarSpan.newRecord();
+            }
+            calendarSpan.start = dateRange[0];
+            calendarSpan.end = dateRange[1];
+            calendarSpan.calendar = calendarSysId;
+            calendarSpan.span_name = spanNameSysId;
+            calendarSpan.update();
+            return calendarSpan;
+        },
+        /**
+         * Creates the fiscal year entries for a Business Calendar (business_calendar) called "Fiscal Year"
+         * NOTE: You must create a business_calendar named "Fiscal Year" before creating the entries.
+         * 
+         * Creates all the calendar entries by year beginning at the start year
+         * and ending at the end year.
+         * @param {number} startYear
+         * @param {number} endYear
+         */
+        createFiscalYearEntries: function(startYear, endYear) {
+            for (var year = startYear; year <= endYear; year++) {
+                this.createYear(year);
+            }
+        },
+        /**
+         * Creates the span names for the fiscal calendar year
+         * @param {number} startYear
+         * @param {number} endYear
+         */
+        createFiscalYearNameEntries: function(startYear, endYear) {
+            for (var year = startYear; year <= endYear; year++) {
+                this.createFiscalYearName(year);
+            }
+        },
+        /**
+         *
+         * @param {number} year
+         * @returns {GlideRecord}
+         */
+        createFiscalYearName: function(year) {
+            var calendarSysId = this.getCalendarByName(this.fiscalYearCalendarName).getUniqueValue();
+            var spanName = new GlideRecord('business_calendar_span_name');
+            /**@ts-ignore */
+            var shortName = year.toString();
+            spanName.addQuery('short_name', shortName);
+            spanName.addQuery('calendar', calendarSysId);
+            spanName.query();
+            if (!spanName.next()) {
+                spanName.newRecord();
+            }
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Year ' + year;
+            spanName.label = 'FY ' + year;
+            spanName.calendar = calendarSysId;
+            spanName.update();
+            return spanName;
+        }
+    };
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-02 14:04:03</sys_created_on>
+        <sys_id>77b1e09547f3821058ceeb02d16d4310</sys_id>
+        <sys_mod_count>12</sys_mod_count>
+        <sys_name>KLF_CalendarCreator</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_77b1e09547f3821058ceeb02d16d4310</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-02 14:27:48</sys_updated_on>
+    </sys_script_include>
+</record_update>

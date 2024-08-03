@@ -7,7 +7,20 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_SPUtils</name>
-        <script><![CDATA[// @ts-ignore 
+        <script><![CDATA[/**
+ * This script implements some enhancements to the Service Portal.
+ * 
+ * - applyGlideRecordTemplate - Applies a sys_template to a ServicePortal form to easily populate fields
+ * - getActivityEntries - Enhances the Ticket Conversations widget by providing a complete list of activities.
+ * By default, the widget only shows comments and work notes. This function provides the same list of activities
+ * that are displayed in platform UI.
+ * - getSPClientUIActions - This is used to display client actions in ServicePortal. Retrieves all the client actions for a table.
+ * By default, ServicePortal will only display server side UI actions. This function retrieves client side UI actions that are
+ * configured to be displayed on a ServicePortal view.
+ * - setRedirectURL - Used in the form widget in ServicePortal to provide a redirect URL. This is to provide some standardization on
+ * how routing is performed in ServicePortal after a UI Action is executed.
+ */
+// @ts-ignore 
 var global = global || {};
 /**
  * @class global.KLF_SPUtils
@@ -174,10 +187,10 @@ KLF_SPUtils.prototype = {
      * Gets a list of entries that can be rendered in the "Ticket Conversations" widget. This function
      * is called in the "Server Script" to help populate the list of entries that are displayed
      * @param {ChangeRecord[]} history
+     * @param {string} tableName
      * @returns {Activity[]} A list of activities that can be displayed in the "Ticket Conversations" widget
      */
-    getActivityEntries: function(history) {
-        var tableName = 'x_lib_library_loan';
+    getActivityEntries: function(history, tableName) {
         var configuredActivityFieldString = gs.getProperty('glide.ui.' + tableName + '_activity.fields');
         var activityFields = configuredActivityFieldString ? configuredActivityFieldString.split(',') : ['status'];
         return history.map(function(changeRecord) {
@@ -352,13 +365,13 @@ global.KLF_SPUtils = KLF_SPUtils;]]></script>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
-        <sys_mod_count>12</sys_mod_count>
+        <sys_mod_count>15</sys_mod_count>
         <sys_name>KLF_SPUtils</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dc93e1d197682910b2e1f97e6253af1a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-03-04 20:29:18</sys_updated_on>
+        <sys_updated_on>2024-08-03 12:10:12</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -7,7 +7,13 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_AtfAddStepsHelper</name>
-        <script><![CDATA[/** @ts-ignore */
+        <script><![CDATA[/**
+ * Contains utility functions for dynamically creating ATF tests. The original use case for these utility methods was to
+ * generate a baseline test template. Then using this script you could potentially generate copies of that template to
+ * quickly create new tests.
+ */
+
+/** @ts-ignore */
 var global = global || {};
 
 global.KLF_AtfAddStepsHelper = (function() {
@@ -130,13 +136,13 @@ global.KLF_AtfAddStepsHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-28 21:00:46</sys_created_on>
         <sys_id>7d731b6b97ace150b2e1f97e6253afcc</sys_id>
-        <sys_mod_count>11</sys_mod_count>
+        <sys_mod_count>12</sys_mod_count>
         <sys_name>KLF_AtfAddStepsHelper</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_7d731b6b97ace150b2e1f97e6253afcc</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-03-04 16:15:30</sys_updated_on>
+        <sys_updated_on>2024-08-02 23:02:21</sys_updated_on>
     </sys_script_include>
 </record_update>

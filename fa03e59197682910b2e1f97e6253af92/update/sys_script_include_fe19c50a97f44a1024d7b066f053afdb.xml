@@ -7,7 +7,16 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_DataTransferUtils</name>
-        <script><![CDATA[//@ts-ignore
+        <script><![CDATA[/**
+ * This was an initial attempt to create a utility to export data from a scoped application. The core of it
+ * uses updated sets to export data. While this method does work it creates a large amount of data in the source
+ * and target instance. This method of exporting data is not recommended for large data sets. The recommended
+ * method is to use KLF_RecordSync instead.
+ * 
+ * There are a few methods in this script that are still useful and may be used in other scripts.
+ */
+
+//@ts-ignore
 var global = global || {};
 // Add logging so have a better idea of what's going on
 
@@ -668,13 +677,13 @@ global.KLF_DataTransferUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-08 21:43:04</sys_created_on>
         <sys_id>fe19c50a97f44a1024d7b066f053afdb</sys_id>
-        <sys_mod_count>83</sys_mod_count>
+        <sys_mod_count>85</sys_mod_count>
         <sys_name>KLF_DataTransferUtils</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_fe19c50a97f44a1024d7b066f053afdb</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-29 12:14:17</sys_updated_on>
+        <sys_updated_on>2024-08-02 23:00:16</sys_updated_on>
     </sys_script_include>
 </record_update>
