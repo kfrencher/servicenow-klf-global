@@ -81,6 +81,19 @@ in the target instance. This utility contains functions to help manage the group
 data between instances.
 
 ## KLF_SPUtils
+
+This script implements some enhancements to the Service Portal.
+
+- applyGlideRecordTemplate - Applies a sys_template to a ServicePortal form to easily populate fields
+- getActivityEntries - Enhances the Ticket Conversations widget by providing a complete list of activities.
+By default, the widget only shows comments and work notes. This function provides the same list of activities
+that are displayed in platform UI.
+- getSPClientUIActions - This is used to display client actions in ServicePortal. Retrieves all the client actions for a table.
+By default, ServicePortal will only display server side UI actions. This function retrieves client side UI actions that are
+configured to be displayed on a ServicePortal view.
+- setRedirectURL - Used in the form widget in ServicePortal to provide a redirect URL. This is to provide some standardization on
+how routing is performed in ServicePortal after a UI Action is executed.
+
 ## KLF_TestUtils
 
 This script include provides utility functions for unit testing.
