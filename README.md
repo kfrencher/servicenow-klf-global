@@ -73,7 +73,7 @@ and there is no need to manually export and import data.
 > NOTE: To use any of the sync methods you must install this application on the target
 instance and the source instance. This scoped application contains the REST API that is used to import records into
 the target instance. The open API spec for the REST API is located at 
-[KLF Import XML Spec](klf_import_xml_spec.yaml)
+[KLF Import XML Spec](klf_import_xml_openapi.yaml)
 
 #### KLF_RecordSync_UserUtils
 
