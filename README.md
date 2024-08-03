@@ -54,6 +54,10 @@ into the parent group
 
 ## KLF_LdapGroupService
 
+This script is used to ingest groups from LDAP into ServiceNow. Depending on the configuration
+it can also properly ingest nested groups by recursively adding the members of nested groups
+to the parent group.
+
 ## KLF_RecordSync
 
 ServiceNow natively supports transferring application code between instances but does not expose an API to efficiently transfer data between instances.
