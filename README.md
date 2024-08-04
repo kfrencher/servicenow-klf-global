@@ -1,6 +1,7 @@
 # Global KLF Utilities
 
 These are script includes that execute in the `global` scope. They are used across applications. There is a brief description of each utility below. A more detailed description is included inside each script include.
+- [KLF Form Widget](#KLF_Form)
 - [KLF_AtfAddStepsHelper](#KLF_AtfAddStepsHelper)
 - [KLF_CalendarCreator](#KLF_CalendarCreator)
 - [KLF_CommandProbe](#KLF_CommandProbe)
@@ -11,6 +12,22 @@ These are script includes that execute in the `global` scope. They are used acro
 - [KLF_RecordSync](#KLF_RecordSync)
 - [KLF_SPUtils](#KLF_SPUtils)
 - [KLF_TestUtils](#KLF_TestUtils)
+
+## KLF Form Widget
+
+This widget was cloned from the OOB Form widget
+
+It has been modified to support the following:
+- Support for client-side UI actions
+  - TODO: Add screenshot of UI Action Visibility related list
+> NOTE: To make a client-side UI action visible to Service Portal you must add *Service Portal* to the
+> *UI Action Visibility* related list of the UI action.
+- Support for applying templates (sys_ui_template) to the form. The template name is passed as a URL parameter called 'template_name'
+  - TODO: Add example URL
+- Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
+  - TODO: Add sample UI Action redirect code
+- Support for showing all audit entries in the ticket conversation widget
+  - TODO: Add screenshot showing more than STATUS audits being displayed
 
 ## KLF_AtfAddStepsHelper
 
