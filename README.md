@@ -25,7 +25,28 @@ It has been modified to support the following:
 - Support for applying templates (sys_template) to the form. The template name is passed as a URL parameter called 'template_name'
   Example: `https://example.service-now.com/sp?id=demo_form&table=my_task&sys_id=-1&template_name=demo_template`
 - Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
-  - TODO: Add sample UI Action redirect code
+  Example:
+  ```javascript
+  // This function is defined in the Script field of UI Action
+  function submitServicePortal() {
+  	// This is actually executing in the "KLF Form" widget scope
+  	// This invokes the triggerAction function to submit the form
+  	triggerAction();
+  }
+  
+  if(typeof window == 'undefined') {
+  	current.update();
+  
+  	// Hold reference to the current UI Action sys_id
+  	var thisUIActionSysId = 'ad8de4c2473b461058ceeb02d16d4310';
+  
+  	// Function takes 2 parameters. First is the UI Actions sys_id
+  	// Second is a function that returns the URL to redirect to after UI Action completes
+  	new global.KLF_SPUtils().setRedirectURL(thisUIActionSysId, function() {
+  		return '/sp';
+  	});
+  }
+  ```
 - Support for showing all audit entries in the ticket conversation widget
   - TODO: Add screenshot showing more than STATUS audits being displayed
 
