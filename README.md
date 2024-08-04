@@ -22,8 +22,8 @@ It has been modified to support the following:
   - TODO: Add screenshot of UI Action Visibility related list
 > NOTE: To make a client-side UI action visible to Service Portal you must add *Service Portal* to the
 > *UI Action Visibility* related list of the UI action.
-- Support for applying templates (sys_ui_template) to the form. The template name is passed as a URL parameter called 'template_name'
-  - TODO: Add example URL
+- Support for applying templates (sys_template) to the form. The template name is passed as a URL parameter called 'template_name'
+  Example: `https://example.service-now.com/sp?id=demo_form&table=my_task&sys_id=-1&template_name=demo_template`
 - Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
   - TODO: Add sample UI Action redirect code
 - Support for showing all audit entries in the ticket conversation widget
