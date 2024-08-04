@@ -11,16 +11,17 @@
 var global = global || {};
 
 /**
+ * Object that provides methods to sync records between two ServiceNow instances
+ * 
  * ServiceNow natively supports transferring application code between instances but does not expose an API to efficiently transfer data between instances.
  * This script include provides a way to transfer data between instances using the REST API. The basic idea is to script the data transfer in a way that
  * that is repeatable so the script can be written up front and then run whenever data needs to be transferred. This way the data transfer is automated
  * and there is no need to manually export and import data.
  * 
- * Object that provides methods to sync records between two ServiceNow instances
- * 
  * NOTE: To use any of the sync methods you must install this application on the target
- * instance. This scoped application contains the REST API that is used to import records into
- * the target instance
+ * instance and the source instance. This scoped application contains the REST API that is used to import records into
+ * the target instance. The open API spec for the REST API is located at 
+ * {@link https://github.com/kfrencher/servicenow-klf-global/blob/main/klf_import_xml_openapi.yaml KLF Import XML Spec}
  * 
  * The primary method is {@link global.KLF_RecordSync.syncAllDataInScope} which syncs all the data in
  * a scoped application from one ServiceNow instance to the same application in a different ServiceNow instance
@@ -793,13 +794,13 @@ global.KLF_RecordSync.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>157</sys_mod_count>
+        <sys_mod_count>162</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-02 22:39:02</sys_updated_on>
+        <sys_updated_on>2024-08-03 15:28:16</sys_updated_on>
     </sys_script_include>
 </record_update>
