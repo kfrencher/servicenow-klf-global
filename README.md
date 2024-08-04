@@ -7,6 +7,7 @@ These are script includes that execute in the `global` scope. They are used acro
 - [KLF_GlideRecordUtils](#KLF_GlideRecordUtils)
 - [KLF_GroupUtils](#KLF_GroupUtils)
 - [KLF_LdapGroupService](#KLF_LdapGroupService)
+- [KLF_MetricUtils](#KLF_MetricUtils)
 - [KLF_RecordSync](#KLF_RecordSync)
 - [KLF_SPUtils](#KLF_SPUtils)
 - [KLF_TestUtils](#KLF_TestUtils)
@@ -79,6 +80,19 @@ to the parent group.
 
 It can ingest a single group or multiple groups. It can also refresh the membership of multiple
 groups based on the group type names or sys_ids.
+
+## KLF_MetricUtils
+
+This script includes functions for working with metrics. Metrics are located in the Metrics module.
+They are used to generated data associated with a record so that it can be used in reports.
+
+Refer to the ServiceNow documentation for more information on metrics:
+[Metrics](https://docs.servicenow.com/csh?topicname=c_MetricDefinitionSupport.html&version=latest)
+
+Some of the functions in this script are:
+- createMetricInstance: Creates a metric instance record for a given metric definition and record
+- clearMetricsByRelatedRecord: Deletes all metric instances for a given record
+- queueMetricUpdate: Used in a business rule to queue the metric.update event. This is used when creating metrics on a table that doesn't extend Task
 
 ## KLF_RecordSync
 
