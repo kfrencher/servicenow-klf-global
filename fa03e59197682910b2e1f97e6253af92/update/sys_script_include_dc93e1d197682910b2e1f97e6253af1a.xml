@@ -79,15 +79,15 @@ KLF_SPUtils.prototype = {
      * NullPointerException in Rome, so I replaced it with an equivalent call. This is used
      * in the snb-ticket-conversation widget
      * @param {string} tableName
-     * @param {string} sysld
+     * @param {string} sysId
      * @returns {Object}
      */
-    getStream: function(tableName, sysld) {
+    getStream: function(tableName, sysId) {
         var gr = new GlideRecord(tableName);
-        if (gr.get(sysld)) {
+        if (gr.get(sysId)) {
             return {
                 "display_ value": gr.getDisplayValue(),
-                "sys_id": sysld,
+                "sys_id": sysId,
                 "number": gr.getValue('number'),
                 "entries": [],
                 "user sys_id": gs.getUserID(),
@@ -137,12 +137,12 @@ KLF_SPUtils.prototype = {
     /**
      *
      * @param {string} tableName Name of table to retrieve history
-     * @param {string} sysld sys_id of record to retrieve history
+     * @param {string} sysId sys_id of record to retrieve history
      * @returns {ChangeRecord[]}
      */
-    getHistory: function(tableName, sysld) {
+    getHistory: function(tableName, sysId) {
         //@ts-ignore
-        var walker = new sn_hw.HistoryWalker(tableName, sysld);
+        var walker = new sn_hw.HistoryWalker(tableName, sysId);
         walker.walkBackward();
         var current = walker.getWalkedRecordCopy();
         /** @type {GlideRecord} */
@@ -250,7 +250,7 @@ KLF_SPUtils.prototype = {
         }
         var actionGr = new GlideRecord('sys_ui_action');
         actionGr.addQuery('client', true);
-        actionGr.addQuery(' active', true);
+        actionGr.addQuery('active', true);
         //filter for only client side UI actions with an UI Action Visibility of Service Portal
         actionGr.addJoinQuery('sys_ui_action_view', 'sys_id', 'sys_ui_action')
             .addCondition('sys_ui_ view', uiView.getUniqueValue());
@@ -301,16 +301,16 @@ KLF_SPUtils.prototype = {
      * @param {string} viewName
      * @returns {SPAction[]}
      */
-    filterForSPActionslnView: function(spActions, viewName) {
+    filterForSPActionsInView: function(spActions, viewName) {
         var view = new GlideRecord('sys_ui_view');
-        var viewSysld = (viewName && view.get('name', viewName)) ? view.getUniqueValue() : '';
+        var viewSysId = (viewName && view.get('name', viewName)) ? view.getUniqueValue() : '';
         return spActions.filter(function(spAction) {
             // Look for include rule first
             // If the sys_ui_action has the view on the list than include it
             var includeViewRule = new GlideRecord('sys_ui_action_view');
             includeViewRule.addQuery('sys_ui_action', spAction.sys_id);
             includeViewRule.addQuery('visibility', 'Include');
-            includeViewRule.addQuery('sys_ui_view', viewSysld);
+            includeViewRule.addQuery('sys_ui_view', viewSysId);
             includeViewRule.query();
             if (includeViewRule.getRowCount() > 0) {
                 return true;
@@ -320,7 +320,7 @@ KLF_SPUtils.prototype = {
             var excludeViewRule = new GlideRecord('sys_ui_action_view');
             excludeViewRule.addQuery('sys_ui_action', spAction.sys_id);
             excludeViewRule.addQuery('visibility', 'Exclude');
-            excludeViewRule.addQuery('sys_ui_view', viewSysld);
+            excludeViewRule.addQuery('sys_ui_view', viewSysId);
             excludeViewRule.query();
             if (excludeViewRule.getRowCount() > 0) {
                 return false;
@@ -329,11 +329,11 @@ KLF_SPUtils.prototype = {
             // an include list. If there was an include list then we know this view
             // isn't on it so exclude it. Otherwise either there isn't a list or
             // this view isn't on the exclude list so include it
-            var haslncludeViewRule = new GlideRecord('sys_ui_action_view');
-            haslncludeViewRule.addQuery('sys_ui_action', spAction.sys_id);
-            haslncludeViewRule.addQuery('visibility', 'Include');
-            haslncludeViewRule.query();
-            return haslncludeViewRule.getRowCount() === 0; // Including if we don't have any include view rules
+            var hasIncludeViewRule = new GlideRecord('sys_ui_action_view');
+            hasIncludeViewRule.addQuery('sys_ui_action', spAction.sys_id);
+            hasIncludeViewRule.addQuery('visibility', 'Include');
+            hasIncludeViewRule.query();
+            return hasIncludeViewRule.getRowCount() === 0; // Including if we don't have any include view rules
         });
     },
     /**
@@ -345,12 +345,12 @@ KLF_SPUtils.prototype = {
      * in combination with a UI action. The UI action sys_id is used as a key in the user
      * session to store a redirect URL that is picked up by the client after the UI action
      * executes
-     * @param {string} actionSysld sys_id of a UI Action
+     * @param {string} actionSysId sys_id of a UI Action
      * @param {getUrl} getUrl function used to generate URL
      */
-    setRedirectURL: function(actionSysld, getUrl) {
+    setRedirectURL: function(actionSysId, getUrl) {
         var session = gs.getSession();
-        session.putClientData(actionSysld, JSON.stringify({
+        session.putClientData(actionSysId, JSON.stringify({
             redirectUrl: getUrl()
         }));
     },
@@ -365,13 +365,13 @@ global.KLF_SPUtils = KLF_SPUtils;]]></script>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>19</sys_mod_count>
         <sys_name>KLF_SPUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dc93e1d197682910b2e1f97e6253af1a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-03 12:10:12</sys_updated_on>
+        <sys_updated_on>2024-08-04 23:47:25</sys_updated_on>
     </sys_script_include>
 </record_update>
