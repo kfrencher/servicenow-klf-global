@@ -19,9 +19,9 @@ This widget was cloned from the OOB Form widget
 
 It has been modified to support the following:
 - Support for client-side UI actions
-  - TODO: Add screenshot of UI Action Visibility related list
 > NOTE: To make a client-side UI action visible to Service Portal you must add *Service Portal* to the
 > *UI Action Visibility* related list of the UI action.
+> ![UI Action Visibility Image](docs/ui_action_visibility.jpg)
 - Support for applying templates (sys_template) to the form. The template name is passed as a URL parameter called 'template_name'
   Example: `https://example.service-now.com/sp?id=demo_form&table=my_task&sys_id=-1&template_name=demo_template`
 - Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
