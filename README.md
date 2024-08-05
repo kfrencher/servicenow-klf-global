@@ -18,14 +18,8 @@ These are script includes that execute in the `global` scope. They are used acro
 This widget was cloned from the OOB Form widget
 
 It has been modified to support the following:
-- Support for client-side UI actions
-> NOTE: To make a client-side UI action visible to Service Portal you must add *Service Portal* to the
-> *UI Action Visibility* related list of the UI action.
-> ![UI Action Visibility Image](docs/ui_action_visibility.jpg)
-- Support for applying templates (sys_template) to the form. The template name is passed as a URL parameter called 'template_name'
-  Example: `https://example.service-now.com/sp?id=demo_form&table=my_task&sys_id=-1&template_name=demo_template`
-- Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
-  Example:
+- Support for client-side UI actions\
+Example:
   ```javascript
   // This function is defined in the Script field of UI Action
   function submitServicePortal() {
@@ -40,12 +34,31 @@ It has been modified to support the following:
   	// Hold reference to the current UI Action sys_id
   	var thisUIActionSysId = 'ad8de4c2473b461058ceeb02d16d4310';
   
-  	// Function takes 2 parameters. First is the UI Actions sys_id
+  	// Function takes 2 parameters. First is the UI Action's sys_id
   	// Second is a function that returns the URL to redirect to after UI Action completes
   	new global.KLF_SPUtils().setRedirectURL(thisUIActionSysId, function() {
   		return '/sp';
   	});
   }
+  ```
+> NOTE: To make a client-side UI action visible to Service Portal you must add *Service Portal* to the
+> *UI Action Visibility* related list of the UI action.
+> ![UI Action Visibility Image](docs/ui_action_visibility.jpg)
+- Support for applying templates (sys_template) to the form. The template name is passed as a URL parameter called 'template_name'
+  Example: `https://example.service-now.com/sp?id=demo_form&table=my_task&sys_id=-1&template_name=demo_template`
+- Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
+  Example:
+  ```javascript
+  // Execute your normal code in server side UI Action
+  current.update();
+
+  // This is the redirect code
+  // Function takes 2 parameters. First is the UI Action's sys_id
+  // Second is a function that returns the URL to redirect to after UI Action completes
+  // In this scenario I am redirecting the user to create a new Incident after the form is saved
+  new global.KLF_SPUtils().setRedirectURL(thisUIActionSysId, function() {
+  	return '/sp?id=form&table=incident&sys_id=-1';
+  });
   ```
 - Support for showing all audit entries in the ticket conversation widget
   - TODO: Add screenshot showing more than STATUS audits being displayed
