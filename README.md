@@ -49,6 +49,7 @@ Example:
 - Support for redirecting to a URL after an action has been executed. Refer to `global.KLF_SPUtils.setRedirectURL` for more information
   Example:
   ```javascript
+  // This function is defined in the Script field of UI Action
   // Execute your normal code in server side UI Action
   current.update();
 
