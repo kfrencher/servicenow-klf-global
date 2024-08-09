@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_TableScoper</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_TableScoper</name>
+        <script><![CDATA[/**
+ * Maybe create a UI Action that has a mapping of old table names to new table names.
+ * Then you can click the UI Action and it would clone the script into the target scope as
+ * well as modify the script to use the new table names.
+ */
+
+/**
+ * Object used to generate a table in a target scope based on a global table.
+ * This is to make it faster to scope a global application.
+ * 
+ * The column names of the resulting scoped table will be the same as the global table
+ * including any columns with a u_ prefix.
+ * 
+ * The following tables are included in the process:
+ * - sys_db_object
+ * - sys_dictionary
+ * - sys_documentation
+ * - sys_embedded_help_role
+ * - sys_security_acl
+ * - sys_security_acl_role
+ * - sys_user_role
+ * - sys_wizard_answer
+ * - ua_table_licensing_config
+ */
+var global = global || {};
+
+global.KLF_TableScoper = function(targetScope) {
+    this.targetScope = targetScope;
+};
+
+global.KLF_TableScoper.prototype = {};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-08 23:21:23</sys_created_on>
+        <sys_id>25fa15df4733021058ceeb02d16d4338</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>KLF_TableScoper</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_25fa15df4733021058ceeb02d16d4338</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-08 23:31:54</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>25fa15df4733021058ceeb02d16d4338</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-08 23:21:23</sys_created_on>
+        <sys_id>791b15df4733021058ceeb02d16d433f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-08 23:21:23</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
