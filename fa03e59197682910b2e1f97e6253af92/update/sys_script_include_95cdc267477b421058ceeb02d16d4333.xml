@@ -32,6 +32,25 @@ global.KLF_RecordSync_RoleUtils = function(connectionConfig) {
     this.connectionConfig = connectionConfig;
 };
 
+/**
+ * @typedef {{
+ * roleAssignedToData?: RoleAssignedToData,
+ * success: boolean
+ * error?: string
+ * }} RoleAssignedToResponse
+ */
+/**
+ * @param {string[]} roleNames 
+ * @returns 
+ */
+global.KLF_RecordSync_RoleUtils.getRemoteRoleAssignedTo = function(roleNames) {
+    return {
+        // @ts-ignore
+        assignedToRole: new global.KLF_RecordSync_RoleUtils().getRoleAssignedTo(roleNames),
+        success: true
+    };
+};
+
 global.KLF_RecordSync_RoleUtils.prototype = {
     /**
      * @param {string} message 
@@ -51,9 +70,12 @@ global.KLF_RecordSync_RoleUtils.prototype = {
      * @returns {string[]}
      */
     getRolesInScope: function(scope) {
+        if (!scope) {
+            throw new Error('Scope is required');
+        }
         var roles = [];
         var role = new GlideRecord('sys_user_role');
-        role.addQuery('scope', scope);
+        role.addQuery('sys_scope.scope', scope);
         role.query();
         while (role.next()) {
             roles.push(role.name.toString());
@@ -105,7 +127,12 @@ global.KLF_RecordSync_RoleUtils.prototype = {
      */
     diffLocalAndRemoteRoles: function(roleNames) {
         var localRoles = this.getRoleAssignedTo(roleNames);
-        var remoteRoles = this.getRemoteRoleAssignedTo(roleNames);
+        var response = this.getRemoteRoleAssignedTo(roleNames);
+        if (!response.success) {
+            throw new Error('Failed to retrieve remote roles: ' + response.error);
+        }
+
+        var remoteRoles = /** @type {RoleAssignedToData} */ (response.roleAssignedToData);
         return this.diffRoles(localRoles, remoteRoles);
     },
 
@@ -126,14 +153,14 @@ global.KLF_RecordSync_RoleUtils.prototype = {
 
     /**
      * @param {string[]} roleNames
-     * @returns {RoleAssignedToData}
+     * @returns {RoleAssignedToResponse}
      */
     getRemoteRoleAssignedTo: function(roleNames) {
         // Make a  request to sys_user_group
         var request = this.createRestMessage();
-        request.setRequestHeader('Content-Type', 'application/json')
+        request.setRequestHeader('Content-Type', 'application/json');
         request.setHttpMethod('POST');
-        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_RoleUtils.endpoint.mapping.path');
+        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_RoleUtils.endpoint.roles.path');
         request.setEndpoint(endpoint);
         this.logInfo('Retrieving remote roles:\n\n' + JSON.stringify(roleNames, null, 4));
         request.setRequestBody(JSON.stringify({
@@ -147,10 +174,14 @@ global.KLF_RecordSync_RoleUtils.prototype = {
             this.logError('Received body: ' + response.getBody());
             return {
                 success: false,
-                error: response.getBody(),
+                error: response.getBody()
             };
         }
-        return {};
+
+        return {
+            success: true,
+            roleAssignedToData: JSON.parse(response.getBody())
+        };
     },
 
     /**
@@ -301,14 +332,14 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-09 21:41:17</sys_created_on>
         <sys_id>95cdc267477b421058ceeb02d16d4333</sys_id>
-        <sys_mod_count>10</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_95cdc267477b421058ceeb02d16d4333</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-09 23:01:30</sys_updated_on>
+        <sys_updated_on>2024-08-10 01:08:44</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>95cdc267477b421058ceeb02d16d4333</id>
