@@ -1,0 +1,2 @@
+var spUtils = new global.KLF_SPUtils();
+gs.info(JSON.stringify(spUtils.getSPClientUIActions('incident', x_912467_klf.GlideRecordUtils.getRecord('b893b88a473b461058ceeb02d16d439', 'incident'), 'sp'), null, 4));
