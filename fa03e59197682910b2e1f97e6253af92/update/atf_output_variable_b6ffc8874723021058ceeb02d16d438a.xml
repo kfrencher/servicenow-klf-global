@@ -13,20 +13,20 @@
         <choice/>
         <choice_field/>
         <choice_table/>
-        <column_label>Record ID</column_label>
+        <column_label>Table</column_label>
         <comments/>
         <create_roles/>
         <default_value/>
         <defaultsort/>
         <delete_roles/>
-        <dependent>u_table</dependent>
-        <dependent_on_field>u_table</dependent_on_field>
+        <dependent/>
+        <dependent_on_field/>
         <display>false</display>
         <dynamic_creation>false</dynamic_creation>
         <dynamic_creation_script/>
         <dynamic_default_value/>
         <dynamic_ref_qual/>
-        <element>u_record_id</element>
+        <element>u_table</element>
         <element_reference>false</element_reference>
         <foreign_database/>
         <formula/>
@@ -34,10 +34,10 @@
         <function_field>false</function_field>
         <help/>
         <hint/>
-        <internal_type display_value="">document_id</internal_type>
-        <label>Record ID</label>
+        <internal_type display_value="">table_name</internal_type>
+        <label>Table</label>
         <mandatory>false</mandatory>
-        <max_length>32</max_length>
+        <max_length>80</max_length>
         <model display_value="KLF Click a UI Action (SP)">9632b19597a82910b2e1f97e6253afef</model>
         <model_id>9632b19597a82910b2e1f97e6253afef</model_id>
         <model_table/>
@@ -58,16 +58,19 @@
         <staged>false</staged>
         <sys_class_name>atf_output_variable</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2023-01-21 14:15:18</sys_created_on>
-        <sys_name>Record ID</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_created_on>2023-01-21 14:16:02</sys_created_on>
+        <sys_id>b6ffc8874723021058ceeb02d16d438a</sys_id>
+        <sys_name>Table</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
-        <sys_update_name>atf_output_variable_83b3fd1997a82910b2e1f97e6253af63</sys_update_name>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>atf_output_variable_b6ffc8874723021058ceeb02d16d438a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-26 12:59:02</sys_updated_on>
         <table_reference>false</table_reference>
         <text_index>false</text_index>
         <unique>false</unique>
-        <use_dependent_field>true</use_dependent_field>
+        <use_dependent_field>false</use_dependent_field>
         <use_dynamic_default>false</use_dynamic_default>
         <use_reference_qualifier>simple</use_reference_qualifier>
         <virtual>false</virtual>

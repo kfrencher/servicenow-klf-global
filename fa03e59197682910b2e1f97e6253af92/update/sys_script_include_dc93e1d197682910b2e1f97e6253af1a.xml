@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_SPUtils</name>
         <script><![CDATA[/**
  * This script implements some enhancements to the Service Portal.

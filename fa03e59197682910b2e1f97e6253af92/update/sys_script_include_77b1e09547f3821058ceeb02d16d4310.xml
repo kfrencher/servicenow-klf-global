@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_CalendarCreator</name>
         <script><![CDATA[//@ts-ignore -- I know this throws an error, but it allows VSCode to autocomplete the methods
 var global = global || {};

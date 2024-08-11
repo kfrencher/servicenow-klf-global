@@ -24,7 +24,7 @@
     <sys_variable_value action="DELETE" query="document_key=7c135f6b97ace150b2e1f97e6253af15"/>
     <sys_update_version action="INSERT_OR_UPDATE">
         <action>DELETE</action>
-        <application display_value="G KLF">fa03e59197682910b2e1f97e6253af92</application>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
         <file_path/>
         <instance_id>3985fabbdb7037808aea21c40596199a</instance_id>
         <instance_name>dev82424</instance_name>
@@ -55,13 +55,16 @@
         <sys_db_object display_value="" name="sys_atf_test">sys_atf_test</sys_db_object>
         <sys_id>1bdeeea7df144a14830ae3d45be8d010</sys_id>
         <sys_metadata>7c135f6b97ace150b2e1f97e6253af15</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
         <sys_name>SNB_LdapGroupServiceTest copy</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_parent/>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
         <sys_update_name>sys_atf_test_7c135f6b97ace150b2e1f97e6253af15</sys_update_name>
         <sys_update_version display_value="sys_atf_test_7c135f6b97ace150b2e1f97e6253af15">3c135f6b97ace150b2e1f97e6253af19</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-11 11:06:22</sys_updated_on>
     </sys_metadata_delete>
 </record_update>

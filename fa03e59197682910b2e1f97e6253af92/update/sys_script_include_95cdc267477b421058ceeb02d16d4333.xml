@@ -46,8 +46,27 @@ global.KLF_RecordSync_RoleUtils = function(connectionConfig) {
 global.KLF_RecordSync_RoleUtils.getRemoteRoleAssignedTo = function(roleNames) {
     return {
         // @ts-ignore
-        assignedToRole: new global.KLF_RecordSync_RoleUtils().getRoleAssignedTo(roleNames),
+        roleAssignedToData: new global.KLF_RecordSync_RoleUtils().getRoleAssignedTo(roleNames),
         success: true
+    };
+};
+
+/**
+ * @typedef {{
+ * success: boolean
+ * errors: string[]
+ * }} AddRolesResponse
+ */
+/**
+ * @param {RoleAssignedToData} roleData 
+ * @returns {AddRolesResponse}
+ */
+global.KLF_RecordSync_RoleUtils.addRoles = function(roleData) {
+    // @ts-ignore
+    var errors = new global.KLF_RecordSync_RoleUtils().addRoles(roleData);
+    return {
+        success: true,
+        errors: errors
     };
 };
 
@@ -96,7 +115,7 @@ global.KLF_RecordSync_RoleUtils.prototype = {
 
         var missingRoles = new global.ArrayUtil().diff(roles1, roles2);
         if (missingRoles.length > 0) {
-            throw new Error('Role names do not match: ' + missingRoles.join(', '));
+            throw new Error('Role names do not match: ' + missingRoles.join('\n'));
         }
 
         return roles1.reduce(function(diff, roleName) {
@@ -114,6 +133,78 @@ global.KLF_RecordSync_RoleUtils.prototype = {
             };
             return diff;
         }, /** @type {RoleAssignedToData} */ ({}));
+    },
+
+    /**
+     * Synchronizes the passed roles with the target instance
+     * @param {RoleAssignedToData} roleData
+     */
+    syncRoles: function(roleData) {
+        // Make a  request to sys_user_group
+        var request = this.createRestMessage();
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.setHttpMethod('POST');
+        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_RoleUtils.endpoint.roles.path');
+        request.setEndpoint(endpoint);
+        this.logInfo('Syncing remote roles:\n\n' + JSON.stringify(roleData, null, 4));
+        request.setRequestBody(JSON.stringify(roleData));
+
+        var response = request.execute();
+        if (response.getStatusCode() != 200) {
+            this.logError('Failed to sync roles using role data: ' + JSON.stringify(roleData));
+            this.logError('Received status code: ' + response.getStatusCode());
+            this.logError('Received body: ' + response.getBody());
+            return {
+                success: false,
+                error: response.getBody()
+            };
+        }
+
+        var responseBody = JSON.parse(response.getBody());
+        return {
+            success: true,
+            errors: responseBody.result.errors
+        };
+    },
+
+    /**
+     * Adds the specified roles to the users / groups
+     * @param {RoleAssignedToData} roleData
+     * @returns {string[]} Array of any errors that occurred
+     */
+    addRoles: function(roleData) {
+        var me = this;
+        var roleNames = Object.keys(roleData);
+        var errors = /** @type {string[]} */ ([]);
+        roleNames.forEach(function(roleName) {
+            var assignedTo = roleData[roleName];
+            assignedTo.users.forEach(function(username) {
+                try {
+                    me._addUserRole(username, roleName);
+                } catch (e) {
+                    if (e instanceof Error && e.name == 'UserNotFoundError') {
+                        errors.push(e.message);
+                    }
+                    if (e instanceof Error && e.name == 'RoleNotFoundError') {
+                        errors.push(e.message);
+                    }
+                }
+            });
+            assignedTo.groups.forEach(function(groupName) {
+                try {
+                    me._addGroupRole(groupName, roleName);
+                } catch (e) {
+                    if (e instanceof Error && e.name == 'GroupNotFoundError') {
+                        errors.push(e.message);
+                    }
+                    if (e instanceof Error && e.name == 'RoleNotFoundError') {
+                        errors.push(e.message);
+                    }
+                }
+            });
+        });
+
+        return errors;
     },
 
     /**
@@ -159,13 +250,12 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         // Make a  request to sys_user_group
         var request = this.createRestMessage();
         request.setRequestHeader('Content-Type', 'application/json');
-        request.setHttpMethod('POST');
-        var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_RoleUtils.endpoint.roles.path');
+        request.setHttpMethod('GET');
+        var endpoint = request.getEndpoint() +
+            gs.getProperty('KLF_RecordSync_RoleUtils.endpoint.roles.path') +
+            '?roleNames=' + roleNames.join(',');
         request.setEndpoint(endpoint);
         this.logInfo('Retrieving remote roles:\n\n' + JSON.stringify(roleNames, null, 4));
-        request.setRequestBody(JSON.stringify({
-            roleNames: roleNames
-        }));
 
         var response = request.execute();
         if (response.getStatusCode() != 200) {
@@ -178,9 +268,10 @@ global.KLF_RecordSync_RoleUtils.prototype = {
             };
         }
 
+        var responseBody = JSON.parse(response.getBody());
         return {
             success: true,
-            roleAssignedToData: JSON.parse(response.getBody())
+            roleAssignedToData: responseBody.result.roleAssignedToData
         };
     },
 
@@ -327,19 +418,88 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         return groupNames;
     },
 
+    /**
+     * Adds the specified role to the group. If the role is already assigned to the group
+     * then no action is taken.
+     * @param {string} groupName 
+     * @param {string} roleName 
+     * @throws {Error} If the user or role does not exist
+     */
+    _addGroupRole: function(groupName, roleName) {
+        var groupRole = new GlideRecord('sys_group_has_role');
+        var error = null;
+        // Make sure user and role exist
+        var group = new GlideRecord('sys_user_group');
+        if (!group.get('name', groupName)) {
+            error = new Error('Group not found: ' + groupName);
+            error.name = 'GroupNotFoundError';
+            throw error;
+        }
+        var role = new GlideRecord('sys_user_role');
+        if (!role.get('name', roleName)) {
+            error = new Error('Role not found: ' + roleName);
+            error.name = 'RoleNotFoundError';
+            throw error;
+        }
+        groupRole.addQuery('group.name', groupName);
+        groupRole.addQuery('role.name', roleName);
+        groupRole.query();
+        if (!groupRole.next()) {
+            groupRole.newRecord();
+            groupRole.user = group.sys_id.toString();
+            groupRole.role = role.sys_id.toString();
+            groupRole.insert();
+        }
+    },
+
+
+    /**
+     * Adds the specified role to the user. If the role is already assigned to the user
+     * then no action is taken.
+     * @param {string} username 
+     * @param {string} roleName 
+     * @throws {Error} If the user or role does not exist
+     */
+    _addUserRole: function(username, roleName) {
+        var userRole = new GlideRecord('sys_user_has_role');
+        var error = null;
+        // Make sure user and role exist
+        var user = new GlideRecord('sys_user');
+        if (!user.get('user_name', username)) {
+            error = new Error('User not found: ' + username);
+            error.name = 'UserNotFoundError';
+            throw error;
+        }
+        var role = new GlideRecord('sys_user_role');
+        if (!role.get('name', roleName)) {
+            error = new Error('Role not found: ' + roleName);
+            error.name = 'RoleNotFoundError';
+            throw error;
+        }
+        userRole.addQuery('user.user_name', username);
+        userRole.addQuery('role.name', roleName);
+        userRole.query();
+        if (!userRole.next()) {
+            userRole.initialize();
+            userRole.user = user.sys_id.toString();
+            userRole.role = role.sys_id.toString();
+            userRole.insert();
+        }
+    }
+
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-09 21:41:17</sys_created_on>
         <sys_id>95cdc267477b421058ceeb02d16d4333</sys_id>
-        <sys_mod_count>17</sys_mod_count>
+        <sys_mod_count>32</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_95cdc267477b421058ceeb02d16d4333</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-10 01:08:44</sys_updated_on>
+        <sys_updated_on>2024-08-10 10:38:27</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>95cdc267477b421058ceeb02d16d4333</id>

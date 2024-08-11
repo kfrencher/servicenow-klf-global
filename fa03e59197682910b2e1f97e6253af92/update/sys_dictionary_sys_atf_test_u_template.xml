@@ -2,7 +2,7 @@
     <sys_dictionary action="INSERT_OR_UPDATE" element="u_template" table="sys_atf_test">
         <active>true</active>
         <array>false</array>
-        <attributes/>
+        <attributes>edge_encryption_enabled=true</attributes>
         <audit>false</audit>
         <calculation><![CDATA[(function calculatedFieldValue(current) {
 
@@ -53,10 +53,12 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-02-03 13:00:20</sys_created_on>
         <sys_name>Template</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_dictionary_sys_atf_test_u_template</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-26 12:58:59</sys_updated_on>
         <table_reference>false</table_reference>
         <text_index>false</text_index>
         <unique>false</unique>
@@ -70,7 +72,7 @@
         <xml_view>false</xml_view>
     </sys_dictionary>
     <sys_claim action="INSERT_OR_UPDATE">
-        <claim_owner_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
+        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
         <claim_timestamp>18666cafa900000001</claim_timestamp>
         <metadata_update_name>sys_dictionary_sys_atf_test_u_template</metadata_update_name>
         <previous_claim_app_version>1.0.0</previous_claim_app_version>
@@ -79,5 +81,8 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-02-18 23:10:23</sys_created_on>
         <sys_id>51da33da97cd2110b2e1f97e6253afa5</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-26 12:59:01</sys_updated_on>
     </sys_claim>
 </record_update>

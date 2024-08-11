@@ -2,12 +2,12 @@
     <sys_script_include action="INSERT_OR_UPDATE">
         <access>package_private</access>
         <active>true</active>
-        <api_name>global.KLF_TestUtilsTest</api_name>
+        <api_name>global.KLF_RecordSync_RoleUtilsTest</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
         <mobile_callable>false</mobile_callable>
-        <name>KLF_TestUtilsTest</name>
+        <name>KLF_RecordSync_RoleUtilsTest</name>
         <script><![CDATA[/**
  * @param {*} outputs 
  * @param {*} steps 
@@ -15,7 +15,7 @@
  * @param {*} stepResult 
  * @param {*} assertEqual 
  */
-function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
+function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     var testUtils = global.KLF_TestUtils;
 
     describe('KLF_TestUtilTest.impersonateUser', function() {
@@ -25,19 +25,18 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
             expect(user.getValue('sys_id')).toBe(gs.getUserID());
         });
     });
-
 }]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2023-01-30 00:20:32</sys_created_on>
-        <sys_id>2d1b858c97b86550b2e1f97e6253af73</sys_id>
-        <sys_mod_count>1</sys_mod_count>
-        <sys_name>KLF_TestUtilsTest</sys_name>
+        <sys_created_on>2024-08-11 11:03:34</sys_created_on>
+        <sys_id>9bfe8e844700121058ceeb02d16d436b</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KLF_RecordSync_RoleUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
-        <sys_update_name>sys_script_include_2d1b858c97b86550b2e1f97e6253af73</sys_update_name>
+        <sys_update_name>sys_script_include_9bfe8e844700121058ceeb02d16d436b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-02-25 14:40:39</sys_updated_on>
+        <sys_updated_on>2024-08-11 11:03:34</sys_updated_on>
     </sys_script_include>
 </record_update>

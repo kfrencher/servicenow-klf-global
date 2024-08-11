@@ -51,6 +51,7 @@
         <name>KLF Click a UI Action (SP)</name>
         <order>7300</order>
         <outputs/>
+        <performance_include>false</performance_include>
         <step_env display_value="UI">d2cb02e1870312009dccc9ded0e3ec7c</step_env>
         <step_execution_generator><![CDATA[debugger;
 (function(step, stepResult, assertionObject) {
@@ -205,13 +206,16 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 14:08:13</sys_created_on>
         <sys_id>9632b19597a82910b2e1f97e6253afef</sys_id>
+        <sys_mod_count>0</sys_mod_count>
         <sys_name>KLF Click a UI Action (SP)</sys_name>
-        <sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_atf_step_config_9632b19597a82910b2e1f97e6253afef</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-07-26 12:59:03</sys_updated_on>
         <template_reminder>Demo Click a UI Action (SP)</template_reminder>
-        <type display_value="Test Step" name="sys_atf_step">c3004e8c756401100acb0f6766fcbfd1</type>
+        <type display_value="Test Step" name="sys_atf_step">8385c5378dc20210d0ad51af41866317</type>
         <wizard_redirect/>
     </sys_atf_step_config>
     <sys_translated_text action="delete_multiple" query="documentkey=9632b19597a82910b2e1f97e6253afef"/>

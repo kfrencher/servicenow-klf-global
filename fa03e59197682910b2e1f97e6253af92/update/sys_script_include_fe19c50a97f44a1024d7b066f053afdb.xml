@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_DataTransferUtils</name>
         <script><![CDATA[/**
  * This was an initial attempt to create a utility to export data from a scoped application. The core of it

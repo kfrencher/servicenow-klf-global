@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_CommandProbe</name>
         <script><![CDATA[/**
  * This class is used to execute shell commands on a mid server. The command is executed by sending an

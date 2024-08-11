@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_AtfAddStepsHelper</name>
         <script><![CDATA[/**
  * Contains utility functions for dynamically creating ATF tests. The original use case for these utility methods was to

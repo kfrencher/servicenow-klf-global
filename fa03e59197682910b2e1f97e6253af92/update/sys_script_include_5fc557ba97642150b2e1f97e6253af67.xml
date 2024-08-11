@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_GlideRecordUtils</name>
         <script><![CDATA[/**
  * This utility object provides a convenient way to execute GlideRecord operations from a scoped application

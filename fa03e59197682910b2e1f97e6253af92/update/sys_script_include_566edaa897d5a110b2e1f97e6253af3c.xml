@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_MetricUtils</name>
         <script><![CDATA[/**
  * This script includes functions for working with metrics. Metrics are located in the Metrics module.

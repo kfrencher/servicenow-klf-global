@@ -6,6 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_GroupUtils</name>
         <script><![CDATA[/**
  * This script contains general functions that help with group management in ServiceNow.
