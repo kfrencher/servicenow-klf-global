@@ -2,7 +2,7 @@
     // Create configuration
     var connectionConfig = {
         username: 'kenneth.frencher',
-        password: 'Pip33jord!',
+        password: gs.getProperty('KLF_RecordSync.user.password'),
         instanceUrl: 'https://abspscpov2.service-now.com',
         chunkSize: 20
     };
@@ -66,7 +66,7 @@
     function syncRoles() {
         var connectionConfig = {
             username: 'kenneth.frencher',
-            password: 'Pip33jord!',
+            password: gs.getProperty('KLF_RecordSync.user.password'),
             instanceUrl: 'https://abspscpov2.service-now.com',
             chunkSize: 20
         };

@@ -1,8 +1,8 @@
 // Create configuration
 var connectionConfig = {
     username: 'kenneth.frencher',
-    password: 'Pip33jord!',
-    instanceUrl: 'https://abspscpov2.service-now.com/',
+    password: gs.getProperty('KLF_RecordSync.user.password'),
+    instanceUrl: 'https://abspscpov2.service-now.com',
     chunkSize: 20
 };
 

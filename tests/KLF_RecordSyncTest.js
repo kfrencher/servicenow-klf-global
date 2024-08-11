@@ -1,8 +1,8 @@
 (function() {
     var sync = new global.KLF_RecordSync({
-        username: 'admin',
-        password: 'Pip33jord!',
-        instanceUrl: 'https://dev209572.service-now.com',
+        username: 'kenneth.frencher',
+        password: gs.getProperty('KLF_RecordSync.user.password'),
+        instanceUrl: 'https://abspscpov2.service-now.com',
         chunkSize: 20
     });
 

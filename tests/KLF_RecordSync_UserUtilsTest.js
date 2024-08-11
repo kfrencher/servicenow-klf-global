@@ -1,8 +1,8 @@
 (function() {
     var userUtils = new global.KLF_RecordSync_UserUtils({
-        username: 'admin',
-        password: 'Pip33jord!',
-        instanceUrl: 'https://dev229555.service-now.com/',
+        username: 'kenneth.frencher',
+        password: gs.getProperty('KLF_RecordSync.user.password'),
+        instanceUrl: 'https://abspscpov2.service-now.com',
         chunkSize: 20
     });
 
