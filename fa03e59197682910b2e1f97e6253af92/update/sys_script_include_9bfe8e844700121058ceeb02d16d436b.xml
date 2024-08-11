@@ -16,27 +16,205 @@
  * @param {*} assertEqual 
  */
 function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
-    var testUtils = global.KLF_TestUtils;
 
-    describe('KLF_TestUtilTest.impersonateUser', function() {
-        it('should impersonate the user with the given sys_id', function() {
-            var user = testUtils.createUser('testUser');
-            testUtils.impersonateUser(user.sys_id);
-            expect(user.getValue('sys_id')).toBe(gs.getUserID());
+    // Create configuration
+    var connectionConfig = {
+        username: 'kenneth.frencher',
+        password: gs.getProperty('KLF_RecordSync.user.password'),
+        instanceUrl: 'https://abspscpov2.service-now.com',
+        chunkSize: 20
+    };
+
+    describe('getRolesInScope', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
         });
+
+        it('Should return a list with at least one entry', function() {
+            var roles = roleUtils.getRolesInScope('x_53417_demo');
+
+            expect(Array.isArray(roles)).toBe(true);
+            expect(roles.length).toBeGreaterThan(0);
+            expect(roles).toContain('x_53417_demo.user');
+        });
+
+        it('Should throw an error for missing scope', function() {
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getRolesInScope(null);
+            }).toThrowError();
+        });
+
+        it('Should return empty list for non-existent scope', function() {
+            var roles = roleUtils.getRolesInScope('x_i_dont_exist');
+            expect(roles.length).toBe(0);
+        });
+    });
+
+    describe('getGroupsForRole', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('Should return a list of groups', function() {
+            // Need to create a group
+            var group = testUtils.createGroup('ROLE_UTILS_TEST_GROUP');
+            testUtils.addRoleToGroup(group, 'x_53417_demo.user');
+
+            var groups = roleUtils.getGroupsForRole('x_53417_demo.user');
+            expect(groups).toContain('ROLE_UTILS_TEST_GROUP');
+        });
+
+        it('Should return empty list for non-existent role', function() {
+            var groups = roleUtils.getGroupsForRole('x_i_dont_exist');
+            expect(groups.length).toBe(0);
+        });
+
+        it('Should throw error if role is missing', function() {
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getGroupsForRole('');
+            }).toThrowError();
+
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getGroupsForRole(null);
+            }).toThrowError();
+        });
+    });
+
+    describe('getUsersForRole', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('Should return a list of users', function() {
+            // Need to create a group
+            var user = testUtils.createUser('ROLE_UTILS_TEST_USER');
+            testUtils.addRoleToUser(user, 'x_53417_demo.user');
+
+            var groups = roleUtils.getUsersForRole('x_53417_demo.user');
+            expect(groups).toContain('ROLE_UTILS_TEST_USER');
+        });
+
+        it('Should return empty list for non-existent role', function() {
+            var groups = roleUtils.getUsersForRole('x_i_dont_exist');
+            expect(groups.length).toBe(0);
+        });
+
+        it('Should throw error if role is missing', function() {
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getUsersForRole('');
+            }).toThrowError();
+
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getUsersForRole(null);
+            }).toThrowError();
+        });
+    });
+
+    describe('getAssignedToRole', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('Should return an object that contains users and groups properties', function() {
+            var roleMap = roleUtils.getAssignedToRole(['x_53417_demo.user']);
+            var properties = Object.keys(roleMap);
+            expect(properties).toContain('users');
+            expect(properties).toContain('groups');
+        });
+
+        it('Should return a list of users and groups assigned to the roles', function() {
+            // Create a group and add a role to it
+            var groupParts = testUtils.createCommonGroup();
+            testUtils.addRoleToGroup(groupParts.group, 'x_53417_demo.user');
+            testUtils.addRoleToUser(groupParts.user, 'x_53417_demo.user');
+            /**
+             * Result should look something like
+             * {
+             *   "users": {
+             *       "test.user": [
+             *           "x_53417_demo.user"
+             *       ]
+             *   },
+             *   "groups": {
+             *       "Test Group": [
+             *           "x_53417_demo.user"
+             *       ]
+             *   }
+             */
+            var assignedToRole = roleUtils.getAssignedToRole(['x_53417_demo.user']);
+            expect(assignedToRole.users[groupParts.user.getValue('user_name')]).toContain('x_53417_demo.user');
+            expect(assignedToRole.groups[groupParts.group.getValue('name')]).toContain('x_53417_demo.user');
+        });
+
+        it('Should throw error if roles are missing', function() {
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getAssignedToRole(null);
+            }).toThrowError();
+        });
+
+        it('Should return return empty lists for users and groups if the role does not exist', function() {
+            var assignedToRole = roleUtils.getAssignedToRole(['x_i_dont_exist']);
+            expect(Object.keys(assignedToRole.users).length).toBe(0);
+            expect(Object.keys(assignedToRole.groups).length).toBe(0);
+        });
+
     });
 }]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-11 11:03:34</sys_created_on>
         <sys_id>9bfe8e844700121058ceeb02d16d436b</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>20</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_9bfe8e844700121058ceeb02d16d436b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-11 11:03:34</sys_updated_on>
+        <sys_updated_on>2024-08-11 14:58:45</sys_updated_on>
     </sys_script_include>
 </record_update>
