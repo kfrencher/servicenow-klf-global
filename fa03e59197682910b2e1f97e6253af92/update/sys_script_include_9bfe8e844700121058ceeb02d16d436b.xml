@@ -9,23 +9,29 @@
         <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_RoleUtilsTest</name>
         <script><![CDATA[/**
- * @param {*} outputs 
- * @param {*} steps 
- * @param {*} params 
- * @param {*} stepResult 
- * @param {*} assertEqual 
+ * @param {*} outputs
+ * @param {*} steps
+ * @param {*} params
+ * @param {*} stepResult
+ * @param {*} assertEqual
  */
-function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
-
+function KLF_RecordSync_RoleUtilsTest(
+    outputs,
+    steps,
+    params,
+    stepResult,
+    assertEqual
+) {
     var testRoleName = 'x_53417_demo.user';
     var testScope = 'x_53417_demo';
+    var klfRoleUtils = new global.KLF_RoleUtils();
 
     // Create configuration
     var connectionConfig = {
         username: 'kenneth.frencher',
         password: gs.getProperty('KLF_RecordSync.user.password'),
         instanceUrl: 'https://abspscpov2.service-now.com',
-        chunkSize: 20
+        chunkSize: 20,
     };
 
     describe('getRolesInScope()', function() {
@@ -188,8 +194,12 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
              *   }
              */
             var assignedToRole = roleUtils.getAssignedToRole([testRoleName]);
-            expect(assignedToRole.users[groupParts.user.getValue('user_name')]).toContain(testRoleName);
-            expect(assignedToRole.groups[groupParts.group.getValue('name')]).toContain(testRoleName);
+            expect(
+                assignedToRole.users[groupParts.user.getValue('user_name')]
+            ).toContain(testRoleName);
+            expect(
+                assignedToRole.groups[groupParts.group.getValue('name')]
+            ).toContain(testRoleName);
         });
 
         it('Should throw error if roles are missing', function() {
@@ -200,11 +210,12 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
 
         it('Should return return empty lists for users and groups if the role does not exist', function() {
-            var assignedToRole = roleUtils.getAssignedToRole(['x_i_dont_exist']);
+            var assignedToRole = roleUtils.getAssignedToRole([
+                'x_i_dont_exist',
+            ]);
             expect(Object.keys(assignedToRole.users).length).toBe(0);
             expect(Object.keys(assignedToRole.groups).length).toBe(0);
         });
-
     });
 
     describe('getRoleAssignedTo()', function() {
@@ -268,7 +279,9 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
 
         it('Should return return empty lists for users and groups if the role does not exist', function() {
-            var roleAssignedTo = roleUtils.getRoleAssignedTo(['x_i_dont_exist']);
+            var roleAssignedTo = roleUtils.getRoleAssignedTo([
+                'x_i_dont_exist',
+            ]);
             var role = roleAssignedTo['x_i_dont_exist'];
             expect(Object.keys(role.users).length).toBe(0);
             expect(Object.keys(role.groups).length).toBe(0);
@@ -277,53 +290,25 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
 
     describe('diffRoles()', function() {
         var roles1 = {
-            "role1": {
-                "users": [
-                    "user1",
-                    "user2"
-                ],
-                "groups": [
-                    "group1",
-                    "group2"
-                ]
+            role1: {
+                users: ['user1', 'user2'],
+                groups: ['group1', 'group2'],
             },
-            "role2": {
-                "users": [
-                    "user1",
-                    "user2"
-                ],
-                "groups": [
-                    "group1",
-                    "group2"
-                ]
-            }
+            role2: {
+                users: ['user1', 'user2'],
+                groups: ['group1', 'group2'],
+            },
         };
 
         var roles2 = {
-            "role1": {
-                "users": [
-                    "user1",
-                    "user2",
-                    "user3"
-                ],
-                "groups": [
-                    "group1",
-                    "group2",
-                    "group3"
-                ]
+            role1: {
+                users: ['user1', 'user2', 'user3'],
+                groups: ['group1', 'group2', 'group3'],
             },
-            "role2": {
-                "users": [
-                    "user1",
-                    "user2",
-                    "user3"
-                ],
-                "groups": [
-                    "group1",
-                    "group2",
-                    "group3"
-                ]
-            }
+            role2: {
+                users: ['user1', 'user2', 'user3'],
+                groups: ['group1', 'group2', 'group3'],
+            },
         };
 
         /** @type {global.KLF_RecordSync_RoleUtils} */
@@ -349,26 +334,14 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
 
         it('Should throw an error if the list of roles in role1 and role2 are different', function() {
             var differentRoles = {
-                "role1": {
-                    "users": [
-                        "user1",
-                        "user2"
-                    ],
-                    "groups": [
-                        "group1",
-                        "group2"
-                    ]
+                role1: {
+                    users: ['user1', 'user2'],
+                    groups: ['group1', 'group2'],
                 },
-                "differentRole2": {
-                    "users": [
-                        "user1",
-                        "user2"
-                    ],
-                    "groups": [
-                        "group1",
-                        "group2"
-                    ]
-                }
+                differentRole2: {
+                    users: ['user1', 'user2'],
+                    groups: ['group1', 'group2'],
+                },
             };
             expect(function() {
                 roleUtils.diffRoles(roles1, differentRoles);
@@ -378,14 +351,14 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         it('Should return an object that represents no differences if roles are the same', function() {
             /** @type {RoleAssignedToData} */
             var noDifferences = {
-                "role1": {
-                    "users": [],
-                    "groups": []
+                role1: {
+                    users: [],
+                    groups: [],
                 },
-                "role2": {
-                    "users": [],
-                    "groups": []
-                }
+                role2: {
+                    users: [],
+                    groups: [],
+                },
             };
             var actualDiff = roleUtils.diffRoles(roles1, roles1);
             expect(actualDiff).toEqual(noDifferences);
@@ -393,21 +366,21 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
 
         it('Should return an object that represents the differences between two roles', function() {
             var expectedDiff = {
-                "role1": {
-                    "users": ["user3"],
-                    "groups": ["group3"]
+                role1: {
+                    users: ['user3'],
+                    groups: ['group3'],
                 },
-                "role2": {
-                    "users": ["user3"],
-                    "groups": ["group3"]
-                }
+                role2: {
+                    users: ['user3'],
+                    groups: ['group3'],
+                },
             };
             var actualDiff = roleUtils.diffRoles(roles2, roles1);
             expect(actualDiff).toEqual(expectedDiff);
         });
     });
 
-    fdescribe('diffLocalAndRemoteRoles()', function() {
+    describe('diffLocalAndRemoteRoles()', function() {
         /** @type {global.KLF_RecordSync_RoleUtils} */
         var roleUtils;
         beforeAll(function() {
@@ -424,34 +397,145 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
             testUtils.cleanup();
         });
 
-        fit('Should return an object that represents the differences between local and remote roles', function() {
+        it('Should return an object that represents the differences between local and remote roles', function() {
             var testRoleName = 'klf_test_role';
             testUtils.createRole(testRoleName);
             // Create a group and add a role to it
             var groupParts = testUtils.createCommonGroup();
             testUtils.addRoleToGroup(groupParts.group, testRoleName);
             testUtils.addRoleToUser(groupParts.user, testRoleName);
+            var expectedDiff = {
+                klf_test_role: {
+                    users: [groupParts.user.getValue('user_name')],
+                    groups: [groupParts.group.getValue('name')],
+                },
+            };
 
-            gs.log(JSON.stringify(roleUtils.getRoleAssignedTo([testRoleName]), null, 4), 'KLF_RecordSync_RoleUtilsTest');
+            spyOn(roleUtils, 'getRemoteRoleAssignedTo').and.returnValue({
+                success: true,
+                roleAssignedToData: {
+                    klf_test_role: {
+                        users: [],
+                        groups: [],
+                    },
+                },
+            });
 
+            var actualDiff = roleUtils.diffLocalAndRemoteRoles([testRoleName]);
+            expect(actualDiff).toEqual(expectedDiff);
+        });
 
-            // var missingRoles = roleUtils.diffLocalAndRemoteRoles([testRoleName]);
-            // expect(missingRoles).toEqual();
+        it('shoult throw an error if the request fails', function() {
+            spyOn(roleUtils, 'getRemoteRoleAssignedTo').and.returnValue({
+                success: false,
+                roleAssignedToData: {},
+            });
+
+            expect(function() {
+                roleUtils.diffLocalAndRemoteRoles([testRoleName]);
+            }).toThrowError();
         });
     });
 
+    describe('addRoles()', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('Should add the specified roles', function() {
+            testUtils.createRole('role1');
+            testUtils.createRole('role2');
+
+            testUtils.createUser('user1');
+            testUtils.createUser('user2');
+            testUtils.createGroup('group1');
+            testUtils.createGroup('group2');
+
+            var rolesToAdd = {
+                role1: {
+                    users: ['user1'],
+                    groups: ['group1'],
+                },
+                role2: {
+                    users: ['user2'],
+                    groups: ['group2'],
+                },
+            };
+
+            var errors = roleUtils.addRoles(rolesToAdd);
+
+            expect(errors).toBeArrayOfSize(0);
+            expect(klfRoleUtils.userHasRole('user1', 'role1')).toBe(true);
+            expect(klfRoleUtils.userHasRole('user2', 'role2')).toBe(true);
+            expect(klfRoleUtils.groupHasRole('group1', 'role1')).toBe(true);
+            expect(klfRoleUtils.groupHasRole('group2', 'role2')).toBe(true);
+        });
+    });
+
+    describe('_addUserRole()', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('Should add the specified role to the user', function() {
+            testUtils.createUser('user1');
+            testUtils.createRole('role1');
+
+            roleUtils._addUserRole('user1', 'role1');
+
+            expect(klfRoleUtils.userHasRole('user1', 'role1')).toBe(true);
+        });
+
+        it('Should throw an error if the user does not exist', function() {
+            testUtils.createRole('role1');
+            expect(function() {
+                roleUtils._addUserRole('user1', 'role1');
+            }).toThrowError();
+        });
+
+        it('Should throw an error if the role does not exist', function() {
+            testUtils.createUser('user1');
+            expect(function() {
+                roleUtils._addUserRole('user1', 'role1');
+            }).toThrowError();
+        });
+    });
 }]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-11 11:03:34</sys_created_on>
         <sys_id>9bfe8e844700121058ceeb02d16d436b</sys_id>
-        <sys_mod_count>38</sys_mod_count>
+        <sys_mod_count>52</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_9bfe8e844700121058ceeb02d16d436b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-18 18:36:43</sys_updated_on>
+        <sys_updated_on>2024-08-18 23:00:39</sys_updated_on>
     </sys_script_include>
 </record_update>

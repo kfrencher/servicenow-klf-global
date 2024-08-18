@@ -468,9 +468,9 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         groupRole.query();
         if (!groupRole.next()) {
             groupRole.newRecord();
-            groupRole.user = group.sys_id.toString();
-            groupRole.role = role.sys_id.toString();
-            groupRole.insert();
+            groupRole.group = group.getUniqueValue();
+            groupRole.role = role.getUniqueValue();
+            groupRole.update();
         }
     },
 
@@ -502,10 +502,10 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         userRole.addQuery('role.name', roleName);
         userRole.query();
         if (!userRole.next()) {
-            userRole.initialize();
-            userRole.user = user.sys_id.toString();
-            userRole.role = role.sys_id.toString();
-            userRole.insert();
+            userRole.newRecord();
+            userRole.user = user.getUniqueValue();
+            userRole.role = role.getUniqueValue();
+            userRole.update();
         }
     }
 
@@ -514,14 +514,14 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-09 21:41:17</sys_created_on>
         <sys_id>95cdc267477b421058ceeb02d16d4333</sys_id>
-        <sys_mod_count>37</sys_mod_count>
+        <sys_mod_count>43</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_95cdc267477b421058ceeb02d16d4333</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-11 13:27:44</sys_updated_on>
+        <sys_updated_on>2024-08-18 22:57:45</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>95cdc267477b421058ceeb02d16d4333</id>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_RoleUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RoleUtils</name>
+        <script><![CDATA[/**
+ * This script contains general functions that help with role management in ServiceNow.
+ * - userHasRole: Returns true if the user has the specified role.
+ * - groupHasRole: Returns true if the group has the role.
+ */
+
+//@ts-ignore
+var global = global || {};
+
+global.KLF_RoleUtils = function() {};
+
+global.KLF_RoleUtils.prototype = {
+    /**
+     * @param {string} message 
+     */
+    logError: function(message) {
+        gs.logError(message, "KLF_RoleUtils");
+    },
+
+    /**
+     * Returns true if the user has the specified role.
+     * @param {string} username
+     * @param {string} roleName
+     * @returns {boolean}
+     */
+    userHasRole: function(username, roleName) {
+        if (!username) {
+            this.logError("KLF_RoleUtils.userHasRole: username is required");
+            return false;
+        }
+
+        if (!roleName) {
+            this.logError("KLF_RoleUtils.userHasRole: roleName is required");
+            return false;
+        }
+
+        var userRole = new GlideRecord("sys_user_has_role");
+        userRole.addQuery("user.user_name", username);
+        userRole.addQuery("role.name", roleName);
+        userRole.query();
+        return userRole.hasNext();
+    },
+
+    /**
+     * Returns true if the group has the role
+     * @param {string} groupName
+     * @param {string} roleName
+     * @returns {boolean}
+     */
+    groupHasRole: function(groupName, roleName) {
+        if (!groupName) {
+            this.logError("KLF_RoleUtils.userHasRole: groupName is required");
+            return false;
+        }
+
+        if (!roleName) {
+            this.logError("KLF_RoleUtils.userHasRole: roleName is required");
+            return false;
+        }
+
+        var groupRole = new GlideRecord("sys_group_has_role");
+        groupRole.addQuery("group.name", groupName);
+        groupRole.addQuery("role.name", roleName);
+        groupRole.query();
+        return groupRole.hasNext();
+    },
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-18 22:16:44</sys_created_on>
+        <sys_id>e03ce4a6470c121058ceeb02d16d43db</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>KLF_RoleUtils</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_e03ce4a6470c121058ceeb02d16d43db</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-18 23:36:32</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>e03ce4a6470c121058ceeb02d16d43db</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-18 23:14:32</sys_created_on>
+        <sys_id>c76938aa474c121058ceeb02d16d430e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-18 23:14:32</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
+</record_update>

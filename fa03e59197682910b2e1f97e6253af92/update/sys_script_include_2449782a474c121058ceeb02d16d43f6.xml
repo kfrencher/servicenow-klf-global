@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_RoleUtilsTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RoleUtilsTest</name>
+        <script><![CDATA[/**
+ * @param {*} outputs 
+ * @param {*} steps 
+ * @param {*} params 
+ * @param {*} stepResult 
+ * @param {*} assertEqual 
+ */
+function KLF_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
+
+    describe('userHasRole', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return true when the user has the role', function() {
+            var roleName = 'test_role';
+            var user = testUtils.createCommonUser();
+            testUtils.createRole(roleName);
+            testUtils.addRoleToUser(user, roleName);
+
+            var roleUtils = new global.KLF_RoleUtils();
+            var userHasRole = roleUtils.userHasRole(user.getValue('user_name'), roleName);
+
+            expect(userHasRole).toBe(true);
+        });
+
+        it('should return false when the user does not have the role', function() {
+            var roleName = 'test_role';
+            var user = testUtils.createCommonUser();
+            testUtils.createRole(roleName);
+            var roleUtils = new global.KLF_RoleUtils();
+
+            var userHasRole = roleUtils.userHasRole(user.getValue('user_name'), roleName);
+
+            expect(userHasRole).toBe(false);
+        });
+
+        it('should return false when the user is falsy', function() {
+            var roleName = 'test_role';
+            testUtils.createRole(roleName);
+
+
+            spyOn(global.KLF_RoleUtils.prototype, 'logError');
+            var roleUtils = new global.KLF_RoleUtils();
+            var userHasRole = roleUtils.userHasRole('', roleName);
+
+            expect(userHasRole).toBe(false);
+            expect(global.KLF_RoleUtils.prototype.logError).toHaveBeenCalled();
+        });
+
+        it('should return false when the role is falsy', function() {
+            var user = testUtils.createCommonUser();
+            var roleUtils = new global.KLF_RoleUtils();
+
+            spyOn(global.KLF_RoleUtils.prototype, 'logError');
+            var userHasRole = roleUtils.userHasRole(user.getValue('user_name'), '');
+
+            expect(userHasRole).toBe(false);
+            expect(global.KLF_RoleUtils.prototype.logError).toHaveBeenCalled();
+        });
+    });
+
+    describe("groupHasRole", function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return true when the group has the role', function() {
+            var roleName = 'test_role';
+            var group = testUtils.createCommonGroup().group;
+            testUtils.createRole(roleName);
+            testUtils.addRoleToGroup(group, roleName);
+
+            var roleUtils = new global.KLF_RoleUtils();
+            var groupHasRole = roleUtils.groupHasRole(group.getValue('name'), roleName);
+
+            expect(groupHasRole).toBe(true);
+        });
+
+        it('should return false when the group does not have the role', function() {
+            var roleName = 'test_role';
+            var group = testUtils.createCommonGroup().group;
+            testUtils.createRole(roleName);
+            var roleUtils = new global.KLF_RoleUtils();
+
+            var groupHasRole = roleUtils.groupHasRole(group.getValue('name'), roleName);
+
+            expect(groupHasRole).toBe(false);
+        });
+
+        it('should return false when the group name is falsy', function() {
+            var roleName = 'test_role';
+            testUtils.createRole(roleName);
+
+            spyOn(global.KLF_RoleUtils.prototype, 'logError');
+
+            var roleUtils = new global.KLF_RoleUtils();
+            var groupHasRole = roleUtils.groupHasRole('', roleName);
+
+            expect(groupHasRole).toBe(false);
+            expect(global.KLF_RoleUtils.prototype.logError).toHaveBeenCalled();
+        });
+
+        it('should return false when the role name is falsy', function() {
+            var group = testUtils.createCommonGroup().group;
+            var roleUtils = new global.KLF_RoleUtils();
+
+            spyOn(global.KLF_RoleUtils.prototype, 'logError');
+            var groupHasRole = roleUtils.groupHasRole(group.getValue('name'), '');
+
+            expect(groupHasRole).toBe(false);
+            expect(global.KLF_RoleUtils.prototype.logError).toHaveBeenCalled();
+        });
+
+    });
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-18 23:13:48</sys_created_on>
+        <sys_id>2449782a474c121058ceeb02d16d43f6</sys_id>
+        <sys_mod_count>16</sys_mod_count>
+        <sys_name>KLF_RoleUtilsTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_2449782a474c121058ceeb02d16d43f6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-18 23:52:41</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>2449782a474c121058ceeb02d16d43f6</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-18 23:14:58</sys_created_on>
+        <sys_id>e189b0aa474c121058ceeb02d16d43a1</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-18 23:14:58</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
