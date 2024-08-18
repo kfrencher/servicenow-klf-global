@@ -17,6 +17,9 @@
  */
 function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
+    var testRoleName = 'x_53417_demo.user';
+    var testScope = 'x_53417_demo';
+
     // Create configuration
     var connectionConfig = {
         username: 'kenneth.frencher',
@@ -25,7 +28,7 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         chunkSize: 20
     };
 
-    describe('getRolesInScope', function() {
+    describe('getRolesInScope()', function() {
         /** @type {global.KLF_RecordSync_RoleUtils} */
         var roleUtils;
         beforeAll(function() {
@@ -33,11 +36,11 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
 
         it('Should return a list with at least one entry', function() {
-            var roles = roleUtils.getRolesInScope('x_53417_demo');
+            var roles = roleUtils.getRolesInScope(testScope);
 
             expect(Array.isArray(roles)).toBe(true);
             expect(roles.length).toBeGreaterThan(0);
-            expect(roles).toContain('x_53417_demo.user');
+            expect(roles).toContain(testRoleName);
         });
 
         it('Should throw an error for missing scope', function() {
@@ -53,7 +56,7 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
     });
 
-    describe('getGroupsForRole', function() {
+    describe('getGroupsForRole()', function() {
         /** @type {global.KLF_RecordSync_RoleUtils} */
         var roleUtils;
         beforeAll(function() {
@@ -73,9 +76,9 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         it('Should return a list of groups', function() {
             // Need to create a group
             var group = testUtils.createGroup('ROLE_UTILS_TEST_GROUP');
-            testUtils.addRoleToGroup(group, 'x_53417_demo.user');
+            testUtils.addRoleToGroup(group, testRoleName);
 
-            var groups = roleUtils.getGroupsForRole('x_53417_demo.user');
+            var groups = roleUtils.getGroupsForRole(testRoleName);
             expect(groups).toContain('ROLE_UTILS_TEST_GROUP');
         });
 
@@ -97,7 +100,7 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
     });
 
-    describe('getUsersForRole', function() {
+    describe('getUsersForRole()', function() {
         /** @type {global.KLF_RecordSync_RoleUtils} */
         var roleUtils;
         beforeAll(function() {
@@ -117,9 +120,9 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         it('Should return a list of users', function() {
             // Need to create a group
             var user = testUtils.createUser('ROLE_UTILS_TEST_USER');
-            testUtils.addRoleToUser(user, 'x_53417_demo.user');
+            testUtils.addRoleToUser(user, testRoleName);
 
-            var groups = roleUtils.getUsersForRole('x_53417_demo.user');
+            var groups = roleUtils.getUsersForRole(testRoleName);
             expect(groups).toContain('ROLE_UTILS_TEST_USER');
         });
 
@@ -141,7 +144,7 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
     });
 
-    describe('getAssignedToRole', function() {
+    describe('getAssignedToRole()', function() {
         /** @type {global.KLF_RecordSync_RoleUtils} */
         var roleUtils;
         beforeAll(function() {
@@ -159,7 +162,7 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
 
         it('Should return an object that contains users and groups properties', function() {
-            var roleMap = roleUtils.getAssignedToRole(['x_53417_demo.user']);
+            var roleMap = roleUtils.getAssignedToRole([testRoleName]);
             var properties = Object.keys(roleMap);
             expect(properties).toContain('users');
             expect(properties).toContain('groups');
@@ -168,8 +171,8 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         it('Should return a list of users and groups assigned to the roles', function() {
             // Create a group and add a role to it
             var groupParts = testUtils.createCommonGroup();
-            testUtils.addRoleToGroup(groupParts.group, 'x_53417_demo.user');
-            testUtils.addRoleToUser(groupParts.user, 'x_53417_demo.user');
+            testUtils.addRoleToGroup(groupParts.group, testRoleName);
+            testUtils.addRoleToUser(groupParts.user, testRoleName);
             /**
              * Result should look something like
              * {
@@ -184,9 +187,9 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
              *       ]
              *   }
              */
-            var assignedToRole = roleUtils.getAssignedToRole(['x_53417_demo.user']);
-            expect(assignedToRole.users[groupParts.user.getValue('user_name')]).toContain('x_53417_demo.user');
-            expect(assignedToRole.groups[groupParts.group.getValue('name')]).toContain('x_53417_demo.user');
+            var assignedToRole = roleUtils.getAssignedToRole([testRoleName]);
+            expect(assignedToRole.users[groupParts.user.getValue('user_name')]).toContain(testRoleName);
+            expect(assignedToRole.groups[groupParts.group.getValue('name')]).toContain(testRoleName);
         });
 
         it('Should throw error if roles are missing', function() {
@@ -203,18 +206,252 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         });
 
     });
+
+    describe('getRoleAssignedTo()', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('Should return an object that contains the correct root properties', function() {
+            var roleMap = roleUtils.getRoleAssignedTo([testRoleName]);
+            var properties = Object.keys(roleMap);
+            expect(properties).toContain(testRoleName);
+            var assignedTo = roleMap[testRoleName];
+            var assignedToProperties = Object.keys(assignedTo);
+            expect(assignedToProperties).toContain('users');
+            expect(assignedToProperties).toContain('groups');
+        });
+
+        it('Role should have the correct user and group', function() {
+            // Create a group and add a role to it
+            var groupParts = testUtils.createCommonGroup();
+            testUtils.addRoleToGroup(groupParts.group, testRoleName);
+            testUtils.addRoleToUser(groupParts.user, testRoleName);
+            /**
+             * Result should look something like
+             * {
+             *   "x_53417_demo.user": {
+             *       "users": [
+             *           "avery.parbol",
+             *           "alyssa.biasotti"
+             *       ],
+             *       "groups": [
+             *           "ATF_TestGroup_ServiceDesk",
+             *           "Network CAB Managers"
+             *       ]
+             *   }
+             * }
+             */
+            var roleAssignedTo = roleUtils.getRoleAssignedTo([testRoleName]);
+            var role = roleAssignedTo[testRoleName];
+            expect(role.users).toContain(groupParts.user.getValue('user_name'));
+            expect(role.groups).toContain(groupParts.group.getValue('name'));
+        });
+
+        it('Should throw error if roles are missing', function() {
+            expect(function() {
+                // @ts-ignore
+                roleUtils.getRoleAssignedTo(null);
+            }).toThrowError();
+        });
+
+        it('Should return return empty lists for users and groups if the role does not exist', function() {
+            var roleAssignedTo = roleUtils.getRoleAssignedTo(['x_i_dont_exist']);
+            var role = roleAssignedTo['x_i_dont_exist'];
+            expect(Object.keys(role.users).length).toBe(0);
+            expect(Object.keys(role.groups).length).toBe(0);
+        });
+    });
+
+    describe('diffRoles()', function() {
+        var roles1 = {
+            "role1": {
+                "users": [
+                    "user1",
+                    "user2"
+                ],
+                "groups": [
+                    "group1",
+                    "group2"
+                ]
+            },
+            "role2": {
+                "users": [
+                    "user1",
+                    "user2"
+                ],
+                "groups": [
+                    "group1",
+                    "group2"
+                ]
+            }
+        };
+
+        var roles2 = {
+            "role1": {
+                "users": [
+                    "user1",
+                    "user2",
+                    "user3"
+                ],
+                "groups": [
+                    "group1",
+                    "group2",
+                    "group3"
+                ]
+            },
+            "role2": {
+                "users": [
+                    "user1",
+                    "user2",
+                    "user3"
+                ],
+                "groups": [
+                    "group1",
+                    "group2",
+                    "group3"
+                ]
+            }
+        };
+
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        it('Should throw an error if roles are null', function() {
+            expect(function() {
+                // @ts-ignore
+                roleUtils.diffRoles(null, null);
+            }).toThrowError();
+            expect(function() {
+                // @ts-ignore
+                roleUtils.diffRoles({}, null);
+            }).toThrowError();
+            expect(function() {
+                // @ts-ignore
+                roleUtils.diffRoles(null, {});
+            }).toThrowError();
+        });
+
+        it('Should throw an error if the list of roles in role1 and role2 are different', function() {
+            var differentRoles = {
+                "role1": {
+                    "users": [
+                        "user1",
+                        "user2"
+                    ],
+                    "groups": [
+                        "group1",
+                        "group2"
+                    ]
+                },
+                "differentRole2": {
+                    "users": [
+                        "user1",
+                        "user2"
+                    ],
+                    "groups": [
+                        "group1",
+                        "group2"
+                    ]
+                }
+            };
+            expect(function() {
+                roleUtils.diffRoles(roles1, differentRoles);
+            }).toThrowError();
+        });
+
+        it('Should return an object that represents no differences if roles are the same', function() {
+            /** @type {RoleAssignedToData} */
+            var noDifferences = {
+                "role1": {
+                    "users": [],
+                    "groups": []
+                },
+                "role2": {
+                    "users": [],
+                    "groups": []
+                }
+            };
+            var actualDiff = roleUtils.diffRoles(roles1, roles1);
+            expect(actualDiff).toEqual(noDifferences);
+        });
+
+        it('Should return an object that represents the differences between two roles', function() {
+            var expectedDiff = {
+                "role1": {
+                    "users": ["user3"],
+                    "groups": ["group3"]
+                },
+                "role2": {
+                    "users": ["user3"],
+                    "groups": ["group3"]
+                }
+            };
+            var actualDiff = roleUtils.diffRoles(roles2, roles1);
+            expect(actualDiff).toEqual(expectedDiff);
+        });
+    });
+
+    fdescribe('diffLocalAndRemoteRoles()', function() {
+        /** @type {global.KLF_RecordSync_RoleUtils} */
+        var roleUtils;
+        beforeAll(function() {
+            roleUtils = new global.KLF_RecordSync_RoleUtils(connectionConfig);
+        });
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        fit('Should return an object that represents the differences between local and remote roles', function() {
+            var testRoleName = 'klf_test_role';
+            testUtils.createRole(testRoleName);
+            // Create a group and add a role to it
+            var groupParts = testUtils.createCommonGroup();
+            testUtils.addRoleToGroup(groupParts.group, testRoleName);
+            testUtils.addRoleToUser(groupParts.user, testRoleName);
+
+            gs.log(JSON.stringify(roleUtils.getRoleAssignedTo([testRoleName]), null, 4), 'KLF_RecordSync_RoleUtilsTest');
+
+
+            // var missingRoles = roleUtils.diffLocalAndRemoteRoles([testRoleName]);
+            // expect(missingRoles).toEqual();
+        });
+    });
+
 }]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-11 11:03:34</sys_created_on>
         <sys_id>9bfe8e844700121058ceeb02d16d436b</sys_id>
-        <sys_mod_count>20</sys_mod_count>
+        <sys_mod_count>38</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_9bfe8e844700121058ceeb02d16d436b</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-11 14:58:45</sys_updated_on>
+        <sys_updated_on>2024-08-18 18:36:43</sys_updated_on>
     </sys_script_include>
 </record_update>

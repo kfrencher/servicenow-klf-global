@@ -128,7 +128,13 @@ global.KLF_TestUtils.prototype = {
         var createdByUserName = createdBy.getValue('user_name');
 
         tableNames.forEach(function(tableName) {
+            if(tableName.startsWith('sys_')) {
+                throw new Error('Cannot delete records from system tables');
+            }
             var gr = new GlideRecord(tableName);
+            if(!gr.isValid()) {
+                throw new Error('Invalid table name: ' + tableName);
+            }
             gr.addQuery('sys_created_by', createdByUserName);
             gr.deleteMultiple();
         });
@@ -270,6 +276,18 @@ global.KLF_TestUtils.prototype = {
         return impersonator.impersonate(userSysId);
     },
 
+    /**
+     * Creates a new sys_user_role 
+     * @param {string} roleName
+     */
+    createRole: function(roleName) {
+        var role = new GlideRecord('sys_user_role');
+        role.newRecord();
+        role.name = roleName;
+        role.update();
+        this.recordTracker.trackByGlideRecord(role);
+        return role;
+    },
 
     /**
      * Creates a new sys_user_group record
@@ -359,13 +377,13 @@ global.KLF_TestUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:05:57</sys_created_on>
         <sys_id>82b7058897b86550b2e1f97e6253afa2</sys_id>
-        <sys_mod_count>42</sys_mod_count>
+        <sys_mod_count>45</sys_mod_count>
         <sys_name>KLF_TestUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_82b7058897b86550b2e1f97e6253afa2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-11 14:54:05</sys_updated_on>
+        <sys_updated_on>2024-08-18 18:35:52</sys_updated_on>
     </sys_script_include>
 </record_update>
