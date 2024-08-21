@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordSync_UserUtilsTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RecordSync_UserUtilsTest</name>
+        <script><![CDATA[function createUserUtils() {
+    return new global.KLF_RecordSync_UserUtils({
+        username: 'kenneth.frencher',
+        password: 'password',
+        instanceUrl: 'https://abspscpov2.service-now.com',
+        chunkSize: 20
+    });
+}
+
+// @ts-ignore
+function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assertEqual) {
+    var testScopeName = 'x_53417_test_scope';
+    // List of all the user fields in the scope
+    var userFieldsInScope = [{
+            columnName: 'assigned_to',
+            table: testScopeName + '_task',
+            type: 'reference'
+        },
+        {
+            columnName: 'readonly_users',
+            table: testScopeName + '_task',
+            type: 'glide_list'
+        },
+        {
+            columnName: 'requested_for_user',
+            table: testScopeName + '_request',
+            type: 'reference'
+        }
+    ];
+
+    var userFieldsInTask = userFieldsInScope.filter(function(field) {
+        return field.table === testScopeName + '_task';
+    });
+
+    // The user fields in request, which will include the user fields in task
+    // because the request table extends the task table
+    var userFieldsInRequest = userFieldsInScope.filter(function(field) {
+        return field.table === testScopeName + '_request' ||
+            field.table === testScopeName + '_task';
+    });
+
+    /**
+     * 
+     * @param {KLF_RecordSync_UserField} f1 
+     * @param {KLF_RecordSync_UserField} f2 
+     * @returns {number}
+     */
+    function sortFieldsAscByColumnName(f1, f2) {
+        return f1.columnName.localeCompare(f2.columnName);
+    }
+
+    // List of all the group fields in the scope
+    var groupFieldNamesInScope = [
+        'requested_for_group',
+        'assignment_group',
+        'readonly_groups'
+    ];
+
+
+    describe('getUserFields()', function() {
+        /** @type {string} */
+        var testScopeSysId;
+        beforeAll(function() {
+            var testUtils = new global.KLF_TestUtils();
+            testScopeSysId = testUtils.getScopeSysId(testScopeName);
+        });
+
+        /** @type {global.KLF_RecordSync_UserUtils} */
+        var userUtils;
+
+        beforeEach(function() {
+            userUtils = createUserUtils();
+        });
+
+        it('should find all the user fields in the scope', function() {
+            // Need to add the filter property to the expected fields.
+            var expectedFields = userFieldsInScope.slice().map(function(field) {
+                // Cloning field
+                var _field = JSON.parse(JSON.stringify(field));
+                // @ts-ignore
+                _field.filter = undefined;
+                return _field;
+            });
+
+            var actualFields = userUtils.getUserFields(testScopeSysId);
+            actualFields.sort(sortFieldsAscByColumnName);
+
+            expect(actualFields).toEqual(expectedFields);
+        });
+    });
+
+    describe('getUserFieldsInTable()', function() {
+        /** @type {global.KLF_RecordSync_UserUtils} */
+        var userUtils;
+
+        beforeEach(function() {
+            userUtils = createUserUtils();
+        });
+
+        it('should find all the user fields in the specified table', function() {
+            var taskActualFields = userUtils.getUserFieldsInTable(testScopeName + '_task');
+            taskActualFields.sort(sortFieldsAscByColumnName);
+            expect(taskActualFields).toEqual(userFieldsInTask);
+
+            var requestActualFields = userUtils.getUserFieldsInTable(testScopeName + '_request');
+            requestActualFields.sort(sortFieldsAscByColumnName);
+            expect(requestActualFields).toEqual(userFieldsInRequest);
+        });
+
+        it('should throw error if table name does not exist', function() {
+            expect(function() {
+                userUtils.getUserFieldsInTable('non_existent_table');
+            }).toThrow();
+        });
+
+        it('should throw error if table name is falsy', function() {
+            expect(function() {
+                userUtils.getUserFieldsInTable('');
+            }).toThrow();
+        });
+
+    });
+}
+
+// @ts-ignore
+KLF_RecordSync_UserUtilsTest.checkSysUserDisplayField = function(outputs, steps, params, stepResult, assertEqual) {
+    describe('checkSysUserDisplayField()', function() {
+        /** @type {global.KLF_RecordSync_UserUtils} */
+        var userUtils;
+        /** @type {GlideRecord} */
+        var usernameField;
+        beforeEach(function() {
+            usernameField = new GlideRecord('sys_dictionary');
+            usernameField.addQuery('name', 'sys_user');
+            usernameField.addQuery('element', 'user_name');
+            usernameField.query();
+            usernameField.next();
+
+            userUtils = new global.KLF_RecordSync_UserUtils({
+                username: 'kenneth.frencher',
+                password: 'password',
+                instanceUrl: 'https://abspscpov2.service-now.com',
+                chunkSize: 20
+            });
+        });
+
+        it('should return true if sys_user display field is user_name', function() {
+            usernameField.display = true;
+            usernameField.update();
+
+            expect(userUtils.checkSysUserDisplayField()).toBe(true);
+        });
+
+        it('should return false if sys_user display field is not user_name', function() {
+            usernameField.display = false;
+            usernameField.update();
+
+            expect(userUtils.checkSysUserDisplayField()).toBe(false);
+        });
+    });
+};
+
+// @ts-ignore
+KLF_RecordSync_UserUtilsTest.clearSysUserDisplayField = function(outputs, steps, params, stepResult, assertEqual) {
+    describe('clearSysUserDisplayField()', function() {
+        /** @type {global.KLF_RecordSync_UserUtils} */
+        var userUtils;
+        /** @type {GlideRecord} */
+        var usernameField;
+        beforeEach(function() {
+            usernameField = new GlideRecord('sys_dictionary');
+            usernameField.addQuery('name', 'sys_user');
+            usernameField.addQuery('element', 'user_name');
+            usernameField.query();
+            usernameField.next();
+
+            userUtils = new global.KLF_RecordSync_UserUtils({
+                username: 'kenneth.frencher',
+                password: 'password',
+                instanceUrl: 'https://abspscpov2.service-now.com',
+                chunkSize: 20
+            });
+        });
+
+        it('should set the display field of all columns in sys_user to false', function() {
+            usernameField.display = true;
+            usernameField.update();
+
+            expect(userUtils.checkSysUserDisplayField()).toBe(true);
+
+            userUtils.clearSysUserDisplayField();
+
+
+            var sysUserDisplayField = new GlideRecord('sys_dictionary');
+            sysUserDisplayField.addQuery('name', 'sys_user');
+            sysUserDisplayField.addQuery('display', true);
+            sysUserDisplayField.query();
+
+            expect(sysUserDisplayField.hasNext()).toBe(false);
+        });
+    });
+};
+
+// @ts-ignore
+KLF_RecordSync_UserUtilsTest.updateSysUserDisplayField = function(outputs, steps, params, stepResult, assertEqual) {
+    describe('updateSysUserDisplayField()', function() {
+        /** @type {global.KLF_RecordSync_UserUtils} */
+        var userUtils;
+        /** @type {GlideRecord} */
+        var usernameField;
+        beforeEach(function() {
+            userUtils.clearSysUserDisplayField();
+
+            userUtils = createUserUtils();
+        });
+
+        it('should set the display field of the specified column in sys_user to true', function() {
+            expect(userUtils.checkSysUserDisplayField()).toBe(false);
+
+            userUtils.updateSysUserDisplayField('user_name');
+
+            var sysUserDisplayField = new GlideRecord('sys_dictionary');
+            sysUserDisplayField.addQuery('name', 'sys_user');
+            sysUserDisplayField.addQuery('display', true);
+            sysUserDisplayField.query();
+            sysUserDisplayField.next();
+
+            expect(sysUserDisplayField.getRowCount()).toBe(1);
+            expect(sysUserDisplayField.getValue('element')).toBe('user_name');
+        });
+
+        it('should return the current display field name', function() {
+            // Make the name field the display field
+            var nameField = new GlideRecord('sys_dictionary');
+            nameField.addQuery('name', 'sys_user');
+            nameField.addQuery('element', 'name');
+            nameField.query();
+            nameField.next();
+            nameField.display = true;
+            nameField.update();
+
+            expect(userUtils.updateSysUserDisplayField('user_name')).toBe('name');
+        });
+
+        it('should throw an error if the specified column does not exist', function() {
+            expect(function() {
+                userUtils.updateSysUserDisplayField('non_existent_column');
+            }).toThrow();
+        });
+
+        it('should throw error if fieldname is falsy', function() {
+            expect(function() {
+                userUtils.updateSysUserDisplayField('');
+            }).toThrow();
+        });
+    });
+};
+
+// @ts-ignore
+KLF_RecordSync_UserUtilsTest.updateSysUserDisplayField = function(outputs, steps, params, stepResult, assertEqual) {
+
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-21 00:12:18</sys_created_on>
+        <sys_id>01d95b8b47c0121058ceeb02d16d4365</sys_id>
+        <sys_mod_count>34</sys_mod_count>
+        <sys_name>KLF_RecordSync_UserUtilsTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_01d95b8b47c0121058ceeb02d16d4365</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-21 14:02:40</sys_updated_on>
+    </sys_script_include>
+</record_update>

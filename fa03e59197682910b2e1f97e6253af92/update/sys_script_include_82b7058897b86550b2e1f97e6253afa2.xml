@@ -128,11 +128,11 @@ global.KLF_TestUtils.prototype = {
         var createdByUserName = createdBy.getValue('user_name');
 
         tableNames.forEach(function(tableName) {
-            if(tableName.startsWith('sys_')) {
+            if (tableName.startsWith('sys_')) {
                 throw new Error('Cannot delete records from system tables');
             }
             var gr = new GlideRecord(tableName);
-            if(!gr.isValid()) {
+            if (!gr.isValid()) {
                 throw new Error('Invalid table name: ' + tableName);
             }
             gr.addQuery('sys_created_by', createdByUserName);
@@ -371,19 +371,57 @@ global.KLF_TestUtils.prototype = {
         });
         this.recordTracker.trackByGlideRecord(userHasRole);
         return userHasRole;
+    },
+
+    /**
+     * Creates a sys_scope record
+     * @param {string} scopeName - The name of the scope to create
+     * @returns {GlideRecord} - The newly created sys_scope record
+     */
+    createScope: function(scopeName) {
+        if (!scopeName) {
+            throw new Error('Scope name cannot be falsy');
+        }
+
+        var scope = new GlideRecord('sys_scope');
+        if (scope.get('scope', scopeName)) {
+            throw new Error('Scope already exists');
+        }
+        scope.newRecord();
+        scope.scope = scopeName;
+        scope.name = scopeName;
+        scope.short_description = 'Scope used in ATF. You can delete this';
+        scope.version = '1.0';
+        scope.update();
+        this.recordTracker.trackByGlideRecord(scope);
+        return scope;
+    },
+
+    /**
+     * Returns the sys_id of the given scopeName
+     * @param {string} scopeName
+     * @returns {string} The sys_id of the scope with the given name
+     */
+    getScopeSysId: function(scopeName) {
+        var scope = new GlideRecord('sys_scope');
+        if (!scope.get('scope', scopeName)) {
+            throw new Error('Scope ' + scopeName + ' does not exist');
+        }
+        return scope.getUniqueValue();
     }
+
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:05:57</sys_created_on>
         <sys_id>82b7058897b86550b2e1f97e6253afa2</sys_id>
-        <sys_mod_count>45</sys_mod_count>
+        <sys_mod_count>49</sys_mod_count>
         <sys_name>KLF_TestUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_82b7058897b86550b2e1f97e6253afa2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-18 18:35:52</sys_updated_on>
+        <sys_updated_on>2024-08-21 12:37:55</sys_updated_on>
     </sys_script_include>
 </record_update>
