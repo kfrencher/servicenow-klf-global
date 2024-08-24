@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test_suite_test">
+    <sys_atf_test_suite_test action="DELETE">
+        <abort_on_failure>false</abort_on_failure>
+        <order/>
+        <sys_class_name>sys_atf_test_suite_test</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-24 22:16:05</sys_created_on>
+        <sys_id>a9956f1c4758961058ceeb02d16d4393</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>65956f1c4758961058ceeb02d16d438a</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_test_suite_test_a9956f1c4758961058ceeb02d16d4393</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-24 22:16:05</sys_updated_on>
+        <test display_value="">65956f1c4758961058ceeb02d16d438a</test>
+        <test_suite display_value="KLF Global">10f26bbb97a06550b2e1f97e6253af14</test_suite>
+    </sys_atf_test_suite_test>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>sys_atf_test_suite_test_a9956f1c4758961058ceeb02d16d4393</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test_suite_test"><sys_atf_test_suite_test action="INSERT_OR_UPDATE"><abort_on_failure>false</abort_on_failure><order/><sys_class_name>sys_atf_test_suite_test</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2024-08-24 22:16:05</sys_created_on><sys_id>a9956f1c4758961058ceeb02d16d4393</sys_id><sys_mod_count>0</sys_mod_count><sys_name>65956f1c4758961058ceeb02d16d438a</sys_name><sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package><sys_policy/><sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope><sys_update_name>sys_atf_test_suite_test_a9956f1c4758961058ceeb02d16d4393</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2024-08-24 22:16:05</sys_updated_on><test display_value="">65956f1c4758961058ceeb02d16d438a</test><test_suite display_value="KLF Global">10f26bbb97a06550b2e1f97e6253af14</test_suite></sys_atf_test_suite_test></record_update>]]></payload>
+        <payload_hash>761296098</payload_hash>
+        <record_name>65956f1c4758961058ceeb02d16d438a</record_name>
+        <reverted_from/>
+        <source>dcc98a124733021058ceeb02d16d4309</source>
+        <source_table>sys_upgrade_history</source_table>
+        <state>previous</state>
+        <sys_created_by/>
+        <sys_created_on>2024-08-06 00:11:20</sys_created_on>
+        <sys_id>eca6e7dc4758961058ceeb02d16d43b8</sys_id>
+        <sys_mod_count/>
+        <sys_recorded_at>1912506ac400000000</sys_recorded_at>
+        <sys_updated_by/>
+        <sys_updated_on/>
+        <type>Test Suite Test</type>
+        <update_guid>aca6e7dc4f58961068384b188a5243b8</update_guid>
+        <update_guid_history>aca6e7dc4f58961068384b188a5243b8:761296098</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-24 22:20:39</sys_created_on>
+        <sys_db_object display_value="" name="sys_atf_test_suite_test">sys_atf_test_suite_test</sys_db_object>
+        <sys_id>02b5ae11a7ad4a40ae3b223039412b84</sys_id>
+        <sys_metadata>a9956f1c4758961058ceeb02d16d4393</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>65956f1c4758961058ceeb02d16d438a</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_atf_test_suite_test_a9956f1c4758961058ceeb02d16d4393</sys_update_name>
+        <sys_update_version display_value="sys_atf_test_suite_test_a9956f1c4758961058ceeb02d16d4393">eca6e7dc4758961058ceeb02d16d43b8</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-24 22:20:39</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>

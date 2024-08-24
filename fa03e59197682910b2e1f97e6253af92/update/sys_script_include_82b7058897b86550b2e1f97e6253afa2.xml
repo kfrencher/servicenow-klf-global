@@ -28,15 +28,36 @@ var global = global || {};
 /**
  * @typedef {{sysId:string,tableName:string}} KLF_Document
  */
+
+
+/**
+ * @typedef {{recordTracker?: global.KLF_TestUtils.RecordTracker,commonGroupName?:string,commonUsername?:string,adminUsername?:string}} KLF_TestUtilsConfig
+ */
+
+/**
+ * General utility functions for to help with testing using ATF
+ * @class global.KLF_TestUtils
+ * contains utility functions
+ * @param {KLF_TestUtilsConfig} [config]
+ */
+global.KLF_TestUtils = function(config) {
+    var _config = config || /** @type {KLF_TestUtilsConfig} */ ({});
+    this.recordTracker = _config.recordTracker || new global.KLF_TestUtils.RecordTracker();
+    this.commonGroupName = _config.commonGroupName || gs.getProperty('KLF_TestUtils.common_group_name', 'KLF_TestGroup');
+    this.commonUsername = _config.commonUsername || gs.getProperty('KLF_TestUtils.common_username', 'KLF_TestUser');
+    this.adminUsername = _config.adminUsername || gs.getProperty('KLF_TestUtils.admin_username', 'KLF_TestAdminUser');
+};
+
 /**
  * Used to keep track of records that are created. This is useful for cleaning up after tests
  * Has the ability to delete the records after the test is done
  */
-function KLF_RecordTracker() {
+global.KLF_TestUtils.RecordTracker = function() {
     /** @type {KLF_Document[]} */
     this.documents = [];
-}
-KLF_RecordTracker.prototype = {
+};
+
+global.KLF_TestUtils.RecordTracker.prototype = {
 
     /**
      * @param {string} sysId 
@@ -71,24 +92,6 @@ KLF_RecordTracker.prototype = {
     }
 };
 
-
-/**
- * @typedef {{recordTracker?: KLF_RecordTracker,commonGroupName?:string,commonUsername?:string}} KLF_TestUtilsConfig
- */
-
-/**
- * General utility functions for to help with testing using ATF
- * @class global.KLF_TestUtils
- * contains utility functions
- * @param {KLF_TestUtilsConfig} [config]
- */
-global.KLF_TestUtils = function(config) {
-    var _config = config || /** @type {KLF_TestUtilsConfig} */ ({});
-    this.recordTracker = _config.recordTracker || new KLF_RecordTracker();
-    this.commonGroupName = _config.commonGroupName || gs.getProperty('KLF_TestUtils.common_group_name', 'KLF_TestGroup');
-    this.commonUsername = _config.commonUsername || gs.getProperty('KLF_TestUtils.common_username', 'KLF_TestUser');
-};
-
 global.KLF_TestUtils.prototype = {
 
     glideRecordUtils: new global.KLF_GlideRecordUtils(),
@@ -102,10 +105,10 @@ global.KLF_TestUtils.prototype = {
 
     /**
      * Creates a new RecordTracker instance
-     * @returns {KLF_RecordTracker} The newly created RecordTracker instance
+     * @returns {global.KLF_TestUtils.RecordTracker} The newly created RecordTracker instance
      */
     createRecordTracker: function() {
-        return new KLF_RecordTracker();
+        return new global.KLF_TestUtils.RecordTracker();
     },
 
     /**
@@ -187,6 +190,17 @@ global.KLF_TestUtils.prototype = {
         } else {
             return null;
         }
+    },
+
+    /**
+     * Creates a user with no roles or groups to simulate a common user
+     * @returns {GlideRecord} The newly created sys_user record
+     */
+    createAdminUser: function() {
+        var user = this.createUser(this.adminUsername);
+        this.addRoleToUser(user, 'admin');
+        this.recordTracker.trackByGlideRecord(user);
+        return user;
     },
 
     /**
@@ -415,13 +429,13 @@ global.KLF_TestUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:05:57</sys_created_on>
         <sys_id>82b7058897b86550b2e1f97e6253afa2</sys_id>
-        <sys_mod_count>49</sys_mod_count>
+        <sys_mod_count>51</sys_mod_count>
         <sys_name>KLF_TestUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_82b7058897b86550b2e1f97e6253afa2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-21 12:37:55</sys_updated_on>
+        <sys_updated_on>2024-08-24 22:40:40</sys_updated_on>
     </sys_script_include>
 </record_update>
