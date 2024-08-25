@@ -17,48 +17,6 @@ function KLF_RecordSyncTest() {
 
     var remoteAdminPassword = gs.getProperty('KLF_RecordSyncTest.remoteAdminPassword');
 
-    /**
-     * Clears the test data on the remote instance
-     * @returns {sn_ws.RESTResponseV2}
-     */
-    function clearRemoteTestData() {
-        var request = new sn_ws.RESTMessageV2();
-        request.setRequestHeader("Accept", "application/json");
-        var authHeader = 'Basic ' + GlideStringUtil.base64Encode(remoteAdminUser + ':' + remoteAdminPassword);
-        // Do not use setBasicAuth. This does not work with mutual auth for some reason
-        // request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
-        request.setRequestHeader('Authorization', authHeader);
-        request.setEndpoint(remoteInstanceUrl + gs.getProperty('KLF_RecordSyncTest.endpoint.clean'));
-        request.setHttpMethod('DELETE');
-        return request.execute();
-    }
-
-    /**
-     * @returns {KLF_RecordSyncConnectionConfig}
-     */
-    function createRemoteConnectionConfig() {
-        return {
-            username: remoteAdminUser,
-            password: remoteAdminPassword, // Retrieve password from encoded password property
-            instanceUrl: remoteInstanceUrl,
-            chunkSize: 3
-        };
-    }
-
-    /**
-     * @param {GlideRecord} adminUser 
-     * @param {string} password
-     * @returns {KLF_RecordSyncConnectionConfig}
-     */
-    function createConnectionConfig(adminUser, password) {
-        return {
-            username: adminUser.getValue('user_name'),
-            password: password,
-            instanceUrl: gs.getProperty('glide.servlet.uri'),
-            chunkSize: 3
-        };
-    }
-
     function init() {
         var testUtils = new global.KLF_TestUtils();
         var adminUser = testUtils.createAdminUser();
@@ -66,7 +24,7 @@ function KLF_RecordSyncTest() {
         var password = SNC.PasswordPolicyEvaluator.generateUserPassword(adminUser.getValue('user_name'));
         adminUser.setDisplayValue('user_password', password);
         adminUser.update();
-        var recordSync = new global.KLF_RecordSync(createConnectionConfig(adminUser, password));
+        var recordSync = new global.KLF_RecordSync(KLF_RecordSyncTest.createConnectionConfig(adminUser.getValue('user_name'), password));
         return {
             adminUser: adminUser,
             recordSync: recordSync,
@@ -189,7 +147,7 @@ function KLF_RecordSyncTest() {
 
     describe('clearRemoteTestData', function() {
         it('should clear the test data on the remote instance', function() {
-            var response = clearRemoteTestData();
+            var response = KLF_RecordSyncTest.clearRemoteTestData();
             expect(response.getStatusCode()).toBe(200);
         });
     });
@@ -209,7 +167,7 @@ function KLF_RecordSyncTest() {
         var testFixtures;
         beforeAll(function() {
             var testUtils = new global.KLF_TestUtils();
-            var recordSync = new global.KLF_RecordSync(createRemoteConnectionConfig());
+            var recordSync = new global.KLF_RecordSync(KLF_RecordSyncTest.createRemoteConnectionConfig());
             testFixtures = {
                 recordSync: recordSync,
                 testUtils: testUtils
@@ -228,7 +186,7 @@ function KLF_RecordSyncTest() {
 
         afterEach(function() {
             testUtils.cleanup();
-            clearRemoteTestData();
+            KLF_RecordSyncTest.clearRemoteTestData();
         });
 
         it('should sync a table', function() {
@@ -341,7 +299,7 @@ function KLF_RecordSyncTest() {
         var testFixtures;
         beforeAll(function() {
             var testUtils = new global.KLF_TestUtils();
-            var recordSync = new global.KLF_RecordSync(createRemoteConnectionConfig());
+            var recordSync = new global.KLF_RecordSync(KLF_RecordSyncTest.createRemoteConnectionConfig());
             testFixtures = {
                 recordSync: recordSync,
                 testUtils: testUtils
@@ -360,6 +318,7 @@ function KLF_RecordSyncTest() {
 
         afterEach(function() {
             testUtils.cleanup();
+            KLF_RecordSyncTest.clearRemoteTestData();
         });
 
         it('should sync all data in scope', function() {
@@ -653,19 +612,82 @@ function KLF_RecordSyncTest() {
             }
         });
     });
-}]]></script>
+}
+
+/**
+ * @returns {KLF_RecordSyncConnectionConfig}
+ */
+KLF_RecordSyncTest.createLocalConnectionConfig = function() {
+    var localAdminUser = gs.getProperty('KLF_RecordSyncTest.localAdminUsername');
+    var localAdminPassword = gs.getProperty('KLF_RecordSyncTest.localAdminPassword');
+    return {
+        username: localAdminUser,
+        password: localAdminPassword, // Retrieve password from encoded password property
+        instanceUrl: gs.getProperty('glide.servlet.uri'),
+        chunkSize: 3
+    };
+};
+
+/**
+ * @returns {KLF_RecordSyncConnectionConfig}
+ */
+KLF_RecordSyncTest.createRemoteConnectionConfig = function() {
+    var remoteInstanceUrl = gs.getProperty('KLF_RecordSyncTest.remoteInstanceUrl');
+    var remoteAdminUser = gs.getProperty('KLF_RecordSyncTest.remoteAdminUsername');
+    var remoteAdminPassword = gs.getProperty('KLF_RecordSyncTest.remoteAdminPassword');
+    return {
+        username: remoteAdminUser,
+        password: remoteAdminPassword, // Retrieve password from encoded password property
+        instanceUrl: remoteInstanceUrl,
+        chunkSize: 3
+    };
+};
+
+/**
+ * @param {string} adminUsername
+ * @param {string} password
+ * @returns {KLF_RecordSyncConnectionConfig}
+ */
+KLF_RecordSyncTest.createConnectionConfig = function createConnectionConfig(adminUsername, password) {
+    return {
+        username: adminUsername,
+        password: password,
+        instanceUrl: gs.getProperty('glide.servlet.uri'),
+        chunkSize: 3
+    };
+};
+
+/**
+ * Clears the test data on the remote instance
+ * @returns {sn_ws.RESTResponseV2}
+ */
+KLF_RecordSyncTest.clearRemoteTestData = function() {
+    var remoteAdminUser = gs.getProperty('KLF_RecordSyncTest.remoteAdminUsername');
+    var remoteAdminPassword = gs.getProperty('KLF_RecordSyncTest.remoteAdminPassword');
+    var remoteInstanceUrl = gs.getProperty('KLF_RecordSyncTest.remoteInstanceUrl');
+
+    var request = new sn_ws.RESTMessageV2();
+    request.setRequestHeader("Accept", "application/json");
+    var authHeader = 'Basic ' + GlideStringUtil.base64Encode(remoteAdminUser + ':' + remoteAdminPassword);
+    // Do not use setBasicAuth. This does not work with mutual auth for some reason
+    // request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
+    request.setRequestHeader('Authorization', authHeader);
+    request.setEndpoint(remoteInstanceUrl + gs.getProperty('KLF_RecordSyncTest.endpoint.clean'));
+    request.setHttpMethod('DELETE');
+    return request.execute();
+};]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-22 06:47:48</sys_created_on>
         <sys_id>14fdf96b4704921058ceeb02d16d43d2</sys_id>
-        <sys_mod_count>159</sys_mod_count>
+        <sys_mod_count>168</sys_mod_count>
         <sys_name>KLF_RecordSyncTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_14fdf96b4704921058ceeb02d16d43d2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-24 22:52:49</sys_updated_on>
+        <sys_updated_on>2024-08-25 17:00:35</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>14fdf96b4704921058ceeb02d16d43d2</id>

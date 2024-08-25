@@ -11,12 +11,8 @@
         <script><![CDATA[var testScopeName = 'x_53417_test_scope';
 
 function createGroupUtils() {
-    return new global.KLF_RecordSync_GroupUtils({
-        username: gs.getProperty('KLF_RecordSyncTest.remoteAdminUsername'),
-        password: gs.getProperty('KLF_RecordSyncTest.remoteAdminPassword'),
-        instanceUrl: gs.getProperty('KLF_RecordSyncTest.remoteInstanceUrl'),
-        chunkSize: 20
-    });
+    var localConnectionConfig = KLF_RecordSyncTest.createLocalConnectionConfig();
+    return new global.KLF_RecordSync_GroupUtils(localConnectionConfig);
 }
 
 function KLF_RecordSync_GroupUtilsTest() {
@@ -223,6 +219,60 @@ function KLF_RecordSync_GroupUtilsTest() {
             expect(groupMapping.error).toBeFalsy();
             expect(groupMapping.success).toBe(true);
             expect(groupMapping.missingGroups).toEqual(['group3']);
+        });
+
+    });
+
+    describe('syncGroups()', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            var remoteConnectionConfig = KLF_RecordSyncTest.createRemoteConnectionConfig();
+            groupUtils = new global.KLF_RecordSync_GroupUtils(remoteConnectionConfig);
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+            KLF_RecordSyncTest.clearRemoteTestData();
+        });
+
+        it('should copy the groups from the local instance to the remote instance', function() {
+            var groupPrefix = 'KLF_RecordSyncTest';
+            var group1 = testUtils.createGroup(groupPrefix + ' - ' + 'group1');
+            var group2 = testUtils.createGroup(groupPrefix + ' - ' + 'group2');
+
+            var response = groupUtils.syncGroups([group1.getUniqueValue(), group2.getUniqueValue()]);
+            if (response) {
+                expect(response.success).toBe(true);
+                if (response.missingManifest) {
+                    expect(response.success).toBeTrue();
+                    expect(response.missingManifest.isEmpty()).toBeTrue();
+                } else {
+                    fail('Missing manifest should not be null');
+                }
+            } else {
+                fail('Response should not be null');
+            }
+        });
+
+        it('should throw an exception if a group is not found locally', function() {
+            expect(function() {
+                groupUtils.syncGroups(['non_existent_group']);
+            }).toThrow();
+        });
+
+        it('should return null if there are no groups to sync', function() {
+            expect(groupUtils.syncGroups([])).toBeNull();
+        });
+
+        it('should not throw exception if the quiet flag is set', function() {
+            expect(function() {
+                groupUtils.syncGroups(['non_existent_group'], true);
+            }).not.toThrow();
         });
 
     });
@@ -618,13 +668,13 @@ KLF_RecordSync_GroupUtilsTest.getUniqueGroupsInTable = function(outputs, steps, 
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-24 23:16:37</sys_created_on>
         <sys_id>90733b9847d8961058ceeb02d16d43d9</sys_id>
-        <sys_mod_count>46</sys_mod_count>
+        <sys_mod_count>58</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_90733b9847d8961058ceeb02d16d43d9</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-25 14:34:28</sys_updated_on>
+        <sys_updated_on>2024-08-25 17:30:58</sys_updated_on>
     </sys_script_include>
 </record_update>
