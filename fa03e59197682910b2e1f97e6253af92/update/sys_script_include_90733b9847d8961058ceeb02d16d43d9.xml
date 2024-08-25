@@ -144,7 +144,7 @@ function KLF_RecordSync_GroupUtilsTest() {
         });
     });
 
-    fdescribe('createMappingFromRemote()', function() {
+    describe('createMappingFromRemote()', function() {
         var tableName = testScopeName + '_task';
 
         /** @type {global.KLF_TestUtils} */
@@ -194,6 +194,7 @@ function KLF_RecordSync_GroupUtilsTest() {
         });
 
         it('should find missing groups', function() {
+            // Group 3 does not exist in the local instance so should be missing
             var group1 = testUtils.createGroup('group1');
             var group2 = testUtils.createGroup('group2');
 
@@ -270,12 +271,240 @@ function KLF_RecordSync_GroupUtilsTest() {
                     };
                 }
             });
-            groupUtils.createGroupMapping(groupSysIds, 'KLF_RecordSync_GroupUtilsTest', false);
+            // groupUtils.createGroupMapping(groupSysIds, 'KLF_RecordSync_GroupUtilsTest', false);
 
         });
 
     });
 }
+
+// @ts-ignore
+KLF_RecordSync_GroupUtilsTest.updateNotifications = function(outputs, steps, params, stepResult, assertEqual) {
+    function createEmptyGroupMapping() {
+        return {
+            success: false,
+            hasMissingGroups: false,
+            missingGroups: [],
+            mapping: /** @type {{[sysId:string]:string}} */ ({})
+        };
+    }
+
+    /**
+     * @param {global.KLF_TestUtils} testUtils 
+     * @param {string} name
+     * @param {GlideRecord[]} groups sys_user_group records
+     */
+    function createNotification(testUtils, name, groups) {
+        var notification = new GlideRecord('sysevent_email_action');
+        notification.newRecord();
+        notification.name = name;
+        if (Array.isArray(groups)) {
+            notification.recipient_groups = groups.map(function(group) {
+                return group.getUniqueValue();
+            }).join(',');
+        }
+        notification.update();
+        testUtils.recordTracker.trackByGlideRecord(notification);
+        return notification;
+    }
+
+    describe('updateNotifications()', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should update the notifications using the group mapping', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+
+            // Create a few notifications
+            var notification1 = createNotification(testUtils, 'notification1', [group1]);
+            var notification2 = createNotification(testUtils, 'notification2', [group1, group2]);
+
+            var notificationSysIds = [notification1.getUniqueValue(), notification2.getUniqueValue()];
+
+            // I'm using a group name here to make it easier to test. Do not use the real group name
+            // or it will be converted into a sys_id
+            var groupMapping = createEmptyGroupMapping();
+            groupMapping.mapping[group1.getUniqueValue()] = '_group1';
+            groupMapping.mapping[group2.getUniqueValue()] = '_group2';
+
+
+            var response = global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, notificationSysIds);
+
+            var updatedNotification1 = new GlideRecord('sysevent_email_action');
+            updatedNotification1.get(notification1.getUniqueValue());
+            expect(updatedNotification1.getValue('recipient_groups')).toContain('_group1');
+
+            var updatedNotification2 = new GlideRecord('sysevent_email_action');
+            updatedNotification2.get(notification2.getUniqueValue());
+            expect(updatedNotification2.getValue('recipient_groups')).toContain('_group1');
+            expect(updatedNotification2.getValue('recipient_groups')).toContain('_group2');
+
+            expect(response.success).toBe(true);
+            expect(response.notUpdatedNotifications).toEqual([]);
+            expect(response.error).toBeFalsy();
+            expect(response.updatedNotifications.sort()).toEqual(notificationSysIds.sort());
+            // Do not check for incomplete notifications. This test will probably have
+            // incomplete notifications because the group names are not real
+            // expect(response.incompleteNotifications).toEqual({});
+        });
+
+        it('should not update notification if not in group mapping', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+
+            var notification = createNotification(testUtils, 'notification', [group1]);
+
+            var notificationSysIds = [notification.getUniqueValue()];
+
+            // Group 1 is not in the group mapping so it should not be updated
+            var groupMapping = createEmptyGroupMapping();
+            groupMapping.mapping[group2.getUniqueValue()] = 'group2';
+
+            var response = global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, notificationSysIds);
+
+            var updatedNotification = new GlideRecord('sysevent_email_action');
+            updatedNotification.get(notification.getUniqueValue());
+            expect(updatedNotification.getValue('recipient_groups')).toContain(group1.getUniqueValue());
+
+            expect(response.success).toBe(true);
+            expect(response.incompleteNotifications).toBeFalsy();
+            expect(response.notUpdatedNotifications).toEqual([]);
+            expect(response.error).toBeFalsy();
+            expect(response.updatedNotifications).toEqual(notificationSysIds);
+        });
+
+        it('should throw error if notifications are not provided', function() {
+            var groupMapping = createEmptyGroupMapping();
+            expect(function() {
+                // @ts-ignore
+                global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, null);
+            }).toThrow();
+            expect(function() {
+                // @ts-ignore
+                global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping);
+            }).toThrow();
+        });
+
+        it('should return an empty response if no notifications are provided', function() {
+            var groupMapping = createEmptyGroupMapping();
+            var response = global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, []);
+            expect(response).toEqual({
+                success: true,
+                updatedNotifications: [],
+                notUpdatedNotifications: []
+            });
+        });
+
+        it('should find missing notifications if the notification does not exist', function() {
+            var groupMapping = createEmptyGroupMapping();
+            var fakeNotificationSysIds = [gs.generateGUID(), gs.generateGUID()];
+
+            var response = global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, fakeNotificationSysIds);
+
+            expect(response.notUpdatedNotifications.sort()).toEqual(fakeNotificationSysIds.sort());
+        });
+
+
+    });
+};
+
+// @ts-ignore
+KLF_RecordSync_GroupUtilsTest.getGroupsUsedInNotifications = function(outputs, steps, params, stepResult, assertEqual) {
+    describe('getGroupsUsedInNotifications()', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return the groups used in the specified notifications', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+
+            // Create a few notifications
+            var notification1 = new GlideRecord('sysevent_email_action');
+            notification1.newRecord();
+            notification1.name = 'notification1';
+            notification1.recipient_groups = group1.getUniqueValue();
+            notification1.update();
+            testUtils.recordTracker.trackByGlideRecord(notification1);
+
+            var notification2 = new GlideRecord('sysevent_email_action');
+            notification2.newRecord();
+            notification2.name = 'notification2';
+            notification2.recipient_groups = [group1.getUniqueValue(), group2.getUniqueValue()].join(',');
+            notification2.update();
+            testUtils.recordTracker.trackByGlideRecord(notification2);
+
+            var notification3 = new GlideRecord('sysevent_email_action');
+            notification3.newRecord();
+            notification3.name = 'notification3';
+            notification3.recipient_groups = [group1.getUniqueValue(), group2.getUniqueValue()].join(',');
+            notification3.update();
+            testUtils.recordTracker.trackByGlideRecord(notification3);
+
+            var notificationSysIds = [notification1.getUniqueValue(), notification2.getUniqueValue(), notification3.getUniqueValue()];
+
+            var expectedGroups = [group1.getUniqueValue(), group2.getUniqueValue()].sort();
+            var actualGroups = groupUtils.getGroupsUsedInNotifications(notificationSysIds).sort();
+
+            expect(expectedGroups).toEqual(actualGroups);
+        });
+
+        it('should return an empty array if no groups are used in the notifications', function() {
+            var notification1 = new GlideRecord('sysevent_email_action');
+            notification1.newRecord();
+            notification1.name = 'notification1';
+            notification1.update();
+            testUtils.recordTracker.trackByGlideRecord(notification1);
+
+            var notification2 = new GlideRecord('sysevent_email_action');
+            notification2.newRecord();
+            notification2.name = 'notification2';
+            notification2.update();
+            testUtils.recordTracker.trackByGlideRecord(notification2);
+
+            var notificationSysIds = [notification1.getUniqueValue(), notification2.getUniqueValue()];
+            var actualGroups = groupUtils.getGroupsUsedInNotifications(notificationSysIds);
+            expect(actualGroups).toEqual([]);
+        });
+
+        it('should return an empty array if an empty list of notifications is provided', function() {
+            expect(groupUtils.getGroupsUsedInNotifications([])).toEqual([]);
+        });
+
+        it('should throw error if notificationSysIds is falsy', function() {
+            expect(function() {
+                // @ts-ignore
+                groupUtils.getGroupsUsedInNotifications();
+            }).toThrow();
+            expect(function() {
+                // @ts-ignore
+                groupUtils.getGroupsUsedInNotifications(null);
+            }).toThrow();
+        });
+    });
+};
 
 // @ts-ignore
 KLF_RecordSync_GroupUtilsTest.getUniqueGroupsInTable = function(outputs, steps, params, stepResult, assertEqual) {
@@ -389,13 +618,13 @@ KLF_RecordSync_GroupUtilsTest.getUniqueGroupsInTable = function(outputs, steps, 
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-24 23:16:37</sys_created_on>
         <sys_id>90733b9847d8961058ceeb02d16d43d9</sys_id>
-        <sys_mod_count>25</sys_mod_count>
+        <sys_mod_count>46</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_90733b9847d8961058ceeb02d16d43d9</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-25 09:04:19</sys_updated_on>
+        <sys_updated_on>2024-08-25 14:34:28</sys_updated_on>
     </sys_script_include>
 </record_update>
