@@ -25,6 +25,7 @@
  * @property {string} table The name of the table that contains the field
  * @property {string} type The type of the field from sys_dictionary
  * @property {string} columnName The column name of the field
+ * @property {string} sysId sys_dictionary.sys_id
  */
 
 /**
@@ -152,7 +153,7 @@ global.KLF_RecordSync_GroupUtils.createMappingFromRemote = function(remoteGroups
         missingGroups: missingGroups,
         mapping: localToRemoteMapping
     };
-}
+};
 
 /**
  * The group sys_ids in notifications are not updated when the notifications are transferred to the remote system. This method
@@ -216,7 +217,7 @@ global.KLF_RecordSync_GroupUtils.updateNotifications = function(groupMapping, no
 
     return response;
 
-}
+};
 
 global.KLF_RecordSync_GroupUtils.prototype = {
     /**
@@ -236,15 +237,20 @@ global.KLF_RecordSync_GroupUtils.prototype = {
      * Finds all the fields that reference sys_user_group in a scoped app. This attempts to find
      * all the group fields in the system. The group fields will include both reference fields and
      * list fields that reference sys_user_group
-     * @param {string} scopeSysId sys_scope.sys_id
+     * @param {string} scopeNamespace sys_scope.scope
      * @returns {KLF_RecordSync_GroupField[]}
      */
-    getGroupFieldsInScope: function(scopeSysId) {
+    getGroupFieldsInScope: function(scopeNamespace) {
         var me = this;
         var dataTransferUtils = new global.KLF_DataTransferUtils();
-        var tables = dataTransferUtils.getTablesInScope(scopeSysId);
+        var tables = dataTransferUtils.getTablesInScope(scopeNamespace);
+        var sysDictionarySysIds = /** @type {{[sysId:string]:boolean}} */ ({});
         return tables.reduce(function(allFields, tableName) {
-            return allFields.concat(me.getGroupFieldsInTable(tableName));
+            var fields = me.getGroupFieldsInTable(tableName, Object.keys(sysDictionarySysIds));
+            fields.forEach(function(field) {
+                sysDictionarySysIds[field.sysId] = true;
+            });
+            return allFields.concat(fields);
         }, []);
     },
 
@@ -253,21 +259,33 @@ global.KLF_RecordSync_GroupUtils.prototype = {
      * all the group fields in table. The group fields will include both reference fields and
      * list fields that reference sys_user_group
      * @param {string} tableName 
+     * @param {string[]} [excludeFields] A map of sys_dictionary.sys_id to exclude from the results
      * @returns {KLF_RecordSync_GroupField[]}
      */
-    getGroupFieldsInTable: function(tableName) {
-        var arrayUtil = new global.ArrayUtil()
+    getGroupFieldsInTable: function(tableName, excludeFields) {
+        if (!tableName) {
+            throw 'Table name is required';
+        }
+        var gr = new GlideRecord(tableName);
+        if (!gr.isValid()) {
+            throw 'Table does not exist: ' + tableName;
+        }
+        var arrayUtil = new global.ArrayUtil();
         // @ts-ignore
         var tableUtils = new global.TableUtils(tableName);
-        var tables = arrayUtil.convertArray(tableUtils.getHierarchy());
+        var tables = arrayUtil.convertArray(tableUtils.getTables());
         return tables.reduce(function(allFields, tableName) {
             var fieldGr = new GlideRecord('sys_dictionary');
             fieldGr.addQuery('name', tableName);
             fieldGr.addQuery('reference', 'sys_user_group');
+            if (excludeFields) {
+                fieldGr.addQuery('sys_id', 'NOT IN', excludeFields);
+            }
             fieldGr.query();
             var fields = [];
             while (fieldGr.next()) {
                 fields.push({
+                    sysId: fieldGr.getUniqueValue(),
                     table: fieldGr.name.toString(),
                     type: fieldGr.internal_type.toString(),
                     columnName: fieldGr.element.toString(),
@@ -414,7 +432,7 @@ global.KLF_RecordSync_GroupUtils.prototype = {
 
         // Make a  request to sys_user_group
         var request = this.createRestMessage();
-        request.setRequestHeader('Content-Type', 'application/json')
+        request.setRequestHeader('Content-Type', 'application/json');
         request.setHttpMethod('POST');
         var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_GroupUtils.endpoint.mapping.path');
         request.setEndpoint(endpoint);
@@ -582,13 +600,13 @@ global.KLF_RecordSync_GroupUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-06-01 16:45:24</sys_created_on>
         <sys_id>2654359d97a6021024d7b066f053af84</sys_id>
-        <sys_mod_count>91</sys_mod_count>
+        <sys_mod_count>101</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_2654359d97a6021024d7b066f053af84</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-29 12:42:00</sys_updated_on>
+        <sys_updated_on>2024-08-25 07:32:54</sys_updated_on>
     </sys_script_include>
 </record_update>

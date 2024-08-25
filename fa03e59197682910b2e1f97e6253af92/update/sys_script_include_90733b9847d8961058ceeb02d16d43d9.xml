@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordSync_GroupUtilsTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RecordSync_GroupUtilsTest</name>
+        <script><![CDATA[var testScopeName = 'x_53417_test_scope';
+
+function createGroupUtils() {
+    return new global.KLF_RecordSync_GroupUtils({
+        username: gs.getProperty('KLF_RecordSyncTest.remoteAdminUsername'),
+        password: gs.getProperty('KLF_RecordSyncTest.remoteAdminPassword'),
+        instanceUrl: gs.getProperty('KLF_RecordSyncTest.remoteInstanceUrl'),
+        chunkSize: 20
+    });
+}
+
+function KLF_RecordSync_GroupUtilsTest() {
+    // List of all the user fields in the scope
+    var groupFieldsInScope = [{
+            sysId: '',
+            columnName: 'assignment_group',
+            table: testScopeName + '_task',
+            type: 'reference'
+        },
+        {
+            sysId: '',
+            columnName: 'readonly_groups',
+            table: testScopeName + '_task',
+            type: 'glide_list'
+        },
+        {
+            sysId: '',
+            columnName: 'requested_for_group',
+            table: testScopeName + '_request',
+            type: 'reference'
+        }
+    ];
+
+    var groupFieldsInTask = groupFieldsInScope.filter(function(field) {
+        return field.table === testScopeName + '_task';
+    });
+
+    // The group fields in request, which will include the group fields in task
+    // because the request table extends the task table
+    var groupFieldsInRequest = groupFieldsInScope.filter(function(field) {
+        return field.table === testScopeName + '_request' ||
+            field.table === testScopeName + '_task';
+    });
+
+    /**
+     * 
+     * @param {KLF_RecordSync_GroupField} f1 
+     * @param {KLF_RecordSync_GroupField} f2 
+     * @returns {number}
+     */
+    function sortFieldsAscByColumnName(f1, f2) {
+        return f1.columnName.localeCompare(f2.columnName);
+    }
+
+    describe('getGroupFieldsInScope()', function() {
+
+        // List of all the group fields in the scope
+        var groupFieldNamesInScope = [
+            'requested_for_group',
+            'assignment_group',
+            'readonly_groups'
+        ];
+
+        beforeAll(function() {
+            var testUtils = new global.KLF_TestUtils();
+        });
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+        });
+
+        it('should find all the group fields in the scope', function() {
+            var actualFields = groupUtils.getGroupFieldsInScope(testScopeName);
+            actualFields.sort(sortFieldsAscByColumnName);
+
+            // Clear the sysId field for comparison. I don't know this in advance
+            actualFields.forEach(function(field) {
+                field.sysId = '';
+            });
+
+            expect(actualFields).toEqual(groupFieldsInScope);
+        });
+
+    });
+
+    describe('getGroupFieldsInTable()', function() {
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+        });
+        /**
+         * 
+         * @param {KLF_RecordSync_UserField} f1 
+         * @param {KLF_RecordSync_UserField} f2 
+         * @returns {number}
+         */
+        function sortFieldsAscByColumnName(f1, f2) {
+            return f1.columnName.localeCompare(f2.columnName);
+        }
+
+        it('should find all the group fields in the specified table', function() {
+            var taskActualFields = groupUtils.getGroupFieldsInTable(testScopeName + '_task');
+            taskActualFields.sort(sortFieldsAscByColumnName);
+            // Clear the sysId field for comparison. I don't know this in advance
+            taskActualFields.forEach(function(field) {
+                field.sysId = '';
+            });
+            expect(taskActualFields).toEqual(groupFieldsInTask);
+
+            var requestActualFields = groupUtils.getGroupFieldsInTable(testScopeName + '_request');
+            requestActualFields.sort(sortFieldsAscByColumnName);
+            // Clear the sysId field for comparison. I don't know this in advance
+            requestActualFields.forEach(function(field) {
+                field.sysId = '';
+            });
+            expect(requestActualFields).toEqual(groupFieldsInRequest);
+        });
+
+        it('should throw error if table name does not exist', function() {
+            expect(function() {
+                groupUtils.getGroupFieldsInTable('non_existent_table');
+            }).toThrow();
+        });
+
+        it('should throw error if table name is falsy', function() {
+            expect(function() {
+                groupUtils.getGroupFieldsInTable('');
+            }).toThrow();
+        });
+    });
+
+    fdescribe('createMappingFromRemote()', function() {
+        var tableName = testScopeName + '_task';
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create a group mapping', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+            var group3 = testUtils.createGroup('group3');
+
+            var remoteGroups = [{
+                sysId: 'group1',
+                name: group1.getValue('name'),
+                source: group1.getValue('source')
+            }, {
+                sysId: 'group2',
+                name: group2.getValue('name'),
+                source: group2.getValue('source')
+            }, {
+                sysId: 'group3',
+                name: group3.getValue('name'),
+                source: group3.getValue('source')
+            }];
+
+            var groupMapping = global.KLF_RecordSync_GroupUtils.createMappingFromRemote(remoteGroups);
+
+            expect(groupMapping.mapping).toEqual({
+                group1: group1.getUniqueValue(),
+                group2: group2.getUniqueValue(),
+                group3: group3.getUniqueValue()
+            });
+
+            expect(groupMapping.hasMissingGroups).toBe(false);
+            expect(groupMapping.error).toBeFalsy();
+            expect(groupMapping.success).toBe(true);
+        });
+
+        it('should find missing groups', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+
+            var remoteGroups = [{
+                sysId: 'group1',
+                name: group1.getValue('name'),
+                source: group1.getValue('source')
+            }, {
+                sysId: 'group2',
+                name: group2.getValue('name'),
+                source: group2.getValue('source')
+            }, {
+                sysId: 'group3',
+                name: 'group3',
+                source: ''
+            }];
+
+            var groupMapping = global.KLF_RecordSync_GroupUtils.createMappingFromRemote(remoteGroups);
+
+            expect(groupMapping.mapping).toEqual({
+                group1: group1.getUniqueValue(),
+                group2: group2.getUniqueValue()
+            });
+
+            expect(groupMapping.hasMissingGroups).toBe(true);
+            expect(groupMapping.error).toBeFalsy();
+            expect(groupMapping.success).toBe(true);
+            expect(groupMapping.missingGroups).toEqual(['group3']);
+        });
+
+    });
+
+    xdescribe('createGroupMapping()', function() {
+        var tableName = testScopeName + '_task';
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create a group mapping', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+            var group3 = testUtils.createGroup('group3');
+
+            spyOn(groupUtils, 'createRestMessage').and.returnValue({
+                // @ts-ignore
+                execute: function() {
+                    return {
+                        getStatusCode: function() {
+                            return 200;
+                        },
+                        getBody: function() {
+                            return JSON.stringify({
+                                result: {
+                                    success: true,
+                                    hasMissingGroups: false,
+                                    missingGroups: [],
+                                    mapping: {
+
+                                    }
+                                }
+                            });
+                        }
+                    };
+                }
+            });
+            groupUtils.createGroupMapping(groupSysIds, 'KLF_RecordSync_GroupUtilsTest', false);
+
+        });
+
+    });
+}
+
+// @ts-ignore
+KLF_RecordSync_GroupUtilsTest.getUniqueGroupsInTable = function(outputs, steps, params, stepResult, assertEqual) {
+    describe('getUniqueGroupsInTable()', function() {
+        var tableName = testScopeName + '_task';
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return the unique groups in the specified table', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+            var group3 = testUtils.createGroup('group3');
+
+            function createTask( /** @type {GlideRecord} */ group) {
+                var task = new GlideRecord(tableName);
+                task.newRecord();
+                task.assignment_group = group.getUniqueValue();
+                task.update();
+            }
+            createTask(group1);
+            createTask(group1);
+            createTask(group2);
+            createTask(group3);
+
+            var uniqueGroups = groupUtils.getUniqueGroupsInTable(tableName);
+            var expectedGroups = [group1.getUniqueValue(), group2.getUniqueValue(), group3.getUniqueValue()].sort();
+            expect(uniqueGroups.sort()).toEqual(expectedGroups);
+        });
+
+        it('should throw error if table name does not exist', function() {
+            expect(function() {
+                groupUtils.getUniqueGroupsInTable('non_existent_table');
+            }).toThrow();
+        });
+
+        it('should throw error if table name is falsy', function() {
+            expect(function() {
+                groupUtils.getUniqueGroupsInTable('');
+            }).toThrow();
+        });
+    });
+};
+
+// @ts-ignore
+KLF_RecordSync_GroupUtilsTest.getUniqueGroupsInTable = function(outputs, steps, params, stepResult, assertEqual) {
+    describe('getUniqueGroupsInTable()', function() {
+        var tableName = testScopeName + '_task';
+
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        /** @type {global.KLF_RecordSync_GroupUtils} */
+        var groupUtils;
+        beforeEach(function() {
+            groupUtils = createGroupUtils();
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return the unique users in the specified table', function() {
+            var group1 = testUtils.createGroup('group1');
+            var group2 = testUtils.createGroup('group2');
+            var group3 = testUtils.createGroup('group3');
+
+            function createTask( /** @type {GlideRecord} */ user) {
+                var task = new GlideRecord(tableName);
+                task.newRecord();
+                task.assignment_group = user.getUniqueValue();
+                task.update();
+            }
+            createTask(group1);
+            createTask(group1);
+            createTask(group2);
+            createTask(group3);
+
+            var uniqueGroups = groupUtils.getUniqueGroupsInTable(tableName);
+            var expectedGroups = [group1.getUniqueValue(), group2.getUniqueValue(), group3.getUniqueValue()].sort();
+            expect(uniqueGroups.sort()).toEqual(expectedGroups);
+        });
+
+        it('should throw error if table name does not exist', function() {
+            expect(function() {
+                groupUtils.getUniqueGroupsInTable('non_existent_table');
+            }).toThrow();
+        });
+
+        it('should throw error if table name is falsy', function() {
+            expect(function() {
+                groupUtils.getUniqueGroupsInTable('');
+            }).toThrow();
+        });
+    });
+
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-24 23:16:37</sys_created_on>
+        <sys_id>90733b9847d8961058ceeb02d16d43d9</sys_id>
+        <sys_mod_count>25</sys_mod_count>
+        <sys_name>KLF_RecordSync_GroupUtilsTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_90733b9847d8961058ceeb02d16d43d9</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-25 09:04:19</sys_updated_on>
+    </sys_script_include>
+</record_update>

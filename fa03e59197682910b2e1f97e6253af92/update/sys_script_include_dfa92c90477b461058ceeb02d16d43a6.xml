@@ -444,7 +444,7 @@ global.KLF_RecordSync_UserUtils.prototype = {
 
         // Make a  request to sys_user_user
         var request = this.createRestMessage();
-        request.setRequestHeader('Content-Type', 'application/json')
+        request.setRequestHeader('Content-Type', 'application/json');
         request.setHttpMethod('POST');
         var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync_UserUtils.endpoint.mapping.path');
         request.setEndpoint(endpoint);
@@ -547,13 +547,13 @@ global.KLF_RecordSync_UserUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-07-30 12:03:43</sys_created_on>
         <sys_id>dfa92c90477b461058ceeb02d16d43a6</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>16</sys_mod_count>
         <sys_name>KLF_RecordSync_UserUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dfa92c90477b461058ceeb02d16d43a6</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-21 14:03:35</sys_updated_on>
+        <sys_updated_on>2024-08-25 09:06:13</sys_updated_on>
     </sys_script_include>
 </record_update>
