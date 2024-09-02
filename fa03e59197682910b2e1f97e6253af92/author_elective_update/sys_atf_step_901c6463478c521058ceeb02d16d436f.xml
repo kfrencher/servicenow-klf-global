@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="DELETE">
+        <active>false</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes>getUniqueUsersInTable</notes>
+        <order>4</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-22 00:50:37</sys_created_on>
+        <sys_id>901c6463478c521058ceeb02d16d436f</sys_id>
+        <sys_mod_count>7</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_step_901c6463478c521058ceeb02d16d436f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-02 14:41:21</sys_updated_on>
+        <table/>
+        <test display_value="KLF_RecordSync_UserUtilsTest">1499178b47c0121058ceeb02d16d4306</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="DELETE" query="document_key=901c6463478c521058ceeb02d16d436f"/>
+    <sys_variable_value action="DELETE">
+        <document>sys_atf_step</document>
+        <document_key>901c6463478c521058ceeb02d16d436f</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-24 22:30:57</sys_created_on>
+        <sys_id>9ff8ab144798961058ceeb02d16d4388</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-24 22:30:57</sys_updated_on>
+        <value>KLF_RecordSync_UserUtilsTest.getUniqueUsersInTable(outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+jasmine.getEnv().execute();</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+    <sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>sys_atf_step_901c6463478c521058ceeb02d16d436f</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step"><sys_atf_step action="INSERT_OR_UPDATE"><active>false</active><copied_from/><description>Run Server Side Validation Script</description><display_name>Run Server Side Script</display_name><inputs/><mugshots_cache_json/><notes>getUniqueUsersInTable</notes><order>4</order><step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config><sys_class_name>sys_atf_step</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2024-08-22 00:50:37</sys_created_on><sys_id>901c6463478c521058ceeb02d16d436f</sys_id><sys_mod_count>7</sys_mod_count><sys_name>Run Server Side Script</sys_name><sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package><sys_policy/><sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope><sys_update_name>sys_atf_step_901c6463478c521058ceeb02d16d436f</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2024-09-02 14:41:21</sys_updated_on><table/><test display_value="KLF_RecordSync_UserUtilsTest">1499178b47c0121058ceeb02d16d4306</test><timeout/><warning_message/></sys_atf_step><sys_variable_value action="delete_multiple" query="document_key=901c6463478c521058ceeb02d16d436f"/><sys_variable_value action="INSERT_OR_UPDATE"><document>sys_atf_step</document><document_key>901c6463478c521058ceeb02d16d436f</document_key><order>200</order><sys_class_name>sys_variable_value</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2024-08-24 22:30:57</sys_created_on><sys_id>9ff8ab144798961058ceeb02d16d4388</sys_id><sys_mod_count>0</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2024-08-24 22:30:57</sys_updated_on><value>KLF_RecordSync_UserUtilsTest.getUniqueUsersInTable(outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+jasmine.getEnv().execute();</value><variable display_value="Test script">989d9e235324220002c6435723dc3484</variable></sys_variable_value></record_update>]]></payload>
+        <payload_hash>-1154428416</payload_hash>
+        <record_name>Run Server Side Script</record_name>
+        <reverted_from/>
+        <source>525bd4874723021058ceeb02d16d4352</source>
+        <source_table>sys_update_set</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-02 14:41:21</sys_created_on>
+        <sys_id>08d3d4df4790121058ceeb02d16d435e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>191b32ee8930000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-02 14:41:21</sys_updated_on>
+        <type>Test Step</type>
+        <update_guid>08d3d4df5b901210b5750d483683fa38</update_guid>
+        <update_guid_history>08d3d4df5b901210b5750d483683fa38:-1154428416,30b1501fde901210e7f366516ec32837:1666719711,da22319a1d9c9210c8bdfb80b8d833e8:0,be40bbd063d8961045852ceea7e30450:1094057656,578f635041d89610180eedc780964379:1666719711,d3f8ab14ae9896101da52fbf5ba8148a:1094057656,e356e7dcf7589610466622686c2cc6a7:-1095267542,c190ab50225896102b0b7078b8796d70:464920676,000e935c3f189610814566f25df1a465:464920676,563c2427818c52109427ff0779ec1848:168558047,0c3ce027048c521052575ec70e479b9d:-291350892</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-02 14:41:21</sys_created_on>
+        <sys_db_object display_value="" name="sys_atf_step">sys_atf_step</sys_db_object>
+        <sys_id>01a623dd6b5543909385f846a4e0d190</sys_id>
+        <sys_metadata>901c6463478c521058ceeb02d16d436f</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_atf_step_901c6463478c521058ceeb02d16d436f</sys_update_name>
+        <sys_update_version display_value="sys_atf_step_901c6463478c521058ceeb02d16d436f">08d3d4df4790121058ceeb02d16d435e</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-02 14:41:21</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
