@@ -16,76 +16,93 @@
  * @param {*} assertEqual 
  */
 function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
-
-    describe('impersonateUser()', function() {
+    describe('', function() {
         /** @type {global.KLF_TestUtils} */
         var testUtils;
+        /** @type {global.KLF_TestUtils.RecordTracker} */
+        var recordTracker;
         beforeEach(function() {
             testUtils = new global.KLF_TestUtils();
+            recordTracker = testUtils.recordTracker;
+
         });
 
         afterEach(function() {
             testUtils.cleanup();
         });
 
-        it('should impersonate the user with the given sys_id', function() {
-            var user = testUtils.createUser('testUser');
-            testUtils.impersonateUser(user.sys_id);
-            expect(user.getValue('sys_id')).toBe(gs.getUserID());
+        function createTask() {
+            var task = new GlideRecord('task');
+            task.newRecord();
+            return task;
+        }
+
+        fdescribe('RecordTracker', function() {
+            // These 2 tests hit a lot of the code in the RecordTracker class
+            // It will access trackByGlideRecord, getDocuments, hasGlideRecord, and trackBySysId
+            it('should track records by GlideRecord', function() {
+                var task1 = createTask();
+                var task2 = createTask();
+                recordTracker.trackByGlideRecord(task1)
+                    .trackByGlideRecord(task2);
+
+                var documents = recordTracker.getDocuments();
+                expect(documents.length).toBe(2);
+                expect(recordTracker.hasGlideRecord(task1)).toBe(true);
+            });
+
+            it('should not add duplicates to document list', function() {
+                var task1 = createTask();
+                recordTracker.trackByGlideRecord(task1)
+                    .trackByGlideRecord(task1);
+
+                var documents = recordTracker.getDocuments();
+                expect(documents.length).toBe(1);
+                expect(recordTracker.hasGlideRecord(task1)).toBe(true);
+            });
         });
-    });
 
-    describe('createScope()', function() {
-        /** @type {global.KLF_TestUtils} */
-        var testUtils;
-        beforeEach(function() {
-            testUtils = new global.KLF_TestUtils();
+        describe('impersonateUser()', function() {
+            it('should impersonate the user with the given sys_id', function() {
+                var user = testUtils.createUser('testUser');
+                testUtils.impersonateUser(user.sys_id);
+                expect(user.getValue('sys_id')).toBe(gs.getUserID());
+            });
         });
 
-        afterEach(function() {
-            testUtils.cleanup();
-        });
+        describe('createScope()', function() {
+            it('should create a scope with the given name', function() {
+                var scope = testUtils.createScope('testScope');
+                expect(scope.get('scope', 'testScope')).toBe(true);
+            });
 
-        it('should create a scope with the given name', function() {
-            var scope = testUtils.createScope('testScope');
-            expect(scope.get('scope', 'testScope')).toBe(true);
-        });
-
-        it('should throw an error if the scope already exists', function() {
-            testUtils.createScope('testScope');
-
-            expect(function() {
+            it('should throw an error if the scope already exists', function() {
                 testUtils.createScope('testScope');
-            }).toThrow();
+
+                expect(function() {
+                    testUtils.createScope('testScope');
+                }).toThrow();
+            });
+
+            it('should throw an error if the scope name is falsy', function() {
+                expect(function() {
+                    testUtils.createScope('');
+                }).toThrow();
+            });
         });
 
-        it('should throw an error if the scope name is falsy', function() {
-            expect(function() {
-                testUtils.createScope('');
-            }).toThrow();
-        });
-    });
+        describe('getScopeSysId', function() {
+            it('should return the sys_id of the scope with the given name', function() {
+                var scope = testUtils.createScope('testScope');
+                expect(testUtils.getScopeSysId('testScope')).toBe(scope.getUniqueValue());
+            });
 
-    describe('getScopeSysId', function() {
-        /** @type {global.KLF_TestUtils} */
-        var testUtils;
-        beforeEach(function() {
-            testUtils = new global.KLF_TestUtils();
-        });
+            it('should throw an error if the scope does not exist', function() {
+                expect(function() {
+                    testUtils.getScopeSysId('non_existent_scope');
+                }).toThrow();
+            });
 
-        afterEach(function() {
-            testUtils.cleanup();
-        });
-
-        it('should return the sys_id of the scope with the given name', function() {
-            var scope = testUtils.createScope('testScope');
-            expect(testUtils.getScopeSysId('testScope')).toBe(scope.getUniqueValue());
-        });
-
-        it('should throw an error if the scope does not exist', function() {
-            expect(function() {
-                testUtils.getScopeSysId('non_existent_scope');
-            }).toThrow();
         });
 
     });
@@ -94,13 +111,13 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:20:32</sys_created_on>
         <sys_id>2d1b858c97b86550b2e1f97e6253af73</sys_id>
-        <sys_mod_count>5</sys_mod_count>
+        <sys_mod_count>15</sys_mod_count>
         <sys_name>KLF_TestUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_2d1b858c97b86550b2e1f97e6253af73</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-21 12:39:39</sys_updated_on>
+        <sys_updated_on>2024-09-03 11:59:35</sys_updated_on>
     </sys_script_include>
 </record_update>
