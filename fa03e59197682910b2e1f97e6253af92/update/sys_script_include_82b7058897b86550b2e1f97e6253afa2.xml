@@ -128,6 +128,16 @@ global.KLF_TestUtils.prototype = {
     glideRecordUtils: new global.KLF_GlideRecordUtils(),
 
     /**
+     * @param {GlideRecord} glideRecord
+     * @returns {GlideRecord}
+     */
+    updateAndTrack: function(glideRecord) {
+        glideRecord.update();
+        this.recordTracker.trackByGlideRecord(glideRecord);
+        return glideRecord;
+    },
+
+    /**
      * Cleans up all records that were created during the test
      */
     cleanup: function() {
@@ -532,13 +542,24 @@ global.KLF_TestUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:05:57</sys_created_on>
         <sys_id>82b7058897b86550b2e1f97e6253afa2</sys_id>
-        <sys_mod_count>66</sys_mod_count>
+        <sys_mod_count>68</sys_mod_count>
         <sys_name>KLF_TestUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_82b7058897b86550b2e1f97e6253afa2</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-03 12:16:45</sys_updated_on>
+        <sys_updated_on>2024-09-08 08:02:51</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>82b7058897b86550b2e1f97e6253afa2</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-03 19:11:02</sys_created_on>
+        <sys_id>dc2b5e274718121058ceeb02d16d4336</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-03 19:11:02</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_Scoper</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_Scoper</name>
+        <script><![CDATA[var global = global || {};
+/**
+ * Object used to copy application elements from one scope to another.
+ * This is useful when you want to duplicate a scoped application to a new scope.
+ * 
+ * The following ServiceNow objects can be copied:
+ * - Script Include (sys_script_include)
+ * - Business Rule (sys_script)
+ * - UI Action (sys_ui_action)
+ * - UI Page (sys_ui_page)
+ * - UI Policy (sys_ui_policy)
+ * - UI Script (sys_ui_script)
+ * - Client Script (sys_client_script)
+ * - REST Message (sys_rest_message)
+ * - UI View (sys_ui_view)
+ * - UI Form (sys_ui_form)
+ * - UI Form Section (sys_ui_section)
+ * - UI List (sys_ui_list)
+ * - UI Related List (sys_ui_related_list)
+ */
+
+/**
+ * @typedef {Object} KLF_ScoperConfig
+ * @property {string} sourceScope - The scope of the source records.
+ * @property {string} targetScope - The scope of the target records.
+ * @property {{[sourceTableName: string]: string}} [tableMap] - A map of source table names to target table names.
+ */
+
+/**
+ * @param {KLF_ScoperConfig} config 
+ * @example
+ * var scoper = new global.KLF_Scoper({
+ *     sourceScope: 'x_53417_scoper_1',
+ *     targetScope: 'x_53417_scoper_2',
+ *     tableMap: {
+ *         'x_53417_scoper_1_scoper_task': 'x_53417_scoper_2_scoper_task'
+ *     }
+ * });
+ * 
+ * // Copy a business rule
+ * var targetBusinessRule = scoper.copyBusinessRule('e509c3784764561058ceeb02d16d4399');
+ * 
+ * // Copy a script include
+ * var targetScriptInclude = scoper.copyScriptInclude('e509c3784764561058ceeb02d16d4399');
+ * 
+ * // Copy a column
+ * var targetColumn = scoper.copyColumn('e509c3784764561058ceeb02d16d4399', 'x_53417_scoper_2_scoper_task');
+ */
+global.KLF_Scoper = function(config) {
+    var _config = config || {};
+    var sourceScopeSysId = this.getScopeSysId(_config.sourceScope);
+    if (!sourceScopeSysId) {
+        throw 'Source scope not found';
+    }
+
+    var targetScopeSysId = this.getScopeSysId(_config.targetScope);
+    if (!targetScopeSysId) {
+        throw 'Target scope not found';
+    }
+
+    this.sourceScope = _config.sourceScope;
+    this.sourceScopeSysId = sourceScopeSysId;
+    this.targetScope = _config.targetScope;
+    this.targetScopeSysId = targetScopeSysId;
+    this.tableMap = _config.tableMap || {};
+};
+
+global.KLF_Scoper.prototype = {
+    /**
+     * Copies a UI Policy from the source scope to the target scope.
+     * Includes any related UI Policy Action (sys_ui_policy_action) records.
+     * Includes any related UI Policy Related List Action (sys_ui_policy_rl_action) records.
+     * @param {string} uiPolicySysId 
+     */
+    copyUiPolicy: function(uiPolicySysId) {},
+
+    /**
+     * Copies a UI View from the source scope to the target scope.
+     * This includes:
+     * - UI View (sys_ui_view), 
+     * - Form (sys_ui_form), 
+     * - Form Section (sys_ui_section), 
+     * - List (sys_ui_list), 
+     * - Related List (sys_ui_related_list)
+     * @param {string} uiViewSysId 
+     */
+    copyUiView: function(uiViewSysId) {},
+
+    /**
+     * Copies a UI Action from the source scope to the target scope.
+     * Includes any related UI Action Visibility (sys_ui_action_view) record.
+     * @param {string} uiActionSysId 
+     */
+    copyUiAction: function(uiActionSysId) {
+        var source = new GlideRecord('sys_ui_action');
+        if (!source.get(uiActionSysId)) {
+            throw 'Source UI action not found';
+        }
+
+        var elementNames = this.getNonSysFields(source);
+
+        var target = new GlideRecord('sys_ui_action');
+        target.newRecord();
+
+        for (var i = 0; i < elementNames.length; i++) {
+            var fieldName = elementNames[i];
+            target.setValue(fieldName, source.getValue(fieldName));
+        }
+
+        // Update the scope
+        target.setValue('sys_scope', this.targetScopeSysId);
+
+        // Update the table name
+        target.setValue('table', this.updateTableNames(source.getValue('table')));
+
+        // Update the script field
+        target.setValue('script', this.updateTableNames(source.getValue('script')));
+
+        // Add any related UI Action Visibility records
+        var uiActionVisibilityGr = new GlideRecord('sys_ui_action_view');
+        uiActionVisibilityGr.addQuery('sys_ui_action', uiActionSysId);
+        uiActionVisibilityGr.query();
+        while (uiActionVisibilityGr.next()) {
+            var targetVisibility = new GlideRecord('sys_ui_action_view');
+            // Check if the target visibility record already exists
+            targetVisibility.addQuery('sys_ui_action', target.getUniqueValue());
+            targetVisibility.addQuery('sys_ui_view', uiActionVisibilityGr.getValue('sys_ui_view'));
+            targetVisibility.query();
+            if (!targetVisibility.next()) {
+                // Doesn't exist, so create a new record
+                targetVisibility.newRecord();
+            }
+
+            targetVisibility.sys_ui_action = target.getUniqueValue();
+            targetVisibility.sys_ui_view = uiActionVisibilityGr.getValue('sys_ui_view');
+            targetVisibility.visibility = uiActionVisibilityGr.getValue('visibility');
+            targetVisibility.setValue('sys_scope', this.targetScopeSysId);
+            targetVisibility.update();
+        }
+
+        if (target.update()) {
+            return target;
+        } else {
+            throw 'Failed to copy UI action';
+        }
+    },
+
+    /**
+     * Copies a business rule from the source scope to the target scope.
+     * @param {string} businessRuleSysId 
+     * @returns {GlideRecord?} the target business rule
+     */
+    copyBusinessRule: function(businessRuleSysId) {
+        var source = new GlideRecord('sys_script');
+        if (!source.get(businessRuleSysId)) {
+            return null;
+        }
+        var elementNames = this.getNonSysFields(source);
+
+        // Now that we have the element names, we can copy the business rule
+        var target = new GlideRecord('sys_script');
+        target.newRecord();
+
+        for (var i = 0; i < elementNames.length; i++) {
+            var fieldName = elementNames[i];
+            target.setValue(fieldName, source.getValue(fieldName));
+        }
+
+        // Update the table name
+        target.setValue('collection', this.updateTableNames(source.getValue('collection')));
+
+        // Update script field
+        target.setValue('script', this.updateTableNames(source.getValue('script')));
+
+        // Set the scope to the target scope
+        target.setValue('sys_scope', this.targetScopeSysId);
+
+        if (target.update()) {
+            return target;
+        } else {
+            throw 'Failed to copy business rule';
+        }
+    },
+
+    /**
+     * Copies a script include from the source scope to the target scope.
+     * @param {string} scriptIncludeSysId 
+     */
+    copyScriptInclude: function(scriptIncludeSysId) {
+        var source = new GlideRecord('sys_script_include');
+        if (!source.get(scriptIncludeSysId)) {
+            throw 'Source script include not found';
+        }
+
+        var elementNames = this.getNonSysFields(source);
+
+        // Now that we have the element names, we can copy the business rule
+        var target = new GlideRecord('sys_script_include');
+        target.newRecord();
+
+        for (var i = 0; i < elementNames.length; i++) {
+            var fieldName = elementNames[i];
+            if (fieldName === 'api_name') {
+                continue;
+            }
+            target.setValue(fieldName, source.getValue(fieldName));
+        }
+
+        // Update the script field
+        target.setValue('script', this.updateTableNames(source.getValue('script')));
+
+        // Update the scope
+        target.setValue('sys_scope', this.targetScopeSysId);
+
+        if (target.update()) {
+            return target;
+        } else {
+            throw 'Failed to copy script include';
+        }
+    },
+
+    /**
+     * Copies a column from the source table to the target table.
+     * @param {string} sysDictionarySysId
+     * @param {string} targetTableName
+     * @returns {GlideRecord?} the sys_dictionary record of the target table
+     */
+    copyColumn: function(sysDictionarySysId, targetTableName) {
+        var source = new GlideRecord('sys_dictionary');
+        if (!source.get(sysDictionarySysId)) {
+            throw 'Source column not found';
+        }
+
+        // Check if the target table exists
+        if (!new GlideRecord(targetTableName).isValid()) {
+            throw 'Target table not found';
+        }
+
+        var target = new GlideRecord('sys_dictionary');
+        target.newRecord();
+
+        // Copy all non-system fields
+        var elementNames = this.getNonSysFields(source);
+        elementNames.forEach(function(fieldName) {
+            target.setValue(fieldName, source.getValue(fieldName));
+        });
+
+        // Update the scope and table name
+        target.setValue('sys_scope', this.targetScopeSysId);
+        target.setValue('name', targetTableName);
+
+        if (target.update()) {
+            return target;
+        } else {
+            throw 'Failed to copy column';
+        }
+    },
+
+    /**
+     * Extracts all non-system field names from a GlideRecord.
+     * 
+     * This function iterates through all fields of the given GlideRecord
+     * and returns an array of field names that do not start with 'sys_'.
+     * 
+     * @param {GlideRecord} glideRecord - The GlideRecord to extract field names from.
+     * @returns {string[]} An array of non-system field names.
+     */
+    getNonSysFields: function(glideRecord) {
+        var glideElements = glideRecord.getFields();
+        var elementNames = [];
+        for (var i = 0; i < glideElements.size(); i++) {
+            var glideElement = glideElements.get(i);
+            var name = glideElement.getName();
+            if (!name.startsWith('sys_')) {
+                elementNames.push(name);
+            }
+        }
+        return elementNames;
+    },
+
+    copySPWidget: function() {
+
+    },
+
+    copySPWidgetInstance: function() {},
+
+    copySPPage: function() {
+
+    },
+
+    copySPPortal: function() {
+
+    },
+
+    copyReport: function() {
+
+    },
+
+    /**
+     * @param {string} uiPageSysId 
+     */
+    copyUiPage: function(uiPageSysId) {},
+
+    /**
+     * Updates the table names found in the string using the table map.
+     * 
+     * @param {string} string 
+     * @returns {string}
+     */
+    updateTableNames: function(string) {
+        if (!string) {
+            return string;
+        }
+
+        for (var sourceTableName in this.tableMap) {
+            var targetTableName = this.tableMap[sourceTableName];
+            string = string.replace(new RegExp(sourceTableName, 'g'), targetTableName);
+        }
+        return string;
+    },
+
+    /**
+     * Retrieves the sys_id of a scope by its name.
+     * @param {string} scopeName - The name of the scope to look up.
+     * @returns {string|null} The sys_id of the scope if found, null otherwise.
+     */
+    getScopeSysId: function(scopeName) {
+        var scopeGr = new GlideRecord('sys_scope');
+        if (scopeGr.get('scope', scopeName)) {
+            return scopeGr.getUniqueValue();
+        }
+        return null;
+    },
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-07 10:14:35</sys_created_on>
+        <sys_id>45b68db447e8161058ceeb02d16d430d</sys_id>
+        <sys_mod_count>39</sys_mod_count>
+        <sys_name>KLF_Scoper</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_45b68db447e8161058ceeb02d16d430d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-08 09:17:26</sys_updated_on>
+    </sys_script_include>
+</record_update>

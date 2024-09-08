@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_ScoperTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_ScoperTest</name>
+        <script><![CDATA[// @ts-ignore
+function KLF_ScoperTest(outputs, steps, params, stepResult, assertEqual) {
+    var sourceScope = 'x_53417_scoper_1';
+    var targetScope = 'x_53417_scoper_2';
+    var tableMap = {
+        'x_53417_scoper_1_scoper_task': 'x_53417_scoper_2_scoper_task'
+    };
+
+    describe('', function() {
+        /** @type {global.KLF_Scoper} */
+        var scoper;
+
+        beforeEach(function() {
+            scoper = new global.KLF_Scoper({
+                sourceScope: sourceScope,
+                targetScope: targetScope,
+                tableMap: tableMap
+            });
+        });
+
+        describe('copyUiAction()', function() {
+            it('should copy a UI Action from one scope to another', function() {
+                var sourceUiAction = new GlideRecord('sys_ui_action');
+                var SCOPER_SAVE_UI_ACTION_SYS_ID = 'cfb0718d47a0961058ceeb02d16d438d';
+                expect(sourceUiAction.get(SCOPER_SAVE_UI_ACTION_SYS_ID)).not.toBeFalsy();
+
+                scoper.copyUiAction(SCOPER_SAVE_UI_ACTION_SYS_ID);
+
+                var targetUiAction = new GlideRecord('sys_ui_action');
+                targetUiAction.addQuery('action_name', 'scoper_save');
+                targetUiAction.addQuery('sys_scope.scope', targetScope);
+                targetUiAction.query();
+
+                expect(targetUiAction.next()).toBe(true);
+                expect(targetUiAction.getValue('table')).not.toBeFalsy();
+                expect(targetUiAction.getValue('table')).not.toContain(sourceScope);
+                expect(targetUiAction.getValue('script')).not.toBeFalsy();
+                expect(targetUiAction.getValue('script')).not.toContain(sourceScope);
+
+                // Check if the UI Action Visibility records were copied
+                var targetUiActionVisibility = new GlideRecord('sys_ui_action_view');
+                targetUiActionVisibility.addQuery('sys_ui_action', targetUiAction.getUniqueValue());
+                targetUiActionVisibility.query();
+                expect(targetUiActionVisibility.next()).toBe(true);
+                expect(targetUiActionVisibility.getDisplayValue('sys_ui_view')).toBe('Service Portal');
+            });
+        });
+
+        describe('copyScriptInclude()', function() {
+            it('should copy a script include from one scope to another', function() {
+                var sourceScriptInclude = new GlideRecord('sys_script_include');
+                expect(sourceScriptInclude.get('api_name', 'x_53417_scoper_1.ScopeHelper')).toBeTruthy();
+
+                scoper.copyScriptInclude(sourceScriptInclude.getUniqueValue());
+
+                var targetScriptInclude = new GlideRecord('sys_script_include');
+                expect(targetScriptInclude.get('api_name', 'x_53417_scoper_2.ScopeHelper')).toBeTruthy();
+                expect(targetScriptInclude.getValue('script')).not.toContain(sourceScope);
+                expect(targetScriptInclude.getValue('script')).not.toBeFalsy();
+            });
+        });
+
+        describe('copyBusinessRule()', function() {
+            it('should copy a business rule from one scope to another', function() {
+                var sourceBusinessRule = new GlideRecord('sys_script');
+                sourceBusinessRule.addQuery('name', 'klf_br_scoper');
+                sourceBusinessRule.addQuery('sys_scope.scope', sourceScope);
+                sourceBusinessRule.query();
+
+                if (sourceBusinessRule.next()) {
+                    // Copy the column
+                    // Column is x_53417_scoper_1_scoper_task.short_description
+                    var shortDescriptionColumnSysId = '9e1a7bb44768561058ceeb02d16d43de';
+                    scoper.copyColumn(shortDescriptionColumnSysId, 'x_53417_scoper_2_scoper_task');
+
+                    scoper.copyBusinessRule(sourceBusinessRule.getUniqueValue());
+
+
+                    // Business rule should be in the target scope now
+                    var targetBusinessRule = new GlideRecord('sys_script');
+                    targetBusinessRule.addQuery('name', 'klf_br_scoper');
+                    targetBusinessRule.addQuery('sys_scope.scope', targetScope);
+                    targetBusinessRule.query();
+                    expect(targetBusinessRule.next()).toBe(true);
+                    expect(targetBusinessRule.getValue('filter_condition')).toBe(sourceBusinessRule.getValue('filter_condition'));
+                    // Check if the table name is updated
+                    expect(targetBusinessRule.getValue('collection')).toBe(tableMap['x_53417_scoper_1_scoper_task']);
+                    // All references to the source scope should be updated to the target scope
+                    expect(targetBusinessRule.getValue('script')).not.toContain(sourceScope);
+                } else {
+                    fail('No business rule found with name klf_br_scoper in scope ' + sourceScope);
+                }
+            });
+        });
+
+        describe('copyColumn()', function() {
+            it('should copy a column from one table to another', function() {
+                var targetTable = 'x_53417_scoper_2_scoper_task';
+                var columnName = 'description';
+                var columnType = 'string';
+
+                // Create a test column in the source table
+                // Column is x_53417_scoper_1_scoper_task.description
+                var descriptionColumnSysId = 'de3a33b44768561058ceeb02d16d43c9';
+                var sourceColumn = new GlideRecord('sys_dictionary');
+                expect(sourceColumn.get(descriptionColumnSysId)).toBeTruthy();
+
+                // Copy the column
+                scoper.copyColumn(descriptionColumnSysId, targetTable);
+
+                // Check if the column exists in the target table
+                var targetColumn = new GlideRecord('sys_dictionary');
+                targetColumn.addQuery('name', targetTable);
+                targetColumn.addQuery('element', columnName);
+                targetColumn.addQuery('sys_scope.scope', targetScope);
+                targetColumn.query();
+
+                expect(targetColumn.next()).toBe(true);
+                expect(targetColumn.getValue('column_label')).toBe('Description');
+                expect(targetColumn.getValue('internal_type')).toBe(columnType);
+            });
+        });
+
+    });
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-07 20:35:27</sys_created_on>
+        <sys_id>33c41fb447a4561058ceeb02d16d4336</sys_id>
+        <sys_mod_count>22</sys_mod_count>
+        <sys_name>KLF_ScoperTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_33c41fb447a4561058ceeb02d16d4336</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-08 08:35:21</sys_updated_on>
+    </sys_script_include>
+</record_update>

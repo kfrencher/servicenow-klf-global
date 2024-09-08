@@ -34,6 +34,9 @@
  */
 var global = global || {};
 
+/**
+ * @param {string} targetScope 
+ */
 global.KLF_TableScoper = function(targetScope) {
     this.targetScope = targetScope;
 };
@@ -43,14 +46,14 @@ global.KLF_TableScoper.prototype = {};]]></script>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-08 23:21:23</sys_created_on>
         <sys_id>25fa15df4733021058ceeb02d16d4338</sys_id>
-        <sys_mod_count>2</sys_mod_count>
+        <sys_mod_count>3</sys_mod_count>
         <sys_name>KLF_TableScoper</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_25fa15df4733021058ceeb02d16d4338</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-08 23:31:54</sys_updated_on>
+        <sys_updated_on>2024-09-07 09:51:26</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>25fa15df4733021058ceeb02d16d4338</id>
