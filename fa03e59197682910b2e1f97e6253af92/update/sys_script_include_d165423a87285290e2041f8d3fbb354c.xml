@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_ScoperUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_ScoperUtils</name>
+        <script><![CDATA[var global = global || {};
+/**
+ * Object used to copy application elements from one scope to another.
+ * This is useful when you want to duplicate a scoped application to a new scope.
+ * 
+ * When copying artifacts the scope name will be updated. Table names will be updated based on the provided table map. Sometimes artifacts will have references
+ * to other artifacts. When that is the case the metadata map will update the sys_ids for those references.
+ * 
+ * The following ServiceNow objects can be copied:
+ * - Script Include (sys_script_include)
+ * - Business Rule (sys_script)
+ * - UI Action (sys_ui_action)
+ * - UI View (sys_ui_view)
+ * - UI Form (sys_ui_form)
+ * - UI Form Section (sys_ui_section)
+ * - UI List (sys_ui_list)
+ * - UI Related List (sys_ui_related_list)
+ * - Relationship (sys_relationship)
+ * - Column (sys_ui_column)
+ * 
+ * - UI Page (sys_ui_page)
+ * - UI Policy (sys_ui_policy)
+ * - UI Script (sys_ui_script)
+ * - Client Script (sys_client_script)
+ * - REST Message (sys_rest_message)
+ */
+
+/**
+ * @typedef {Object} KLF_ScoperUtilsConfig
+ * @property {string} sourceScope - The scope of the source records.
+ * @property {string} targetScope - The scope of the target records.
+ * @property {{[sourceTableName: string]: string}} [tableMap] - A map of source table names to target table names.
+ * @property {{[sourceMetadataSysId: string]: string}} [metadataMap] - A map of source metadata sys_ids to target metadata sys_ids. 
+ */
+
+/**
+ * @param {KLF_ScoperUtilsConfig} config 
+ * @example
+ * var scoper = new global.KLF_ScoperUtils({
+ *     sourceScope: 'x_53417_scoper_1',
+ *     targetScope: 'x_53417_scoper_2',
+ *     tableMap: {
+ *         'x_53417_scoper_1_scoper_task': 'x_53417_scoper_2_scoper_task'
+ *     }
+ * });
+ * 
+ * // Copy a business rule
+ * var targetBusinessRule = scoper.copyBusinessRule('e509c3784764561058ceeb02d16d4399');
+ * 
+ * // Copy a script include
+ * var targetScriptInclude = scoper.copyScriptInclude('e509c3784764561058ceeb02d16d4399');
+ * 
+ * // Copy a column
+ * var targetColumn = scoper.copyColumn('e509c3784764561058ceeb02d16d4399', 'x_53417_scoper_2_scoper_task');
+ */
+global.KLF_ScoperUtils = function(config) {
+    var _config = config || {};
+    var sourceScopeSysId = this.getScopeSysId(_config.sourceScope);
+    if (!sourceScopeSysId) {
+        throw 'Source scope not found';
+    }
+
+    var targetScopeSysId = this.getScopeSysId(_config.targetScope);
+    if (!targetScopeSysId) {
+        throw 'Target scope not found';
+    }
+
+    this.sourceScope = _config.sourceScope;
+    this.sourceScopeSysId = sourceScopeSysId;
+    this.targetScope = _config.targetScope;
+    this.targetScopeSysId = targetScopeSysId;
+    this.tableMap = _config.tableMap || {};
+    // Map of source metadata sys_id to target metadata sys_id
+    this.metadataMap = _config.metadataMap || {};
+};
+
+/**
+ * @typedef {Object} KLF_ScoperUtilsMetadataResult
+ * @property {Document} targetRecordDocument
+ * @property {string} targetRecordSysId
+ */
+
+global.KLF_ScoperUtils.prototype = {
+    /**
+     * Generates a new metadata XML string using the source metadata record and the target scope.
+     * The new metadata XML that is returned can be used to create a new artifact in the target scope.
+     * @param {GlideRecord} source sys_metadata.sys_id
+     * @returns {{targetRecordXml: string, targetRecordSysId: string}}
+     */
+    createTargetMetadataFromSourceMetadata: function(source) {
+        if (!source.isValid() || !source.isValidRecord()) {
+            throw 'Source metadata is not valid';
+        }
+
+        // I need to get the actual record from the source metadata record
+        // The sys_metadata record will not give me access to all the fields
+        var _source = new GlideRecord(source.getRecordClassName());
+        if (!_source.get(source.getUniqueValue())) {
+            throw 'Source metadata not found';
+        }
+
+        var type = _source.getRecordClassName();
+        var targetParts;
+        switch (type) {
+            case 'sys_ui_policy_action':
+                targetParts = this.createUiPolicyActionTargetMetadataFromSourceMetadata(_source);
+                break;
+            case 'sys_ui_action_view':
+                targetParts = this.createUiActionVisibilityTargetMetadataFromSourceMetadata(_source);
+                break;
+            case 'sys_ui_view':
+                targetParts = this.createUiViewTargetMetadataFromSourceMetadata(_source);
+                break;
+            case 'sys_ui_list':
+                targetParts = this.createUiListTargetMetadataFromSourceMetadata(_source);
+                break;
+            case 'sys_ui_related_list':
+                targetParts = this.createUiRelatedListTargetMetadataFromSourceMetadata(_source);
+                break;
+            case 'sys_ui_section':
+                targetParts = this.createUiSectionTargetMetadataFromSourceMetadata(_source);
+                break;
+            case 'sys_ui_form':
+                targetParts = this.createUiFormTargetMetadataFromSourceMetadata(_source);
+                break;
+            default:
+                targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(_source);
+        }
+
+
+        var targetRecordXml = this.documentToString(targetParts.targetRecordDocument, true);
+        targetRecordXml = this.updateTableNames(targetRecordXml);
+        targetRecordXml = this.updateReferences(targetRecordXml);
+        return {
+            targetRecordXml: targetRecordXml,
+            targetRecordSysId: targetParts.targetRecordSysId
+        };
+    },
+
+    /**
+     * Creates XML for the target UI Section record
+     * @param {GlideRecord} source sys_ui_form record
+     */
+    createUiFormTargetMetadataFromSourceMetadata: function(source) {
+        var targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(source);
+        var targetDocument = targetParts.targetRecordDocument;
+
+        // Get the related UI Form Sections
+        var uiFormSectionGr = new GlideRecord('sys_ui_form_section');
+        uiFormSectionGr.addQuery('sys_ui_form', source.getUniqueValue());
+        uiFormSectionGr.orderBy('position');
+        uiFormSectionGr.query();
+        while (uiFormSectionGr.next()) {
+            this.defaultCreateTargetMetadataFromSourceMetadata(uiFormSectionGr, null, targetDocument);
+        }
+
+        return targetParts;
+    },
+
+    /**
+     * Creates XML for the target UI Section record
+     * @param {GlideRecord} source sys_ui_section record
+     */
+    createUiSectionTargetMetadataFromSourceMetadata: function(source) {
+        var targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(source);
+        var targetDocument = targetParts.targetRecordDocument;
+
+        // Get the related UI Elements
+        var uiElementGr = new GlideRecord('sys_ui_element');
+        uiElementGr.addQuery('sys_ui_section', source.getUniqueValue());
+        uiElementGr.orderBy('position');
+        uiElementGr.query();
+        while (uiElementGr.next()) {
+            this.defaultCreateTargetMetadataFromSourceMetadata(uiElementGr, null, targetDocument);
+        }
+
+        return targetParts;
+    },
+
+    /**
+     * Creates XML for the target UI Related List record
+     * - sys_ui_related_list is a container for the set of related lists that are displayed on a form.
+     * - sys_ui_related_list_entry defines the specific related list that is displayed. It serves as a pointer
+     * to either a ${table}.${field} or a defined relationship in the format of REL:${sys_relationship.sys_id}.  
+     * For example:
+     *   - REL:d559ab8b87a89290e2041f8d3fbb35c4 // For a relationship
+     *   - x_53417_scoper_1_scoper_task.parent // For a related list that points to the task table using the parent field
+     * @param {GlideRecord} source sys_ui_related_list record
+     */
+    createUiRelatedListTargetMetadataFromSourceMetadata: function(source) {
+        var targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(source);
+        var targetDocument = targetParts.targetRecordDocument;
+
+        // Get the related list elements
+        var listElementGr = new GlideRecord('sys_ui_related_list_entry');
+        listElementGr.addQuery('list_id', source.getUniqueValue());
+        listElementGr.query();
+        while (listElementGr.next()) {
+            // If the related list entry is pointing to a relationship, then I need to update the sys_id
+            // The relationship sys_id is in the format of REL:${sys_relationship.sys_id}
+            if (listElementGr.getValue('related_list').startsWith('REL:')) {
+                var relatedListValue = listElementGr.getValue('related_list');
+                var relatedListParts = relatedListValue.split(':');
+                var relationshipSysId = relatedListParts[1];
+                if (relationshipSysId) {
+                    listElementGr.setValue('related_list', 'REL:' + this.getOrGenerateGUID(relationshipSysId));
+                }
+            }
+
+            this.defaultCreateTargetMetadataFromSourceMetadata(listElementGr, null, targetDocument);
+        }
+
+        return targetParts;
+    },
+
+    /**
+     * Creates XML for the target UI List record
+     * @param {GlideRecord} source sys_ui_list record
+     */
+    createUiListTargetMetadataFromSourceMetadata: function(source) {
+        var targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(source);
+        var targetDocument = targetParts.targetRecordDocument;
+
+        // Get the related list elements
+        var listElementGr = new GlideRecord('sys_ui_list_element');
+        listElementGr.addQuery('list_id', source.getUniqueValue());
+        listElementGr.query();
+        while (listElementGr.next()) {
+            this.defaultCreateTargetMetadataFromSourceMetadata(listElementGr, null, targetDocument);
+        }
+
+        return targetParts;
+    },
+
+    /**
+     * Creates XML for the target UI Policy Action record
+     * @param {GlideRecord} source sys_ui_policy_action record
+     */
+    createUiPolicyActionTargetMetadataFromSourceMetadata: function(source) {
+        // UI Policy Action has to point to the correct UI Policy record
+        if (!source.ui_policy.nil()) {
+            var sysId = source.getValue('ui_policy');
+            source.ui_policy = this.getOrGenerateGUID(sysId);
+        }
+        return this.defaultCreateTargetMetadataFromSourceMetadata(source);
+    },
+
+    /**
+     * Creates XML for the target UI Action Visibility record
+     * @param {GlideRecord} source sys_ui_action_view record
+     */
+    createUiActionVisibilityTargetMetadataFromSourceMetadata: function(source) {
+        // UI Action Visibility has to point to the correct UI Action record
+        if (!source.sys_ui_action.nil()) {
+            var sysId = source.getValue('sys_ui_action');
+            source.sys_ui_action = this.getOrGenerateGUID(sysId);
+        }
+
+        return this.defaultCreateTargetMetadataFromSourceMetadata(source);
+    },
+
+    /**
+     * 
+     * @param {GlideRecord} source sys_metadata record
+     * @param {string?} [targetRecordSysId] 
+     * @param {Document} [providedDocument]
+     * @returns {KLF_ScoperUtilsMetadataResult}
+     */
+    defaultCreateTargetMetadataFromSourceMetadata: function(source, targetRecordSysId, providedDocument) {
+        var _targetRecordSysId = targetRecordSysId || this.getOrGenerateGUID(source.getUniqueValue());
+        if (source.isValidField('sys_scope')) {
+            source.sys_scope = this.targetScopeSysId;
+        }
+        if (source.isValidField('sys_package')) {
+            source.sys_package = this.targetScopeSysId;
+        }
+        if (source.isValidField('sys_id')) {
+            source.sys_id = _targetRecordSysId;
+        }
+
+        var document = providedDocument ? providedDocument : this.createUnloadDocument();
+
+        this.unloadRecord(source, document);
+
+        return {
+            targetRecordDocument: document,
+            targetRecordSysId: _targetRecordSysId
+        };
+    },
+
+    /**
+     * Copies the metadata from the source scope to the target scope.
+     * @param {string} sysId 
+     * @returns {GlideRecord} The target metadata record
+     */
+    copyMetadataBySysId: function(sysId) {
+        var metadata = new GlideRecord('sys_metadata');
+        if (!metadata.get(sysId)) {
+            throw 'Source metadata not found for sys_id: ' + sysId;
+        }
+
+        var targetParts = this.createTargetMetadataFromSourceMetadata(metadata);
+        var metadataXml = targetParts.targetRecordXml;
+        var targetRecordSysId = targetParts.targetRecordSysId;
+
+        // Try to load the metadata into the target scope
+        // @ts-ignore
+        var updateManager = new global.GlideUpdateManager2();
+        updateManager.loadXML(metadataXml);
+
+        // Check if the metadata was loaded successfully
+        var targetMetadata = new GlideRecord(metadata.getRecordClassName());
+        if (!targetMetadata.get(targetRecordSysId)) {
+            throw 'Target metadata not found for target sys_id: ' + targetRecordSysId + ' source sys_id: ' + sysId;
+        }
+
+        return targetMetadata;
+    },
+
+    /**
+     * Copies a UI View from the source scope to the target scope.
+     * @param {GlideRecord} source 
+     * @returns {KLF_ScoperUtilsMetadataResult}
+     */
+    createUiViewTargetMetadataFromSourceMetadata: function(source) {
+        // First check to make sure the view is in the source scope
+        if (source.getValue('sys_scope') !== this.sourceScopeSysId) {
+            throw 'View must be in source scope to be copied to target scope';
+        }
+
+        // For sys_ui_view records the sys_id will not change. The existing record will be
+        // overwritten by the new record. So we don't need to generate a new GUID.
+        return this.defaultCreateTargetMetadataFromSourceMetadata(source, source.getUniqueValue());
+    },
+
+    /**
+     * Updates the table names found in the string using the table map.
+     * 
+     * @param {string} string 
+     * @returns {string}
+     */
+    updateTableNames: function(string) {
+        if (!string) {
+            return string;
+        }
+
+        for (var sourceTableName in this.tableMap) {
+            var targetTableName = this.tableMap[sourceTableName];
+            string = string.replace(new RegExp(sourceTableName, 'g'), targetTableName);
+        }
+        return string;
+    },
+
+
+    /**
+     * Retrieves the sys_id of a scope by its name.
+     * @param {string} scopeName - The name of the scope to look up.
+     * @returns {string|null} The sys_id of the scope if found, null otherwise.
+     */
+    getScopeSysId: function(scopeName) {
+        var scopeGr = new GlideRecord('sys_scope');
+        if (scopeGr.get('scope', scopeName)) {
+            return scopeGr.getUniqueValue();
+        }
+        // Could be global scope. Need to check by name
+        var globalScope = new GlideRecord('sys_scope');
+        globalScope.addQuery('name', scopeName);
+        globalScope.query();
+        if (globalScope.getRowCount() === 1) {
+            globalScope.next();
+            return globalScope.getUniqueValue();
+        } else if (globalScope.getRowCount() > 1) {
+            throw 'Ambiguous scope name. More than one scope found with the name: ' + scopeName;
+        }
+
+        return null;
+    },
+
+    /**
+     * Creates a document object that can be passed to {@link global.KLF_RecordSync.unloadRecord}
+     * This is useful when you want to add multiple unloaded records to the same document
+     * @returns {Document}
+     */
+    createUnloadDocument: function() {
+        // @ts-ignore
+        var document = global.GlideXMLUtil.newDocument('unload');
+        var date = new GlideDateTime();
+        document.documentElement.setAttribute('unload_date', date.toString());
+        return document;
+    },
+
+    /**
+     * Generates XML from GlideRecord that is like the XML generated by exporting a record from ServiceNow.
+     * This XML can be used to import a record into ServiceNow.
+     * @param {GlideRecord} glideRecord 
+     * @param {Document} [document]
+     * @returns {Document}
+     */
+    unloadRecord: function(glideRecord, document) {
+        // I'm going to write to this glideRecord so I don't want something downstream
+        // to write to the database so I'm disabling write operations just in case
+        // something downstream tries to write
+        glideRecord.setAbortAction(true);
+
+        // @ts-ignore
+        var _document = document || global.GlideXMLUtil.newDocument('unload');
+        if (!document) {
+            // If the document was not passed in, then add the unload_date attribute
+            var date = new GlideDateTime();
+            _document.documentElement.setAttribute('unload_date', date.toString());
+        }
+
+        // If this is an extended table then I need the true record and not the base record
+        // If I detect this isn't the extended record I query for the extended record
+        if (glideRecord.getTableName() != glideRecord.getRecordClassName()) {
+            var extended = new GlideRecord(glideRecord.getRecordClassName());
+            extended.get(glideRecord.getUniqueValue());
+            // @ts-ignore
+            new global.GlideUnloader().unloadGlideRecord(_document, extended, 'INSERT_OR_UPDATE');
+        } else {
+            // @ts-ignore
+            new global.GlideUnloader().unloadGlideRecord(_document, glideRecord, 'INSERT_OR_UPDATE');
+        }
+
+        return _document;
+    },
+
+    /**
+     * Returns the XML representation of the Document
+     * @param {Document} document 
+     * @param {boolean} [prettyPrint]
+     * @returns {string}
+     */
+    documentToString: function(document, prettyPrint) {
+        if (prettyPrint) {
+            // @ts-ignore
+            return String(global.GlideXMLUtil.toIndentedString(document));
+        } else {
+            // @ts-ignore
+            return String(global.GlideXMLUtil.toString(document));
+        }
+    },
+
+    /**
+     * Updates the references in the metadata XML using the metadata map
+     * @param {string} xml 
+     */
+    updateReferences: function(xml) {
+        for (var sourceSysId in this.metadataMap) {
+            var targetSysId = this.metadataMap[sourceSysId];
+            xml = xml.replace(new RegExp(sourceSysId, 'g'), targetSysId);
+        }
+        return xml;
+    },
+    /**
+     * Generates a GUID for a source metadata record.
+     * This also adds the source sys_id and target sys_id to the metadata map. Everytime
+     * we generate a GUID we are tracking the relationship so this can be used later to update
+     * references the existing GUID was using. For example, when a target UI Policy get a new
+     * GUID, we need to update the target UI Policy Action records that were using the old GUID.
+     * @param {string} sourceSysId 
+     * @returns {string}
+     */
+    getOrGenerateGUID: function(sourceSysId) {
+        // If the metadata map already has the source sys_id, return the target sys_id
+        var guid = this.metadataMap[sourceSysId] || gs.generateGUID();
+        this.metadataMap[sourceSysId] = guid;
+        return guid;
+    },
+
+
+
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>kenneth.frencher</sys_created_by>
+        <sys_created_on>2024-09-13 19:56:20</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>d165423a87285290e2041f8d3fbb354c</sys_id>
+        <sys_mod_count>66</sys_mod_count>
+        <sys_name>KLF_ScoperUtils</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_d165423a87285290e2041f8d3fbb354c</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-14 23:40:03</sys_updated_on>
+    </sys_script_include>
+</record_update>

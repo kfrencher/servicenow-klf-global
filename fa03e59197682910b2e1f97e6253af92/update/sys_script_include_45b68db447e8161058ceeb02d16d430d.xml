@@ -6,7 +6,6 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_Scoper</name>
         <script><![CDATA[var global = global || {};
 /**
@@ -75,6 +74,156 @@ global.KLF_Scoper = function(config) {
     this.tableMap = _config.tableMap || {};
 };
 
+/**
+ * Extracts all non-system field names from a GlideRecord.
+ * 
+ * This function iterates through all fields of the given GlideRecord
+ * and returns an array of field names that do not start with 'sys_'.
+ * 
+ * @param {GlideRecord} glideRecord - The GlideRecord to extract field names from.
+ * @returns {string[]} An array of non-system field names.
+ */
+global.KLF_Scoper.getNonSysFields = function(glideRecord) {
+    var glideElements = glideRecord.getFields();
+    var elementNames = [];
+    for (var i = 0; i < glideElements.size(); i++) {
+        var glideElement = glideElements.get(i);
+        var name = glideElement.getName();
+        if (!name.startsWith('sys_')) {
+            elementNames.push(name);
+        }
+    }
+    return elementNames;
+};
+
+/**
+ * Used to copy a UI View from the source scope to the target scope.
+ * Note: An empty string is a valid value for the viewName parameter
+ * The empty viewName is the 'Default view' for a table
+ * 
+ * NOTE: The UI View (sys_ui_view) record cannot be copied. The UI View record is a unique record in the sys_ui_view table.
+ * There can only be one, so copying it would result in an error. You must account for the UI View record yourself. Sometimes
+ * this record is in global and does not need to be copied, but other times this record was created by a non-global app and may
+ * need to be created in the target scope.
+ * 
+ * @param {string} viewName sys_ui_view.name
+ * @param {string} tableName This is used to find the related form, form section, and list/related
+ * records associated with the view.
+ * @param {global.KLF_Scoper} scoper 
+ * 
+ * @example
+ * var viewCopier = new global.KLF_Scoper.ViewCopier('My View', 'x_53417_scoper_1_scoper_task');
+ * viewCopier.copy();
+ */
+global.KLF_Scoper.ViewCopier = function(viewName, tableName, scoper) {
+    if (!tableName || !new GlideRecord(tableName).isValid()) {
+        throw 'Table not found';
+    }
+
+    if (typeof viewName != 'string') {
+        throw 'View name must be a string';
+    }
+
+    this.viewName = viewName;
+    this.tableName = tableName;
+    this.scoper = scoper;
+    var view = new GlideRecord('sys_ui_view');
+    view.addQuery('name', this.viewName);
+    view.query();
+    if (!view.next()) {
+        throw 'Source UI view not found';
+    }
+    this.view = view;
+};
+
+global.KLF_Scoper.ViewCopier.prototype = {
+    /**
+     * Copies the entire view. Copies the UI View, Form, Form Section, 
+     * Section Element, List, and Related List
+     * records from the source scope to the target scope.
+     */
+    copy: function() {
+        this.copyFormView();
+    },
+
+    /**
+     * Cop
+     * @param {GlideRecord} view sys_ui_view record
+     */
+    copyUiView: function(view) {
+
+    },
+
+    /**
+     * Copies a Form (sys_ui_form) record from the source scope to the target scope.
+     * @param {GlideRecord} form sys_ui_form record
+     */
+    copyUiForm: function(form) {
+        var source = form;
+        var target = new GlideRecord('sys_ui_form');
+        target.newRecord();
+
+        var elementNames = global.KLF_Scoper.getNonSysFields(form);
+
+        for (var i = 0; i < elementNames.length; i++) {
+            var fieldName = elementNames[i];
+            target.setValue(fieldName, source.getValue(fieldName));
+        }
+
+        // sys fields are not copied a automatically. need to manually set them.
+        target.setValue('sys_name', source.getValue('sys_name'));
+
+        // Update the scope
+        target.setValue('sys_scope', this.scoper.targetScopeSysId);
+
+        // Update the table name
+        target.setValue('name', this.scoper.updateTableNames(source.getValue('name')));
+
+    },
+
+    /**
+     * Copies a form view from the source scope to the target scope.
+     * This includes:
+     * - Form (sys_ui_form), // This looks like it is only created if there are multiple form sections on th form
+     * - Form Section (sys_ui_form_section), // This controls where the section is positioned in the form
+     * - Form Section (sys_ui_section), // This is the container for all the fields in the section
+     * - Section Element (sys_ui_element), // This defines what fields are displayed in the section
+     */
+    copyFormView: function() {
+        // I'm only looking for the first form. I don't think there should be multiple forms
+        // that are not personalized that are associated with a view.
+        var form = new GlideRecord('sys_ui_form');
+        form.addQuery('view', this.view.getUniqueValue());
+        form.addNotNullQuery('sys_user'); // Intentionally excluding personalized views
+        form.orderBy('sys_updated_on'); // Just in case there are multiple forms. I want the one that was updated most recently
+        form.addQuery('name', this.tableName);
+        form.addQuery('sys_scope', this.scoper.sourceScopeSysId);
+        form.query();
+        if (form.next()) {
+            this.copyUiForm(form);
+        }
+
+        // Each form section is a collection of fields that are displayed in the section.
+        var formSection = new GlideRecord('sys_ui_section');
+        formSection.addNotNullQuery('sys_user'); // Intentionally excluding personalized views
+        formSection.addQuery('view', this.view.getUniqueValue());
+        formSection.addQuery('name', this.tableName);
+        formSection.query();
+        while (formSection.next()) {
+            gs.info('Form section found: ' + formSection.getUniqueValue());
+
+            // Each form section could have multiple Section Elements (sys_ui_element) records. These are records
+            // that define what fields are displayed in the section.
+            var sectionElement = new GlideRecord('sys_ui_element');
+            sectionElement.addQuery('sys_ui_section', formSection.getUniqueValue());
+            sectionElement.query();
+            while (sectionElement.next()) {
+                gs.info('Section element found: ' + sectionElement.getUniqueValue());
+            }
+        }
+    }
+};
+
 global.KLF_Scoper.prototype = {
     /**
      * Copies a UI Policy from the source scope to the target scope.
@@ -87,14 +236,20 @@ global.KLF_Scoper.prototype = {
     /**
      * Copies a UI View from the source scope to the target scope.
      * This includes:
-     * - UI View (sys_ui_view), 
-     * - Form (sys_ui_form), 
-     * - Form Section (sys_ui_section), 
-     * - List (sys_ui_list), 
-     * - Related List (sys_ui_related_list)
-     * @param {string} uiViewSysId 
+     * - UI View (sys_ui_view), // This is the container for all the lists and forms related to a view name
+     * - Form (sys_ui_form), // This looks like it is only created if there are multiple form sections on th form
+     * - Form Section (sys_ui_form_section), // This controls where the section is positioned in the form
+     * - Form Section (sys_ui_section), // This is the container for all the fields in the section
+     * - Section Element (sys_ui_element), // This defines what fields are displayed in the section
+     * - List (sys_ui_list), // This defines the columns in the list
+     * - Related List (sys_ui_related_list) // This defines the columns in the related list
+     * @param {string} viewName 
+     * @param {string} tableName 
      */
-    copyUiView: function(uiViewSysId) {},
+    copyUiView: function(viewName, tableName) {
+        var viewCopier = new global.KLF_Scoper.ViewCopier(viewName, tableName, this.targetScope, this.targetScopeSysId);
+        viewCopier.copy();
+    },
 
     /**
      * Copies a UI Action from the source scope to the target scope.
@@ -107,7 +262,7 @@ global.KLF_Scoper.prototype = {
             throw 'Source UI action not found';
         }
 
-        var elementNames = this.getNonSysFields(source);
+        var elementNames = global.KLF_Scoper.getNonSysFields(source);
 
         var target = new GlideRecord('sys_ui_action');
         target.newRecord();
@@ -165,7 +320,7 @@ global.KLF_Scoper.prototype = {
         if (!source.get(businessRuleSysId)) {
             return null;
         }
-        var elementNames = this.getNonSysFields(source);
+        var elementNames = global.KLF_Scoper.getNonSysFields(source);
 
         // Now that we have the element names, we can copy the business rule
         var target = new GlideRecord('sys_script');
@@ -202,7 +357,7 @@ global.KLF_Scoper.prototype = {
             throw 'Source script include not found';
         }
 
-        var elementNames = this.getNonSysFields(source);
+        var elementNames = global.KLF_Scoper.getNonSysFields(source);
 
         // Now that we have the element names, we can copy the business rule
         var target = new GlideRecord('sys_script_include');
@@ -250,7 +405,7 @@ global.KLF_Scoper.prototype = {
         target.newRecord();
 
         // Copy all non-system fields
-        var elementNames = this.getNonSysFields(source);
+        var elementNames = global.KLF_Scoper.getNonSysFields(source);
         elementNames.forEach(function(fieldName) {
             target.setValue(fieldName, source.getValue(fieldName));
         });
@@ -264,28 +419,6 @@ global.KLF_Scoper.prototype = {
         } else {
             throw 'Failed to copy column';
         }
-    },
-
-    /**
-     * Extracts all non-system field names from a GlideRecord.
-     * 
-     * This function iterates through all fields of the given GlideRecord
-     * and returns an array of field names that do not start with 'sys_'.
-     * 
-     * @param {GlideRecord} glideRecord - The GlideRecord to extract field names from.
-     * @returns {string[]} An array of non-system field names.
-     */
-    getNonSysFields: function(glideRecord) {
-        var glideElements = glideRecord.getFields();
-        var elementNames = [];
-        for (var i = 0; i < glideElements.size(); i++) {
-            var glideElement = glideElements.get(i);
-            var name = glideElement.getName();
-            if (!name.startsWith('sys_')) {
-                elementNames.push(name);
-            }
-        }
-        return elementNames;
     },
 
     copySPWidget: function() {
@@ -329,6 +462,7 @@ global.KLF_Scoper.prototype = {
         return string;
     },
 
+
     /**
      * Retrieves the sys_id of a scope by its name.
      * @param {string} scopeName - The name of the scope to look up.
@@ -339,20 +473,33 @@ global.KLF_Scoper.prototype = {
         if (scopeGr.get('scope', scopeName)) {
             return scopeGr.getUniqueValue();
         }
+        // Could be global scope. Need to check by name
+        var globalScope = new GlideRecord('sys_scope');
+        globalScope.addQuery('name', scopeName);
+        globalScope.query();
+        if (globalScope.getRowCount() === 1) {
+            globalScope.next();
+            return globalScope.getUniqueValue();
+        } else if (globalScope.getRowCount() > 1) {
+            throw 'Ambiguous scope name. More than one scope found with the name: ' + scopeName;
+        }
+
         return null;
     },
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-09-07 10:14:35</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>45b68db447e8161058ceeb02d16d430d</sys_id>
-        <sys_mod_count>39</sys_mod_count>
+        <sys_mod_count>45</sys_mod_count>
         <sys_name>KLF_Scoper</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_45b68db447e8161058ceeb02d16d430d</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-08 09:17:26</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-13 13:10:46</sys_updated_on>
     </sys_script_include>
 </record_update>

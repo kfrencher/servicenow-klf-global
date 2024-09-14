@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_Scoper_ViewCopierTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_Scoper_ViewCopierTest</name>
+        <script><![CDATA[function KLF_Scoper_ViewCopierTest() {
+    describe('', function() {
+        describe('copyUiForm()', function() {
+            it('should copy a form from one scope to another', function() {
+                var sourceForm = new GlideRecord('sys_ui_form');
+                sourceForm.addQuery('name', 'scoper_test');
+                sourceForm.addQuery('view', 'scoper_test');
+                sourceForm.query();
+                expect(sourceForm.next()).toBe(true);
+
+                var scoper = new global.KLF_Scoper();
+
+            });
+        });
+    });
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>kenneth.frencher</sys_created_by>
+        <sys_created_on>2024-09-13 19:56:52</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>4985423a87285290e2041f8d3fbb353d</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>KLF_Scoper_ViewCopierTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_4985423a87285290e2041f8d3fbb353d</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-13 19:56:52</sys_updated_on>
+    </sys_script_include>
+</record_update>

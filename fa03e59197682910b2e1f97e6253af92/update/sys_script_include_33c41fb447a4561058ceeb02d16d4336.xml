@@ -6,7 +6,6 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_ScoperTest</name>
         <script><![CDATA[// @ts-ignore
 function KLF_ScoperTest(outputs, steps, params, stepResult, assertEqual) {
@@ -25,6 +24,14 @@ function KLF_ScoperTest(outputs, steps, params, stepResult, assertEqual) {
                 sourceScope: sourceScope,
                 targetScope: targetScope,
                 tableMap: tableMap
+            });
+        });
+
+        fdescribe('copyUiView()', function() {
+            it('should copy a UI View from one scope to another', function() {
+                const viewName = '';
+                const tableName = 'x_53417_scoper_1_scoper_task';
+                scoper.copyUiView(viewName, tableName);
             });
         });
 
@@ -136,14 +143,16 @@ function KLF_ScoperTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-09-07 20:35:27</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>33c41fb447a4561058ceeb02d16d4336</sys_id>
-        <sys_mod_count>22</sys_mod_count>
+        <sys_mod_count>24</sys_mod_count>
         <sys_name>KLF_ScoperTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_33c41fb447a4561058ceeb02d16d4336</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-08 08:35:21</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-13 10:51:45</sys_updated_on>
     </sys_script_include>
 </record_update>
