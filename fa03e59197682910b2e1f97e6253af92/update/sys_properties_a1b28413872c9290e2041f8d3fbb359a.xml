@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>JSON string that contains a map of source sys_ids that have been processed and the associated target sys_ids that were created from the source</description>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>KLF_ScoperUtils.processed_records</name>
+        <read_roles/>
+        <suffix/>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>kenneth.frencher</sys_created_by>
+        <sys_created_on>2024-09-14 23:43:26</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>a1b28413872c9290e2041f8d3fbb359a</sys_id>
+        <sys_mod_count>44</sys_mod_count>
+        <sys_name>KLF_ScoperUtils.processed_records</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_properties_a1b28413872c9290e2041f8d3fbb359a</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-15 00:07:21</sys_updated_on>
+        <type>string</type>
+        <value>{
+    "00176dec7a6e498480001eaf96bcbe99": "dc988c97872c9290e2041f8d3fbb35d9",
+    "017c9fdc6d97491781bc0e4ed4c0d3c1": "d8988c97872c9290e2041f8d3fbb35de",
+    "0207694147a0961058ceeb02d16d4396": "149840d7872c9290e2041f8d3fbb351e",
+    "073ac3cf87289290e2041f8d3fbb35ed": "949840d7872c9290e2041f8d3fbb3521",
+    "0d7ac34387689290e2041f8d3fbb35b1": "d89840d7872c9290e2041f8d3fbb3545",
+    "0d7ac34387689290e2041f8d3fbb35b2": "5c9840d7872c9290e2041f8d3fbb354a",
+    "139c383e87245290e2041f8d3fbb35ec": "209840d7872c9290e2041f8d3fbb3576",
+    "139c383e87245290e2041f8d3fbb35f1": "ec9840d7872c9290e2041f8d3fbb357d",
+    "157f86151a37455ba811c79056925881": "f09840d7872c9290e2041f8d3fbb3591",
+    "179c383e87245290e2041f8d3fbb35f1": "b09840d7872c9290e2041f8d3fbb3595",
+    "201af7b44768561058ceeb02d16d43e5": "bc9840d7872c9290e2041f8d3fbb359b",
+    "466d8d704ab2479c84dfcb462502a3e4": "309840d7872c9290e2041f8d3fbb359f",
+    "539c383e87245290e2041f8d3fbb35ed": "749840d7872c9290e2041f8d3fbb35a2",
+    "579c383e87245290e2041f8d3fbb35ed": "389840d7872c9290e2041f8d3fbb35a9",
+    "579c383e87245290e2041f8d3fbb35f2": "3c9840d7872c9290e2041f8d3fbb35b0",
+    "58a5b98147e0961058ceeb02d16d43e8": "789840d7872c9290e2041f8d3fbb35b7",
+    "5b9c383e87245290e2041f8d3fbb35f2": "349840d7872c9290e2041f8d3fbb35bb",
+    "5c6fe00787609290e2041f8d3fbb3594": "5c6fe00787609290e2041f8d3fbb3594",
+    "5f2cc2904b7542748fdbaa22a78e8390": "859840d7872c9290e2041f8d3fbb35c6",
+    "601a3bb44768561058ceeb02d16d4302": "4d9840d7872c9290e2041f8d3fbb35c9",
+    "681af7b44768561058ceeb02d16d43e0": "cd9840d7872c9290e2041f8d3fbb35f2",
+    "681af7b44768561058ceeb02d16d43f1": "419840d7872c9290e2041f8d3fbb35f6",
+    "72bae367443944129d6bd51a1a37c831": "859840d7872c9290e2041f8d3fbb35f9",
+    "74d9f3b44768561058ceeb02d16d431c": "c99840d7872c9290e2041f8d3fbb35fc",
+    "78266fc787a89290e2041f8d3fbb352a": "019880d7872c9290e2041f8d3fbb350d",
+    "7f64e38787a89290e2041f8d3fbb3559": "419880d7872c9290e2041f8d3fbb3512",
+    "817ac34387689290e2041f8d3fbb35b1": "859880d7872c9290e2041f8d3fbb3516",
+    "979c383e87245290e2041f8d3fbb35ee": "099880d7872c9290e2041f8d3fbb352a",
+    "981ab3b44768561058ceeb02d16d438c": "459880d7872c9290e2041f8d3fbb353d",
+    "9b9c383e87245290e2041f8d3fbb35ee": "899880d7872c9290e2041f8d3fbb3540",
+    "9dff470e64b04ccaaea378932313aaa1": "959880d7872c9290e2041f8d3fbb3547",
+    "a02abdc947e0961058ceeb02d16d43c6": "d99880d7872c9290e2041f8d3fbb3563",
+    "aa24638787a89290e2041f8d3fbb35e9": "d99880d7872c9290e2041f8d3fbb3566",
+    "ac1af7b44768561058ceeb02d16d43fa": "159880d7872c9290e2041f8d3fbb357a",
+    "b81a3bb44768561058ceeb02d16d4335": "919880d7872c9290e2041f8d3fbb357e",
+    "b85a33f44768561058ceeb02d16d4345": "d59880d7872c9290e2041f8d3fbb3581",
+    "c854278787a89290e2041f8d3fbb350d": "1d9880d7872c9290e2041f8d3fbb3584",
+    "cceab7f44768561058ceeb02d16d4316": "dd9880d7872c9290e2041f8d3fbb3597",
+    "cfb0718d47a0961058ceeb02d16d438d": "389840d7872c9290e2041f8d3fbb35b7",
+    "d559ab8b87a89290e2041f8d3fbb35c4": "d99880d7872c9290e2041f8d3fbb359d",
+    "d79c383e87245290e2041f8d3fbb35eb": "559880d7872c9290e2041f8d3fbb35a1",
+    "db9c383e87245290e2041f8d3fbb35ef": "199880d7872c9290e2041f8d3fbb35a8",
+    "df9c383e87245290e2041f8d3fbb35e6": "d19880d7872c9290e2041f8d3fbb35c8",
+    "df9c383e87245290e2041f8d3fbb35e8": "df9c383e87245290e2041f8d3fbb35e8",
+    "df9c383e87245290e2041f8d3fbb35ef": "df9c383e87245290e2041f8d3fbb35ef",
+    "e509c3784764561058ceeb02d16d4399": "a7cb80db87a0de506db4ffb2debb35f9",
+    "ec3aaf8b87a89290e2041f8d3fbb35f5": "77cb80db87a0de506db4ffb2debb35fd",
+    "ef6f640787609290e2041f8d3fbb3553": "fbcbc0db87a0de506db4ffb2debb3503",
+    "f81a3bb44768561058ceeb02d16d4315": "bfcbc0db87a0de506db4ffb2debb3508"
+}</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=a1b28413872c9290e2041f8d3fbb359a"/>
+</record_update>

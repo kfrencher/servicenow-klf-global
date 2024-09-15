@@ -9,6 +9,9 @@
         <name>KLF_ScoperUtilsTest</name>
         <script><![CDATA[// @ts-ignore
 function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
+    // Need to clear out the cache before running the tests
+    gs.setProperty('KLF_ScoperUtils.processed_records', '{}');
+
     var SOURCE_SCOPE = 'x_53417_scoper_1';
     var TARGET_SCOPE = 'x_usga2_scoper_2';
     var SCOPER_SAVE_UI_ACTION_SYS_ID = 'cfb0718d47a0961058ceeb02d16d438d';
@@ -48,6 +51,18 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 sourceScope: SOURCE_SCOPE,
                 targetScope: TARGET_SCOPE,
                 tableMap: tableMap
+            });
+        });
+
+        describe('isProcessed()', function() {
+            it('should return false if the record has not been processed', function() {
+                expect(scoper.isProcessed(gs.generateGUID())).toBe(false);
+            });
+
+            it('should return true if the record has been processed', function() {
+                var sourceSysId = gs.generateGUID();
+                scoper.markRecordAsCopied(sourceSysId, gs.generateGUID());
+                expect(scoper.isProcessed(sourceSysId)).toBe(true);
             });
         });
 
@@ -507,7 +522,7 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_created_on>2024-09-14 07:06:34</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>5fced04b87289e506db4ffb2debb357f</sys_id>
-        <sys_mod_count>54</sys_mod_count>
+        <sys_mod_count>58</sys_mod_count>
         <sys_name>KLF_ScoperUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -515,6 +530,6 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5fced04b87289e506db4ffb2debb357f</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-14 23:23:41</sys_updated_on>
+        <sys_updated_on>2024-09-15 14:44:56</sys_updated_on>
     </sys_script_include>
 </record_update>

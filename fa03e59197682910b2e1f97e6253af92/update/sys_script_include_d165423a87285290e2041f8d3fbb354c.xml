@@ -27,11 +27,14 @@
  * - Relationship (sys_relationship)
  * - Column (sys_ui_column)
  * 
+ * - System Property (sys_properties)
+ * - Report (sys_report)
  * - UI Page (sys_ui_page)
  * - UI Policy (sys_ui_policy)
  * - UI Script (sys_ui_script)
  * - Client Script (sys_client_script)
  * - REST Message (sys_rest_message)
+ * - Reponsive Dashboard
  */
 
 /**
@@ -136,14 +139,23 @@ global.KLF_ScoperUtils.prototype = {
                 targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(_source);
         }
 
-
-        var targetRecordXml = this.documentToString(targetParts.targetRecordDocument, true);
-        targetRecordXml = this.updateTableNames(targetRecordXml);
-        targetRecordXml = this.updateReferences(targetRecordXml);
         return {
-            targetRecordXml: targetRecordXml,
+            targetRecordXml: this.getUpdatedXml(targetParts.targetRecordDocument),
             targetRecordSysId: targetParts.targetRecordSysId
         };
+    },
+
+    /**
+     * Updates the document so all the references and table names that were in the source document
+     * are updated to the target scope. Returns the updated XML.
+     * @param {Document} document 
+     * @returns {string} The updated XML
+     */
+    getUpdatedXml: function(document) {
+        var xml = this.documentToString(document, true);
+        xml = this.updateTableNames(xml);
+        xml = this.updateReferences(xml);
+        return xml;
     },
 
     /**
@@ -298,14 +310,52 @@ global.KLF_ScoperUtils.prototype = {
     },
 
     /**
+     * Copies the data from the source scope to the target scope.
+     * @param {GlideRecord} source 
+     * @param {string?} [targetRecordSysId] 
+     * @param {Document} [providedDocument]
+     * @returns {KLF_ScoperUtilsMetadataResult}
+     */
+    copyData: function(source, targetRecordSysId, providedDocument) {
+        return this.defaultCreateTargetMetadataFromSourceMetadata(source, targetRecordSysId, providedDocument);
+    },
+
+    /**
      * Copies the metadata from the source scope to the target scope.
      * @param {string} sysId 
      * @returns {GlideRecord} The target metadata record
      */
     copyMetadataBySysId: function(sysId) {
+        var targetMetadata;
+        if (this.isProcessed(sysId)) {
+            targetMetadata = new GlideRecord('sys_metadata');
+            if (targetMetadata.get(this.metadataMap[sysId])) {
+                return targetMetadata;
+            }
+        }
+
         var metadata = new GlideRecord('sys_metadata');
         if (!metadata.get(sysId)) {
             throw 'Source metadata not found for sys_id: ' + sysId;
+        }
+
+        if (metadata.getRecordClassName() === 'sys_documentation') {
+            // Check if the sys_documentation already exists in the target scope
+            var source = new GlideRecord('sys_documentation');
+            if (source.get(sysId)) {
+                var target = new GlideRecord('sys_documentation');
+                target.addQuery('name', source.getValue('name'));
+                target.addQuery('element', source.getValue('element'));
+                target.addQuery('language', source.getValue('language'));
+                target.query();
+                if (target.next()) {
+                    // We need to make sure the sys_id in the metadata map is the target sys_id we found
+                    this.metadataMap[sysId] = target.getUniqueValue();
+                    // Mark this as copied
+                    this.markRecordAsCopied(sysId, target.getUniqueValue());
+                    return target;
+                }
+            }
         }
 
         var targetParts = this.createTargetMetadataFromSourceMetadata(metadata);
@@ -318,12 +368,46 @@ global.KLF_ScoperUtils.prototype = {
         updateManager.loadXML(metadataXml);
 
         // Check if the metadata was loaded successfully
-        var targetMetadata = new GlideRecord(metadata.getRecordClassName());
+        targetMetadata = new GlideRecord(metadata.getRecordClassName());
         if (!targetMetadata.get(targetRecordSysId)) {
             throw 'Target metadata not found for target sys_id: ' + targetRecordSysId + ' source sys_id: ' + sysId;
         }
 
+        // For now we are going to track what records are copied
+        this.markRecordAsCopied(sysId, targetRecordSysId);
+
         return targetMetadata;
+    },
+
+    /**
+     * Marks a record as copied.
+     * @param {string} sourceSysId 
+     * @param {string} targetSysId 
+     */
+    markRecordAsCopied: function(sourceSysId, targetSysId) {
+        // Working through the GlideRecord API because it's quicker than using gs.getProperty / gs.setProperty
+        var property = new GlideRecord('sys_properties');
+        property.get('name', 'KLF_ScoperUtils.processed_records');
+
+        var processedRecords = JSON.parse(property.getValue('value') || '{}');
+        processedRecords[sourceSysId] = targetSysId;
+
+        property.setValue('value', JSON.stringify(processedRecords, null, 4));
+        property.setWorkflow(false);
+        property.autoSysFields(false);
+        property.update();
+    },
+
+    /**
+     * Returns true if the record has been processed.
+     * @param {string} sourceSysId 
+     */
+    isProcessed: function(sourceSysId) {
+        // Working through the GlideRecord API because it's quicker than using gs.getProperty / gs.setProperty
+        var property = new GlideRecord('sys_properties');
+        property.get('name', 'KLF_ScoperUtils.processed_records');
+        var processedRecords = JSON.parse(property.getValue('value') || '{}');
+        return processedRecords[sourceSysId] ? true : false;
     },
 
     /**
@@ -485,7 +569,7 @@ global.KLF_ScoperUtils.prototype = {
         <sys_created_on>2024-09-13 19:56:20</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d165423a87285290e2041f8d3fbb354c</sys_id>
-        <sys_mod_count>66</sys_mod_count>
+        <sys_mod_count>81</sys_mod_count>
         <sys_name>KLF_ScoperUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -493,6 +577,6 @@ global.KLF_ScoperUtils.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d165423a87285290e2041f8d3fbb354c</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-14 23:40:03</sys_updated_on>
+        <sys_updated_on>2024-09-15 14:38:56</sys_updated_on>
     </sys_script_include>
 </record_update>
