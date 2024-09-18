@@ -19,6 +19,22 @@ global.KLF_ScoperUtils_DataMigrator = function(scoper) {
 
 global.KLF_ScoperUtils_DataMigrator.prototype = {
     /**
+     * Checks the table map to make sure that the source and target table name is valid.
+     * Throws an error if the source table name is not found.
+     * @param {string} tableName 
+     */
+    checkTable: function(tableName) {
+        var source = new GlideRecord(tableName);
+        if (!source.isValid()) {
+            throw 'Source table not found for ' + tableName;
+        }
+        var target = new GlideRecord(this.scoper.tableMap[tableName]);
+        if (!target.isValid()) {
+            throw 'Target table not found for ' + tableName;
+        }
+    },
+
+    /**
      * Transfers all tables from the source scope to the target scope.
      * @param {{tableName: string, encodedQueryString: string}[]} tables 
      */
@@ -34,6 +50,13 @@ global.KLF_ScoperUtils_DataMigrator.prototype = {
      * @param {GlideRecord} source
      */
     transferRecord: function(source) {
+        // Check to make sure there is a target table
+        if (!this.scoper.tableMap[source.getRecordClassName()]) {
+            throw 'No target table found for ' + source.getRecordClassName();
+        }
+
+        this.checkTable(source.getRecordClassName());
+
         var targetParts = this.scoper.copyData(source);
         var updatedXml = this.scoper.getUpdatedXml(targetParts.targetRecordDocument);
         // @ts-ignore
@@ -48,6 +71,7 @@ global.KLF_ScoperUtils_DataMigrator.prototype = {
      * @param {string} [encodedQueryString]
      */
     transferTable: function(tableName, encodedQueryString) {
+        this.checkTable(tableName);
         var source = new GlideRecord(tableName);
         if (encodedQueryString) {
             source.addEncodedQuery(encodedQueryString);
@@ -56,14 +80,102 @@ global.KLF_ScoperUtils_DataMigrator.prototype = {
         while (source.next()) {
             this.transferRecord(source);
         }
-    }
+    },
+
+    /**
+     * Adds the record's related journal entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
+     */
+    addJournalEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
+        var journal = new GlideRecord("sys_journal_field");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        journal.addQuery("name", parent.getRecordClassName());
+        journal.addQuery("element_id", parent.getUniqueValue());
+        journal.query();
+        while (journal.next()) {
+            manifest.addRecordByGlideRecord(journal);
+            this.unloadRecord(journal, document);
+        }
+        return manifest;
+    },
+
+    /**
+     * Adds the record's related audit entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
+     */
+    addAuditEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
+        var audit = new GlideRecord("sys_audit");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        audit.addQuery("tablename", parent.getRecordClassName());
+        audit.addQuery("documentkey", parent.getUniqueValue());
+        audit.query();
+        while (audit.next()) {
+            manifest.addRecordByGlideRecord(audit);
+            this.unloadRecord(audit, document);
+        }
+        return manifest;
+    },
+
+    /**
+     * Adds the record's related currency entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
+     */
+    addCurrencyEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
+        var currency = new GlideRecord("fx_currency_instance");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        currency.addQuery("table", parent.getRecordClassName());
+        currency.addQuery("id", parent.getUniqueValue());
+        currency.query();
+        while (currency.next()) {
+            manifest.addRecordByGlideRecord(currency);
+            this.unloadRecord(currency, document);
+        }
+        return manifest;
+    },
+
+    /**
+     * Adds the record's related currency entries to the update set
+     * @param {GlideRecord} parent
+     * @param {Document} document
+     * @returns {global.KLF_RecordSync.Manifest}
+     */
+    addPriceEntries: function(parent, document) {
+        var manifest = new global.KLF_RecordSync.Manifest();
+
+        var price = new GlideRecord("fx_price");
+        // Intentionally using GlideRecord.getRecordClassName because it will correctly
+        // handle returning the correct table name when dealing with extended records
+        price.addQuery("table", parent.getRecordClassName());
+        price.addQuery("id", parent.getUniqueValue());
+        price.query();
+        while (price.next()) {
+            manifest.addRecordByGlideRecord(price);
+            this.unloadRecord(price, document);
+        }
+        return manifest;
+    },
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2024-09-15 15:40:04</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>faeddb9387e4d290e2041f8d3fbb358b</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>KLF_ScoperUtils_DataMigrator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -71,6 +183,6 @@ global.KLF_ScoperUtils_DataMigrator.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_faeddb9387e4d290e2041f8d3fbb358b</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-15 15:40:04</sys_updated_on>
+        <sys_updated_on>2024-09-16 12:25:12</sys_updated_on>
     </sys_script_include>
 </record_update>

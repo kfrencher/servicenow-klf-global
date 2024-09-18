@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
     <sys_properties action="INSERT_OR_UPDATE">
         <choices/>
-        <description>JSON string that contains a map of source sys_ids that have been processed and the associated target sys_ids that were created from the source</description>
+        <description>Used to store a mapping of source sys_id to target sys_id when an artifact is copied from one scope to another. This is so references can be updated when sys_id has changed.</description>
         <ignore_cache>true</ignore_cache>
         <is_private>false</is_private>
-        <name>KLF_ScoperUtils.processed_records</name>
+        <name>KLF_ScoperUtils.metadata_map</name>
         <read_roles/>
         <suffix/>
         <sys_class_name>sys_properties</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
-        <sys_created_on>2024-09-14 23:43:26</sys_created_on>
+        <sys_created_on>2024-09-16 12:50:02</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
-        <sys_id>a1b28413872c9290e2041f8d3fbb359a</sys_id>
-        <sys_mod_count>48</sys_mod_count>
-        <sys_name>KLF_ScoperUtils.processed_records</sys_name>
+        <sys_id>c4508c3f87641690e2041f8d3fbb3523</sys_id>
+        <sys_mod_count>5</sys_mod_count>
+        <sys_name>KLF_ScoperUtils.metadata_map</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
-        <sys_update_name>sys_properties_a1b28413872c9290e2041f8d3fbb359a</sys_update_name>
+        <sys_update_name>sys_properties_c4508c3f87641690e2041f8d3fbb3523</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-17 13:36:37</sys_updated_on>
+        <sys_updated_on>2024-09-17 13:40:03</sys_updated_on>
         <type>string</type>
         <value>{
     "00ba795787a0d290e2041f8d3fbb3537": "bdf4ddc487b452906db4ffb2debb35c6",
@@ -42,6 +42,7 @@
     "42911d8887b45690e2041f8d3fbb35d9": "96f4d50c87b452906db4ffb2debb358f",
     "42915d8887b45690e2041f8d3fbb350f": "42915d8887b45690e2041f8d3fbb350f",
     "466d8d704ab2479c84dfcb462502a3e4": "6af4d50c87b452906db4ffb2debb35a5",
+    "cfb0718d47a0961058ceeb02d16d438d": "e2f4d50c87b452906db4ffb2debb35aa",
     "58a5b98147e0961058ceeb02d16d43e8": "eef4d50c87b452906db4ffb2debb35aa",
     "5c6fe00787609290e2041f8d3fbb3594": "5c6fe00787609290e2041f8d3fbb3594",
     "601a3bb44768561058ceeb02d16d4302": "e2f4d50c87b452906db4ffb2debb35b4",
@@ -56,6 +57,7 @@
     "75911d8887b45690e2041f8d3fbb35d5": "75911d8887b45690e2041f8d3fbb35d5",
     "76919d8887b45690e2041f8d3fbb3508": "32f4d50c87b452906db4ffb2debb35ee",
     "76da33384768561058ceeb02d16d43c8": "03f4d50c87b452906db4ffb2debb35f5",
+    "a02abdc947e0961058ceeb02d16d43c6": "4bf4d50c87b452906db4ffb2debb35fa",
     "797ec05f872c9290e2041f8d3fbb350d": "47f4d50c87b452906db4ffb2debb35fb",
     "79911d8887b45690e2041f8d3fbb35b2": "8bf4190c87b452906db4ffb2debb350b",
     "7d911d8887b45690e2041f8d3fbb35d1": "a3f4190c87b452906db4ffb2debb353a",
@@ -66,7 +68,6 @@
     "969af55787a0d290e2041f8d3fbb3581": "bff4190c87b452906db4ffb2debb3571",
     "981ab3b44768561058ceeb02d16d438c": "6ed551cc87b45690e2041f8d3fbb35ad",
     "a01af7b44768561058ceeb02d16d43f6": "aad551cc87b45690e2041f8d3fbb35b1",
-    "a02abdc947e0961058ceeb02d16d43c6": "4bf4d50c87b452906db4ffb2debb35fa",
     "ac1af7b44768561058ceeb02d16d43fa": "32d551cc87b45690e2041f8d3fbb35b9",
     "b5911d8887b45690e2041f8d3fbb35d6": "76d551cc87b45690e2041f8d3fbb35bd",
     "b85a33f44768561058ceeb02d16d4345": "76d551cc87b45690e2041f8d3fbb35de",
@@ -80,7 +81,6 @@
     "ccba795787a0d290e2041f8d3fbb3539": "53d591cc87b45690e2041f8d3fbb352e",
     "ccbaf15787a0d290e2041f8d3fbb35e5": "17d591cc87b45690e2041f8d3fbb353f",
     "cceab7f44768561058ceeb02d16d4316": "d7d591cc87b45690e2041f8d3fbb3543",
-    "cfb0718d47a0961058ceeb02d16d438d": "e2f4d50c87b452906db4ffb2debb35aa",
     "d559ab8b87a89290e2041f8d3fbb35c4": "17d591cc87b45690e2041f8d3fbb354a",
     "e41af7b44768561058ceeb02d16d43fe": "63d591cc87b45690e2041f8d3fbb354f",
     "e509c3784764561058ceeb02d16d4399": "67d591cc87b45690e2041f8d3fbb3553",
@@ -89,5 +89,5 @@
 }</value>
         <write_roles/>
     </sys_properties>
-    <sys_translated_text action="delete_multiple" query="documentkey=a1b28413872c9290e2041f8d3fbb359a"/>
+    <sys_translated_text action="delete_multiple" query="documentkey=c4508c3f87641690e2041f8d3fbb3523"/>
 </record_update>

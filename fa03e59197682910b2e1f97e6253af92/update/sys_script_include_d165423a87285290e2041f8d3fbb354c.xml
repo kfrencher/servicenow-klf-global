@@ -82,8 +82,16 @@ global.KLF_ScoperUtils = function(config) {
     this.targetScope = _config.targetScope;
     this.targetScopeSysId = targetScopeSysId;
     this.tableMap = _config.tableMap || {};
+    this.checkTableMap();
+
     // Map of source metadata sys_id to target metadata sys_id
-    this.metadataMap = _config.metadataMap || {};
+    if (_config.metadataMap) {
+        this.metadataMap = _config.metadataMap;
+    } else {
+        // Load the metadata map from the database
+        var metadataMapJson = this.getSysProperty('KLF_ScoperUtils.metadata_map');
+        this.metadataMap = metadataMapJson ? JSON.parse(metadataMapJson) : {};
+    }
 };
 
 /**
@@ -93,6 +101,20 @@ global.KLF_ScoperUtils = function(config) {
  */
 
 global.KLF_ScoperUtils.prototype = {
+    /**
+     * Checks the table map to make sure that all the source table names are valid.
+     * Throws an error if any of the source table names are not found.
+     */
+    checkTableMap: function() {
+        var me = this;
+        Object.keys(this.tableMap).forEach(function(sourceTableName) {
+            var source = new GlideRecord(sourceTableName);
+            if (!source.isValid()) {
+                throw 'Source table not found for ' + sourceTableName;
+            }
+        });
+    },
+
     /**
      * Generates a new metadata XML string using the source metadata record and the target scope.
      * The new metadata XML that is returned can be used to create a new artifact in the target scope.
@@ -135,6 +157,9 @@ global.KLF_ScoperUtils.prototype = {
             case 'sys_ui_form':
                 targetParts = this.createUiFormTargetMetadataFromSourceMetadata(_source);
                 break;
+            case 'sys_user_role':
+                targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(_source);
+                break;
             default:
                 targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(_source);
         }
@@ -155,6 +180,11 @@ global.KLF_ScoperUtils.prototype = {
         var xml = this.documentToString(document, true);
         xml = this.updateTableNames(xml);
         xml = this.updateReferences(xml);
+        xml = this.updateScope(xml);
+        if (xml.indexOf(this.sourceScope) > -1) {
+            var error = 'KLF_ScoperUtils.getUpdatedXml() - Source scope still exists in target XML even after XML update\n\n' + xml;
+            throw error;
+        }
         return xml;
     },
 
@@ -321,22 +351,46 @@ global.KLF_ScoperUtils.prototype = {
     },
 
     /**
+     * @overload
+     * @param {string} sysId 
+     * @returns {GlideRecord} 
+     */
+    /**
+     * @overload
+     * @param {string} sysId 
+     * @param {boolean} quiet
+     * @returns {GlideRecord?}
+     */
+    /**
      * Copies the metadata from the source scope to the target scope.
      * @param {string} sysId 
-     * @returns {GlideRecord} The target metadata record
+     * @param {boolean} [quiet] - If true, then do not throw an error if the metadata cannot be copied
+     * @returns {GlideRecord?} The target metadata record or null if quiet is true and the metadata cannot be copied
      */
-    copyMetadataBySysId: function(sysId) {
-        var targetMetadata;
+    copyMetadataBySysId: function(sysId, quiet) {
         if (this.isProcessed(sysId)) {
-            targetMetadata = new GlideRecord('sys_metadata');
-            if (targetMetadata.get(this.metadataMap[sysId])) {
-                return targetMetadata;
+            var processedMetadata = new GlideRecord('sys_metadata');
+            if (processedMetadata.get(this.metadataMap[sysId])) {
+                return processedMetadata;
+            } else {
+                throw 'Target metadata not found for sourcesys_id: ' + sysId;
             }
         }
 
         var metadata = new GlideRecord('sys_metadata');
         if (!metadata.get(sysId)) {
             throw 'Source metadata not found for sys_id: ' + sysId;
+        }
+
+        // Check to see if we can copy this type of metadata
+        if (!this.canCopyMetadata(metadata)) {
+            var error = 'Cannot copy metadata for source sys_id: ' + sysId + ' of type: ' + metadata.getRecordClassName();
+            if (!quiet) {
+                throw error;
+            } else {
+                gs.error(error);
+                return null;
+            }
         }
 
         if (metadata.getRecordClassName() === 'sys_documentation') {
@@ -368,9 +422,9 @@ global.KLF_ScoperUtils.prototype = {
         updateManager.loadXML(metadataXml);
 
         // Check if the metadata was loaded successfully
-        targetMetadata = new GlideRecord(metadata.getRecordClassName());
+        var targetMetadata = new GlideRecord(metadata.getRecordClassName());
         if (!targetMetadata.get(targetRecordSysId)) {
-            throw 'Target metadata not found for target sys_id: ' + targetRecordSysId + ' source sys_id: ' + sysId;
+            throw 'Target metadata not found for target sys_id: ' + targetRecordSysId + ' source sys_id: ' + sysId + ' of type: ' + metadata.getRecordClassName();
         }
 
         // For now we are going to track what records are copied
@@ -380,22 +434,50 @@ global.KLF_ScoperUtils.prototype = {
     },
 
     /**
+     * Checks to see if we can copy this type of metadata
+     * @param {GlideRecord} metadata 
+     * @returns {boolean}
+     */
+    canCopyMetadata: function(metadata) {
+        var recordClassName = metadata.getRecordClassName();
+        /** @type {string[]} */
+        var blackList = ['sys_scope_privilege', 'ua_table_licensing_config'];
+
+        if (blackList.indexOf(recordClassName) > -1) {
+            return false;
+        }
+
+        // We aren't going to attempt to copy persononalized views. The personalized views
+        // are customizations users have made to specific forms and lists.
+        // This would include:
+        // - sys_ui_form
+        // - sys_ui_section
+        // - sys_ui_list
+        // - sys_ui_related_list
+        var viewTableNames = ['sys_ui_form', 'sys_ui_section', 'sys_ui_list', 'sys_ui_related_list'];
+        if (viewTableNames.indexOf(recordClassName) > -1) {
+            // If the view is personalized it will have a value in the sys_user field
+            var viewGr = new GlideRecord(recordClassName);
+            viewGr.get(metadata.getUniqueValue());
+            return viewGr.sys_user.nil();
+        }
+
+        return true;
+    },
+
+    /**
      * Marks a record as copied.
      * @param {string} sourceSysId 
      * @param {string} targetSysId 
      */
     markRecordAsCopied: function(sourceSysId, targetSysId) {
         // Working through the GlideRecord API because it's quicker than using gs.getProperty / gs.setProperty
-        var property = new GlideRecord('sys_properties');
-        property.get('name', 'KLF_ScoperUtils.processed_records');
-
-        var processedRecords = JSON.parse(property.getValue('value') || '{}');
+        var processedRecords = this.getSysProperty('KLF_ScoperUtils.processed_records') ? JSON.parse(this.getSysProperty('KLF_ScoperUtils.processed_records')) : {};
         processedRecords[sourceSysId] = targetSysId;
+        this.setSysProperty('KLF_ScoperUtils.processed_records', JSON.stringify(processedRecords, null, 4));
 
-        property.setValue('value', JSON.stringify(processedRecords, null, 4));
-        property.setWorkflow(false);
-        property.autoSysFields(false);
-        property.update();
+        this.metadataMap[sourceSysId] = targetSysId;
+        this.setSysProperty('KLF_ScoperUtils.metadata_map', JSON.stringify(this.metadataMap, null, 4));
     },
 
     /**
@@ -403,10 +485,7 @@ global.KLF_ScoperUtils.prototype = {
      * @param {string} sourceSysId 
      */
     isProcessed: function(sourceSysId) {
-        // Working through the GlideRecord API because it's quicker than using gs.getProperty / gs.setProperty
-        var property = new GlideRecord('sys_properties');
-        property.get('name', 'KLF_ScoperUtils.processed_records');
-        var processedRecords = JSON.parse(property.getValue('value') || '{}');
+        var processedRecords = JSON.parse(this.getSysProperty('KLF_ScoperUtils.processed_records') || '{}');
         return processedRecords[sourceSysId] ? true : false;
     },
 
@@ -424,6 +503,15 @@ global.KLF_ScoperUtils.prototype = {
         // For sys_ui_view records the sys_id will not change. The existing record will be
         // overwritten by the new record. So we don't need to generate a new GUID.
         return this.defaultCreateTargetMetadataFromSourceMetadata(source, source.getUniqueValue());
+    },
+
+    /**
+     * Updates the scope found in the string using the source scope.
+     * @param {string} string 
+     * @returns {string}
+     */
+    updateScope: function(string) {
+        return string.replace(new RegExp(this.sourceScope, 'g'), this.targetScope);
     },
 
     /**
@@ -556,20 +644,52 @@ global.KLF_ScoperUtils.prototype = {
      */
     getOrGenerateGUID: function(sourceSysId) {
         // If the metadata map already has the source sys_id, return the target sys_id
-        var guid = this.metadataMap[sourceSysId] || gs.generateGUID();
-        this.metadataMap[sourceSysId] = guid;
+        var guid = this.metadataMap[sourceSysId];
+        if (!guid) {
+            guid = gs.generateGUID();
+            this.metadataMap[sourceSysId] = guid;
+            // Save the metadata map
+            this.setSysProperty('KLF_ScoperUtils.metadata_map', JSON.stringify(this.metadataMap, null, 4));
+        }
         return guid;
     },
 
+    /**
+     * Retrieves the value of a system property. This is quicker than using gs.getProperty
+     * @param {string} name 
+     * @returns {string}
+     */
+    getSysProperty: function(name) {
+        var property = new GlideRecord('sys_properties');
+        if (property.get('name', name)) {
+            return property.getValue('value');
+        } else {
+            throw 'System property ' + name + ' not found';
+        }
+    },
 
-
+    /**
+     * Directly sets the value of a system property. This is quicker than using gs.setProperty
+     * @param {string} name 
+     * @param {string} value 
+     */
+    setSysProperty: function(name, value) {
+        var property = new GlideRecord('sys_properties');
+        if (!property.get('name', name)) {
+            throw 'System property ' + name + ' not found';
+        }
+        property.setValue('value', value);
+        property.setWorkflow(false);
+        property.autoSysFields(false);
+        property.update();
+    }
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2024-09-13 19:56:20</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d165423a87285290e2041f8d3fbb354c</sys_id>
-        <sys_mod_count>81</sys_mod_count>
+        <sys_mod_count>121</sys_mod_count>
         <sys_name>KLF_ScoperUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -577,6 +697,6 @@ global.KLF_ScoperUtils.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d165423a87285290e2041f8d3fbb354c</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-15 14:38:56</sys_updated_on>
+        <sys_updated_on>2024-09-18 12:10:20</sys_updated_on>
     </sys_script_include>
 </record_update>
