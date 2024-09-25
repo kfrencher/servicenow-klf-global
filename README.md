@@ -196,6 +196,11 @@ data between instances.
 When transferring data between ServiceNow instances groups referenced in the source data set may not exist 
 in the target instance. This utility contains functions to help manage the group data when transferring
 data between instances.
+ 
+With this utility you can:
+- Create a mapping of the groups in the local system to the groups in the remote system {@link global.KLF_RecordSync_GroupUtils.createGroupMapping}
+- Sync the groups in the local system with the remote system {@link global.KLF_RecordSync_GroupUtils.syncGroups}
+- Update the group sys_ids in notifications that are transferred to the remote system {@link global.KLF_RecordSync_GroupUtils.updateRemoteNotifications}
 
 ## KLF_SPUtils
 
