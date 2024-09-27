@@ -11,6 +11,7 @@
         <script><![CDATA[// @ts-ignore
 function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     var testScopeName = 'x_53417_test_scope';
+	var chance = global.KLF_TestChance();
 
     function createUserUtils() {
         return new global.KLF_RecordSync_UserUtils({
@@ -225,9 +226,9 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
             var tableName = testScopeName + '_task';
 
             it('should return the unique users in the specified table', function() {
-                var user1 = testUtils.createUser('user1');
-                var user2 = testUtils.createUser('user2');
-                var user3 = testUtils.createUser('user3');
+                var user1 = testUtils.createUser(chance.string({length: 7, pool:'abcdefghijklmnopqrstuvwxyz'}));
+                var user2 = testUtils.createUser(chance.string({length: 7, pool:'abcdefghijklmnopqrstuvwxyz'}));
+                var user3 = testUtils.createUser(chance.string({length: 7, pool:'abcdefghijklmnopqrstuvwxyz'}));
 
                 function createTask( /** @type {GlideRecord} */ user) {
                     var task = new GlideRecord(tableName);
@@ -263,13 +264,24 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-21 00:12:18</sys_created_on>
         <sys_id>01d95b8b47c0121058ceeb02d16d4365</sys_id>
-        <sys_mod_count>61</sys_mod_count>
+        <sys_mod_count>62</sys_mod_count>
         <sys_name>KLF_RecordSync_UserUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_01d95b8b47c0121058ceeb02d16d4365</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-02 14:41:38</sys_updated_on>
+        <sys_updated_on>2024-09-26 22:40:33</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>01d95b8b47c0121058ceeb02d16d4365</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-26 22:40:32</sys_created_on>
+        <sys_id>dda7294b4774121058ceeb02d16d43b5</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-26 22:40:32</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
