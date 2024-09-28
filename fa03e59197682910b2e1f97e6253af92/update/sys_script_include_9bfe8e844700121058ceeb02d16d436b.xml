@@ -6,22 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_RoleUtilsTest</name>
-        <script><![CDATA[/**
- * @param {*} outputs
- * @param {*} steps
- * @param {*} params
- * @param {*} stepResult
- * @param {*} assertEqual
- */
-function KLF_RecordSync_RoleUtilsTest(
-    outputs,
-    steps,
-    params,
-    stepResult,
-    assertEqual
-) {
+        <script><![CDATA[// @ts-ignore
+function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     var testScope = 'sn_tourbuilder';
     var testRoleName = 'sn_tourbuilder.tour_user';
     var klfRoleUtils = new global.KLF_RoleUtils();
@@ -39,9 +26,9 @@ function KLF_RecordSync_RoleUtilsTest(
         it('Should return a list with at least one entry', function() {
             var roles = roleUtils.getRolesInScope(testScope);
 
-            expect(Array.isArray(roles)).toBe(true);
-            expect(roles.length).toBeGreaterThan(0);
-            expect(roles).toContain(testRoleName);
+            expect(Array.isArray(roles)).toBe(true, 'Roles are an array');
+            expect(roles.length).toBeGreaterThan(0, 'Roles are not empty');
+            expect(roles).toContain(testRoleName, 'Roles contain test role');
         });
 
         it('Should throw an error for missing scope', function() {
@@ -53,7 +40,7 @@ function KLF_RecordSync_RoleUtilsTest(
 
         it('Should return empty list for non-existent scope', function() {
             var roles = roleUtils.getRolesInScope('x_i_dont_exist');
-            expect(roles.length).toBe(0);
+            expect(roles.length).toBe(0, 'Roles are empty');
         });
     });
 
@@ -80,12 +67,12 @@ function KLF_RecordSync_RoleUtilsTest(
             testUtils.addRoleToGroup(group, testRoleName);
 
             var groups = roleUtils.getGroupsForRole(testRoleName);
-            expect(groups).toContain('ROLE_UTILS_TEST_GROUP');
+            expect(groups).toContain('ROLE_UTILS_TEST_GROUP', 'Groups contain test group');
         });
 
         it('Should return empty list for non-existent role', function() {
             var groups = roleUtils.getGroupsForRole('x_i_dont_exist');
-            expect(groups.length).toBe(0);
+            expect(groups.length).toBe(0, 'Groups are empty');
         });
 
         it('Should throw error if role is missing', function() {
@@ -124,12 +111,12 @@ function KLF_RecordSync_RoleUtilsTest(
             testUtils.addRoleToUser(user, testRoleName);
 
             var groups = roleUtils.getUsersForRole(testRoleName);
-            expect(groups).toContain('ROLE_UTILS_TEST_USER');
+            expect(groups).toContain('ROLE_UTILS_TEST_USER', 'Groups contain test user');
         });
 
         it('Should return empty list for non-existent role', function() {
             var groups = roleUtils.getUsersForRole('x_i_dont_exist');
-            expect(groups.length).toBe(0);
+            expect(groups.length).toBe(0, 'Groups are empty');
         });
 
         it('Should throw error if role is missing', function() {
@@ -165,15 +152,16 @@ function KLF_RecordSync_RoleUtilsTest(
         it('Should return an object that contains users and groups properties', function() {
             var roleMap = roleUtils.getAssignedToRole([testRoleName]);
             var properties = Object.keys(roleMap);
-            expect(properties).toContain('users');
-            expect(properties).toContain('groups');
+            expect(properties).toContain('users', 'Role map contains users');
+            expect(properties).toContain('groups', 'Role map contains groups');
         });
 
         it('Should return a list of users and groups assigned to the roles', function() {
             // Create a group and add a role to it
             var groupParts = testUtils.createCommonGroup();
             testUtils.addRoleToGroup(groupParts.group, testRoleName);
-            testUtils.addRoleToUser(groupParts.user, testRoleName);
+            var user = testUtils.createUser(testUtils.getRandomUsername());
+            testUtils.addRoleToUser(user, testRoleName);
             /**
              * Result should look something like
              * {
@@ -190,11 +178,11 @@ function KLF_RecordSync_RoleUtilsTest(
              */
             var assignedToRole = roleUtils.getAssignedToRole([testRoleName]);
             expect(
-                assignedToRole.users[groupParts.user.getValue('user_name')]
-            ).toContain(testRoleName);
+                assignedToRole.users[user.getValue('user_name')]
+            ).toContain(testRoleName, 'User has role');
             expect(
                 assignedToRole.groups[groupParts.group.getValue('name')]
-            ).toContain(testRoleName);
+            ).toContain(testRoleName, 'Group has role');
         });
 
         it('Should throw error if roles are missing', function() {
@@ -208,8 +196,8 @@ function KLF_RecordSync_RoleUtilsTest(
             var assignedToRole = roleUtils.getAssignedToRole([
                 'x_i_dont_exist',
             ]);
-            expect(Object.keys(assignedToRole.users).length).toBe(0);
-            expect(Object.keys(assignedToRole.groups).length).toBe(0);
+            expect(Object.keys(assignedToRole.users).length).toBe(0, 'Users are empty');
+            expect(Object.keys(assignedToRole.groups).length).toBe(0, 'Groups are empty');
         });
     });
 
@@ -233,18 +221,19 @@ function KLF_RecordSync_RoleUtilsTest(
         it('Should return an object that contains the correct root properties', function() {
             var roleMap = roleUtils.getRoleAssignedTo([testRoleName]);
             var properties = Object.keys(roleMap);
-            expect(properties).toContain(testRoleName);
+            expect(properties).toContain(testRoleName, 'Role map contains test role');
             var assignedTo = roleMap[testRoleName];
             var assignedToProperties = Object.keys(assignedTo);
-            expect(assignedToProperties).toContain('users');
-            expect(assignedToProperties).toContain('groups');
+            expect(assignedToProperties).toContain('users', 'Assigned to contains users');
+            expect(assignedToProperties).toContain('groups', 'Assigned to contains groups');
         });
 
         it('Role should have the correct user and group', function() {
             // Create a group and add a role to it
             var groupParts = testUtils.createCommonGroup();
             testUtils.addRoleToGroup(groupParts.group, testRoleName);
-            testUtils.addRoleToUser(groupParts.user, testRoleName);
+            var user = testUtils.createUser(testUtils.getRandomUsername());
+            testUtils.addRoleToUser(user, testRoleName);
             /**
              * Result should look something like
              * {
@@ -262,8 +251,8 @@ function KLF_RecordSync_RoleUtilsTest(
              */
             var roleAssignedTo = roleUtils.getRoleAssignedTo([testRoleName]);
             var role = roleAssignedTo[testRoleName];
-            expect(role.users).toContain(groupParts.user.getValue('user_name'));
-            expect(role.groups).toContain(groupParts.group.getValue('name'));
+            expect(role.users).toContain(user.getValue('user_name'), 'User has role');
+            expect(role.groups).toContain(groupParts.group.getValue('name'), 'Group has role');
         });
 
         it('Should throw error if roles are missing', function() {
@@ -278,8 +267,8 @@ function KLF_RecordSync_RoleUtilsTest(
                 'x_i_dont_exist',
             ]);
             var role = roleAssignedTo['x_i_dont_exist'];
-            expect(Object.keys(role.users).length).toBe(0);
-            expect(Object.keys(role.groups).length).toBe(0);
+            expect(Object.keys(role.users).length).toBe(0, 'Users are empty');
+            expect(Object.keys(role.groups).length).toBe(0, 'Groups are empty');
         });
     });
 
@@ -356,7 +345,7 @@ function KLF_RecordSync_RoleUtilsTest(
                 },
             };
             var actualDiff = roleUtils.diffRoles(roles1, roles1);
-            expect(actualDiff).toEqual(noDifferences);
+            expect(actualDiff).toBeEqual(noDifferences, 'No differences');
         });
 
         it('Should return an object that represents the differences between two roles', function() {
@@ -371,7 +360,7 @@ function KLF_RecordSync_RoleUtilsTest(
                 },
             };
             var actualDiff = roleUtils.diffRoles(roles2, roles1);
-            expect(actualDiff).toEqual(expectedDiff);
+            expect(actualDiff).toBeEqual(expectedDiff, 'Differences are correct');
         });
     });
 
@@ -398,10 +387,11 @@ function KLF_RecordSync_RoleUtilsTest(
             // Create a group and add a role to it
             var groupParts = testUtils.createCommonGroup();
             testUtils.addRoleToGroup(groupParts.group, testRoleName);
-            testUtils.addRoleToUser(groupParts.user, testRoleName);
+            var user = testUtils.createUser(testUtils.getRandomUsername());
+            testUtils.addRoleToUser(user, testRoleName);
             var expectedDiff = {
                 klf_test_role: {
-                    users: [groupParts.user.getValue('user_name')],
+                    users: [user.getValue('user_name')],
                     groups: [groupParts.group.getValue('name')],
                 },
             };
@@ -417,7 +407,8 @@ function KLF_RecordSync_RoleUtilsTest(
             });
 
             var actualDiff = roleUtils.diffLocalAndRemoteRoles([testRoleName]);
-            expect(actualDiff).toEqual(expectedDiff);
+            gs.log(JSON.stringify(actualDiff));
+            expect(actualDiff).toBeEqual(expectedDiff, 'Differences are correct');
         });
 
         it('shoult throw an error if the request fails', function() {
@@ -450,32 +441,39 @@ function KLF_RecordSync_RoleUtilsTest(
         });
 
         it('Should add the specified roles', function() {
-            testUtils.createRole('role1');
-            testUtils.createRole('role2');
+            var role1 = testUtils.getRandomAlphaNumericString(10);
+            var role2 = testUtils.getRandomAlphaNumericString(10);
+            testUtils.createRole(role1);
+            testUtils.createRole(role2);
 
-            testUtils.createUser('user1');
-            testUtils.createUser('user2');
-            testUtils.createGroup('group1');
-            testUtils.createGroup('group2');
+            var user1 = testUtils.getRandomUsername();
+            var user2 = testUtils.getRandomUsername();
+            testUtils.createUser(user1);
+            testUtils.createUser(user2);
 
-            var rolesToAdd = {
-                role1: {
-                    users: ['user1'],
-                    groups: ['group1'],
-                },
-                role2: {
-                    users: ['user2'],
-                    groups: ['group2'],
-                },
+            var group1 = testUtils.getRandomGroupName();
+            var group2 = testUtils.getRandomGroupName();
+            testUtils.createGroup(group1);
+            testUtils.createGroup(group2);
+
+            /** @type {{ [key: string]: { users: string[], groups: string[] } }} */
+            var rolesToAdd = {};
+            rolesToAdd[role1] = {
+                users: [user1],
+                groups: [group1],
+            };
+            rolesToAdd[role2] = {
+                users: [user2],
+                groups: [group2],
             };
 
             var errors = roleUtils.addRoles(rolesToAdd);
 
-            expect(errors).toBeArrayOfSize(0);
-            expect(klfRoleUtils.userHasRole('user1', 'role1')).toBe(true);
-            expect(klfRoleUtils.userHasRole('user2', 'role2')).toBe(true);
-            expect(klfRoleUtils.groupHasRole('group1', 'role1')).toBe(true);
-            expect(klfRoleUtils.groupHasRole('group2', 'role2')).toBe(true);
+            expect(errors).toBeArrayOfSize(0, 'No errors');
+            expect(klfRoleUtils.userHasRole(user1, role1)).toBe(true, 'User 1 has role 1');
+            expect(klfRoleUtils.userHasRole(user2, role2)).toBe(true, 'User 2 has role 2');
+            expect(klfRoleUtils.groupHasRole(group1, role1)).toBe(true, 'Group 1 has role 1');
+            expect(klfRoleUtils.groupHasRole(group2, role2)).toBe(true, 'Group 2 has role 2');
         });
     });
 
@@ -497,25 +495,29 @@ function KLF_RecordSync_RoleUtilsTest(
         });
 
         it('Should add the specified role to the user', function() {
-            testUtils.createUser('user1');
-            testUtils.createRole('role1');
+            var username = testUtils.getRandomUsername();
+            var roleName = testUtils.getRandomAlphaNumericString(10);
+            testUtils.createUser(username);
+            testUtils.createRole(roleName);
 
-            roleUtils._addUserRole('user1', 'role1');
+            roleUtils._addUserRole(username, roleName);
 
-            expect(klfRoleUtils.userHasRole('user1', 'role1')).toBe(true);
+            expect(klfRoleUtils.userHasRole(username, roleName)).toBe(true, 'User has role');
         });
 
         it('Should throw an error if the user does not exist', function() {
-            testUtils.createRole('role1');
+            var roleName = testUtils.getRandomAlphaNumericString(10);
+            testUtils.createRole(roleName);
             expect(function() {
-                roleUtils._addUserRole('user1', 'role1');
+                roleUtils._addUserRole('user1', roleName);
             }).toThrowError();
         });
 
         it('Should throw an error if the role does not exist', function() {
-            testUtils.createUser('user1');
+            var username = testUtils.getRandomUsername();
+            testUtils.createUser(username);
             expect(function() {
-                roleUtils._addUserRole('user1', 'role1');
+                roleUtils._addUserRole(username, 'role1');
             }).toThrowError();
         });
     });
@@ -523,25 +525,16 @@ function KLF_RecordSync_RoleUtilsTest(
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-11 11:03:34</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>9bfe8e844700121058ceeb02d16d436b</sys_id>
-        <sys_mod_count>57</sys_mod_count>
+        <sys_mod_count>72</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_9bfe8e844700121058ceeb02d16d436b</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-25 15:45:48</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 00:32:45</sys_updated_on>
     </sys_script_include>
-    <sys_es_latest_script action="INSERT_OR_UPDATE">
-        <id>9bfe8e844700121058ceeb02d16d436b</id>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2024-08-20 21:22:36</sys_created_on>
-        <sys_id>cbf23e474700121058ceeb02d16d436d</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-20 21:22:36</sys_updated_on>
-        <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
-    </sys_es_latest_script>
 </record_update>

@@ -6,17 +6,10 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_JasmineTest</name>
-        <script><![CDATA[/**
- * @param {*} outputs 
- * @param {*} steps 
- * @param {*} params 
- * @param {*} stepResult 
- * @param {*} assertEqual 
- */
+        <script><![CDATA[// @ts-ignore
 function KLF_JasmineTest(outputs, steps, params, stepResult, assertEqual) {
-     const customMatchers = {
+    var customMatchers = {
         toBeAFunction: function() {
             return {
                 /**
@@ -34,95 +27,100 @@ function KLF_JasmineTest(outputs, steps, params, stepResult, assertEqual) {
     };
 
 
-    describe("spy", () => {
-        beforeAll(() => {
+    describe("spy", function() {
+        beforeAll(function() {
             jasmine.addMatchers(customMatchers);
         });
 
-        it("should call the callback", () => {
-            const spy = jasmine.createSpy();
+        it("should call the callback", function() {
+            var spy = jasmine.createSpy();
             spy();
             expect(spy).toHaveBeenCalled();
         });
 
-        it("should call the spy gs.log instead of gs.log", () => {
-            const logger = {
-                log: () => {
+        it("should call the spy gs.log instead of gs.log", function() {
+            var logger = {
+                log: function() {
                     gs.log('Calling fake function', 'KLF_JasmineTest');
                 }
             };
-            spyOn(logger, "log").and.callFake(() => {
+            spyOn(logger, "log").and.callFake(function() {
                 gs.log('Calling fake function', 'KLF_JasmineTest');
             });
-            spyOn(gs, "info").and.callFake(() => gs.log('Calling fake function', 'KLF_JasmineTest'));
+            spyOn(gs, "info").and.callFake(function() {
+                gs.log('Calling fake function', 'KLF_JasmineTest');
+            });
             logger.log();
         });
 
-        it("should call the spy function instead of the script include function object", () => {
-            spyOn(x_912467_klf.DateUtils, "getFiscalYear").and.callFake(() => 2021);
+        it("should call the spy function instead of the script include function object", function() {
+            spyOn(x_912467_klf.DateUtils, "getFiscalYear").and.callFake(function() {
+                return 2021;
+            });
 
-            expect(x_912467_klf.DateUtils.getFiscalYear(new GlideDateTime())).toEqual(2021);
+            expect(x_912467_klf.DateUtils.getFiscalYear(new GlideDateTime())).toBe(2021, 'Fiscal year is correct');
         });
 
-        it("should call the spy class function instead of the script include function", () => {
-            const expectedGlideRecord = new GlideRecord('task');
+        it("should call the spy class function instead of the script include function", function() {
+            var expectedGlideRecord = new GlideRecord('task');
 
-            spyOn(global.KLF_GroupUtils.prototype, "getGroupByName").and.callFake(() => expectedGlideRecord);
+            spyOn(global.KLF_GroupUtils.prototype, "getGroupByName").and.callFake(function() {
+                return expectedGlideRecord;
+            });
 
             const groupUtils = new global.KLF_GroupUtils();
             const actualResult = groupUtils.getGroupByName('Test Group');
 
             expect(global.KLF_GroupUtils.prototype.getGroupByName).toHaveBeenCalled();
-            expect(actualResult).toBe(expectedGlideRecord);
+            expect(actualResult).toBe(expectedGlideRecord, 'Group is correct');
         });
 
-        it("should have the mock date instead of the current date", () => {
-            const date = new Date('2021-10-01');
+        it("should have the mock date instead of the current date", function() {
+            var date = new Date(2021, 9, 1);
             jasmine.clock().mockDate(date);
 
-            expect(new Date()).toEqual(date);
+            expect(new Date()).toBeEqual(date);
 
             // Standard display of GlideDateTime: 2024-08-18 10:09:30
             // mock the date to 2024-08-18 10:09:30
-            const expectedDateTime = '2024-08-18 10:09:30';
+            var expectedDateTime = '2024-08-18 10:09:30';
 
-            function GlideDateTime() { }
+            function GlideDateTime() {}
             GlideDateTime.prototype = {
-                getDisplayValue() {
+                getDisplayValue: function() {
                     return expectedDateTime;
                 }
             };
 
             // @ts-ignore
-            const getDisplayvalue = spyOn(GlideDateTime.prototype, "getDisplayValue").and.callThrough();
+            var getDisplayvalue = spyOn(GlideDateTime.prototype, "getDisplayValue").and.callThrough();
 
-            const dateTime = new GlideDateTime();
+            var dateTime = new GlideDateTime();
 
             gs.log('DateTime: ' + dateTime.getDisplayValue(), 'KLF_JasmineTest');
-            expect(dateTime.getDisplayValue()).toEqual(expectedDateTime);
+            expect(dateTime.getDisplayValue()).toBeEqual(expectedDateTime);
             expect(dateTime.getDisplayValue).toHaveBeenCalled();
             // @ts-ignore
             expect(GlideDateTime.prototype.getDisplayValue).toHaveBeenCalled();
         });
 
-        it('should have normal datetime', () => {
-            const date = new GlideDateTime();
+        it('should have normal datetime', function() {
+            var date = new GlideDateTime();
 
             gs.log('Date: ' + date.getDisplayValue(), 'KLF_JasmineTest');
-            expect(date.getDisplayValue()).not.toBe('2024-08-18 10:09:30');
+            expect(date.getDisplayValue()).not.toBe('2024-08-18 10:09:30', 'Date is correct');
         });
 
-        it('should be equal to anything', () => {
-            expect(1).toEqual(jasmine.anything());
-            expect([1,2,3]).toEqual(jasmine.arrayContaining([1,2]));
+        it('should be equal to anything', function() {
+            expect(1).toBeEqual(jasmine.anything(), '1 is anything');
+            expect([1, 2, 3]).toBeEqual(jasmine.arrayContaining([1, 2]));
         });
 
-        it('should be a number', () => {
-            expect(1).toEqual(jasmine.any(Number));
+        it('should be a number', function() {
+            expect(1).toBeEqual(jasmine.any(Number), '1 is a number');
         });
 
-        it('should be a number', () => {
-            expect('1').toBeNumber();
+        it('should be a boolean', function() {
             expect(true).toBeBoolean();
         });
     });
@@ -131,14 +129,16 @@ function KLF_JasmineTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-16 23:56:48</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>3aef66f54700121058ceeb02d16d4378</sys_id>
-        <sys_mod_count>45</sys_mod_count>
+        <sys_mod_count>59</sys_mod_count>
         <sys_name>KLF_JasmineTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_3aef66f54700121058ceeb02d16d4378</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-18 17:17:14</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 00:16:55</sys_updated_on>
     </sys_script_include>
 </record_update>

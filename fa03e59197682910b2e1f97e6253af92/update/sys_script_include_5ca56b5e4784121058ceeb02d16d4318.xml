@@ -8,7 +8,12 @@
         <description/>
         <name>KLF_TestJasmineMatchers</name>
         <script><![CDATA[function KLF_TestJasmineMatchers(global) {
-    (function () {
+
+    global.beforeEach(function() {
+        global.jasmine.addMatchers(global.KLF_TestUtils.matchers);
+    });
+
+    (function() {
         function r(e, n, t) {
             function o(i, f) {
                 if (!n[i]) {
@@ -22,7 +27,7 @@
                     var p = (n[i] = { exports: {} });
                     e[i][0].call(
                         p.exports,
-                        function (r) {
+                        function(r) {
                             var n = e[i][1][r];
                             return o(n || r);
                         },
@@ -37,20 +42,17 @@
                 return n[i].exports;
             }
             for (
-                var u = 'function' == typeof require && require, i = 0;
-                i < t.length;
-                i++
+                var u = 'function' == typeof require && require, i = 0; i < t.length; i++
             )
                 o(t[i]);
             return o;
         }
         return r;
-    })()(
-        {
+    })()({
             1: [
-                function (require, module, exports) {
-                    (function (global) {
-                        (function () {
+                function(require, module, exports) {
+                    (function(global) {
+                        (function() {
                             // modules
                             var createRegister = require('./src/create-register');
                             var jasmineV1 = require('./src/jasmine-v1');
@@ -58,8 +60,7 @@
                             var jest = require('./src/jest');
 
                             // public
-                            module.exports = createRegister(
-                                {
+                            module.exports = createRegister({
                                     jasmineV1: jasmineV1,
                                     jasmineV2: jasmineV2,
                                     jest: jest,
@@ -69,13 +70,12 @@
                         }).call(this);
                     }).call(
                         this,
-                        typeof global !== 'undefined'
-                            ? global
-                            : typeof self !== 'undefined'
-                            ? self
-                            : typeof window !== 'undefined'
-                            ? window
-                            : {}
+                        typeof global !== 'undefined' ?
+                        global :
+                        typeof self !== 'undefined' ?
+                        self :
+                        typeof window !== 'undefined' ?
+                        window : {}
                     );
                 },
                 {
@@ -86,9 +86,9 @@
                 },
             ],
             2: [
-                function (require, module, exports) {
-                    (function (global) {
-                        (function () {
+                function(require, module, exports) {
+                    (function(global) {
+                        (function() {
                             // public
                             module.exports = addAsymmetricMatchers;
 
@@ -105,10 +105,10 @@
                             }
 
                             function addAsymmetricMatcher(name, matcher) {
-                                global.any[name] = function () {
+                                global.any[name] = function() {
                                     var args = [].slice.call(arguments);
                                     return {
-                                        asymmetricMatch: function (actual) {
+                                        asymmetricMatch: function(actual) {
                                             var clone = args.slice();
                                             clone.push(actual);
                                             return matcher.apply(this, clone);
@@ -119,19 +119,18 @@
                         }).call(this);
                     }).call(
                         this,
-                        typeof global !== 'undefined'
-                            ? global
-                            : typeof self !== 'undefined'
-                            ? self
-                            : typeof window !== 'undefined'
-                            ? window
-                            : {}
+                        typeof global !== 'undefined' ?
+                        global :
+                        typeof self !== 'undefined' ?
+                        self :
+                        typeof window !== 'undefined' ?
+                        window : {}
                     );
                 },
                 {},
             ],
             3: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     // modules
                     var addAsymmetricMatchers = require('./add-asymmetric-matchers');
 
@@ -179,9 +178,9 @@
                 { './add-asymmetric-matchers': 2 },
             ],
             4: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     module.exports = {
-                        getAdapters: function (globals) {
+                        getAdapters: function(globals) {
                             return {
                                 1: createFactory(adapterForActual),
                                 2: createFactory(adapterForActualAndExpected),
@@ -194,13 +193,13 @@
                             };
 
                             function createFactory(adapter) {
-                                return function (name, matcher) {
+                                return function(name, matcher) {
                                     var matchersByName = {};
                                     matchersByName[name] = adapter(
                                         name,
                                         matcher
                                     );
-                                    globals.beforeEach(function () {
+                                    globals.beforeEach(function() {
                                         this.addMatchers(matchersByName);
                                     });
                                     return matchersByName;
@@ -208,7 +207,7 @@
                             }
 
                             function adapterForActual(name, matcher) {
-                                return function (optionalMessage) {
+                                return function(optionalMessage) {
                                     return matcher(
                                         this.actual,
                                         optionalMessage
@@ -220,7 +219,7 @@
                                 name,
                                 matcher
                             ) {
-                                return function (expected, optionalMessage) {
+                                return function(expected, optionalMessage) {
                                     return matcher(
                                         expected,
                                         this.actual,
@@ -233,7 +232,7 @@
                                 name,
                                 matcher
                             ) {
-                                return function (
+                                return function(
                                     expected1,
                                     expected2,
                                     optionalMessage
@@ -251,7 +250,7 @@
                                 name,
                                 matcher
                             ) {
-                                return function (
+                                return function(
                                     key,
                                     expected1,
                                     expected2,
@@ -272,12 +271,12 @@
                 {},
             ],
             5: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     var matcherFactory = require('./matcher-factory');
                     var memberMatcherFactory = require('./member-matcher-factory');
 
                     module.exports = {
-                        getAdapters: function (globals) {
+                        getAdapters: function(globals) {
                             return {
                                 1: createFactory(getAdapter(1)),
                                 2: createFactory(getAdapter(2)),
@@ -286,13 +285,13 @@
                             };
 
                             function createFactory(adapter) {
-                                return function (name, matcher) {
+                                return function(name, matcher) {
                                     var matchersByName = {};
                                     matchersByName[name] = adapter(
                                         name,
                                         matcher
                                     );
-                                    globals.beforeEach(function () {
+                                    globals.beforeEach(function() {
                                         globals.jasmine.addMatchers(
                                             matchersByName
                                         );
@@ -302,10 +301,10 @@
                             }
 
                             function getAdapter(argsCount) {
-                                return function (name, matcher) {
-                                    var factory = isMemberMatcher(name)
-                                        ? memberMatcherFactory
-                                        : matcherFactory;
+                                return function(name, matcher) {
+                                    var factory = isMemberMatcher(name) ?
+                                        memberMatcherFactory :
+                                        matcherFactory;
                                     return factory[argsCount](name, matcher);
                                 };
                             }
@@ -319,7 +318,7 @@
                 { './matcher-factory': 6, './member-matcher-factory': 7 },
             ],
             6: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     module.exports = {
                         1: forActual,
                         2: forActualAndExpected,
@@ -327,24 +326,23 @@
                     };
 
                     function forActual(name, matcher) {
-                        return function (util) {
+                        return function(util) {
                             return {
-                                compare: function (actual, optionalMessage) {
+                                compare: function(actual, optionalMessage) {
                                     var passes = matcher(actual);
                                     return {
                                         pass: passes,
-                                        message: optionalMessage
-                                            ? util.buildFailureMessage(
-                                                  name,
-                                                  passes,
-                                                  actual,
-                                                  optionalMessage
-                                              )
-                                            : util.buildFailureMessage(
-                                                  name,
-                                                  passes,
-                                                  actual
-                                              ),
+                                        message: optionalMessage ?
+                                            util.buildFailureMessage(
+                                                name,
+                                                passes,
+                                                actual,
+                                                optionalMessage
+                                            ) : util.buildFailureMessage(
+                                                name,
+                                                passes,
+                                                actual
+                                            ),
                                     };
                                 },
                             };
@@ -352,9 +350,9 @@
                     }
 
                     function forActualAndExpected(name, matcher) {
-                        return function (util) {
+                        return function(util) {
                             return {
-                                compare: function (
+                                compare: function(
                                     actual,
                                     expected,
                                     optionalMessage
@@ -362,20 +360,19 @@
                                     var passes = matcher(expected, actual);
                                     return {
                                         pass: passes,
-                                        message: optionalMessage
-                                            ? util.buildFailureMessage(
-                                                  name,
-                                                  passes,
-                                                  actual,
-                                                  expected,
-                                                  optionalMessage
-                                              )
-                                            : util.buildFailureMessage(
-                                                  name,
-                                                  passes,
-                                                  actual,
-                                                  expected
-                                              ),
+                                        message: optionalMessage ?
+                                            util.buildFailureMessage(
+                                                name,
+                                                passes,
+                                                actual,
+                                                expected,
+                                                optionalMessage
+                                            ) : util.buildFailureMessage(
+                                                name,
+                                                passes,
+                                                actual,
+                                                expected
+                                            ),
                                     };
                                 },
                             };
@@ -383,9 +380,9 @@
                     }
 
                     function forActualAndTwoExpected(name, matcher) {
-                        return function (util) {
+                        return function(util) {
                             return {
-                                compare: function (
+                                compare: function(
                                     actual,
                                     expected1,
                                     expected2,
@@ -398,22 +395,21 @@
                                     );
                                     return {
                                         pass: passes,
-                                        message: optionalMessage
-                                            ? util.buildFailureMessage(
-                                                  name,
-                                                  passes,
-                                                  actual,
-                                                  expected1,
-                                                  expected2,
-                                                  optionalMessage
-                                              )
-                                            : util.buildFailureMessage(
-                                                  name,
-                                                  passes,
-                                                  actual,
-                                                  expected1,
-                                                  expected2
-                                              ),
+                                        message: optionalMessage ?
+                                            util.buildFailureMessage(
+                                                name,
+                                                passes,
+                                                actual,
+                                                expected1,
+                                                expected2,
+                                                optionalMessage
+                                            ) : util.buildFailureMessage(
+                                                name,
+                                                passes,
+                                                actual,
+                                                expected1,
+                                                expected2
+                                            ),
                                     };
                                 },
                             };
@@ -423,7 +419,7 @@
                 {},
             ],
             7: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     module.exports = {
                         2: forKeyAndActual,
                         3: forKeyAndActualAndExpected,
@@ -431,9 +427,9 @@
                     };
 
                     function forKeyAndActual(name, matcher) {
-                        return function (util) {
+                        return function(util) {
                             return {
-                                compare: function (
+                                compare: function(
                                     actual,
                                     key,
                                     optionalMessage
@@ -454,29 +450,29 @@
                     }
 
                     function forKeyAndActualAndExpected(name, matcher) {
-                        return function (util) {
+                        return function(util) {
                             return {
-                                compare: function (
+                                compare: function(
                                     actual,
                                     key,
                                     expected,
                                     optionalMessage
                                 ) {
                                     var passes = matcher(key, expected, actual);
-                                    var message = optionalMessage
-                                        ? util.buildFailureMessage(
-                                              name,
-                                              passes,
-                                              actual,
-                                              expected,
-                                              optionalMessage
-                                          )
-                                        : util.buildFailureMessage(
-                                              name,
-                                              passes,
-                                              actual,
-                                              expected
-                                          );
+                                    var message = optionalMessage ?
+                                        util.buildFailureMessage(
+                                            name,
+                                            passes,
+                                            actual,
+                                            expected,
+                                            optionalMessage
+                                        ) :
+                                        util.buildFailureMessage(
+                                            name,
+                                            passes,
+                                            actual,
+                                            expected
+                                        );
                                     return {
                                         pass: passes,
                                         message: formatErrorMessage(
@@ -491,9 +487,9 @@
                     }
 
                     function forKeyAndActualAndTwoExpected(name, matcher) {
-                        return function (util) {
+                        return function(util) {
                             return {
-                                compare: function (
+                                compare: function(
                                     actual,
                                     key,
                                     expected1,
@@ -506,22 +502,22 @@
                                         expected2,
                                         actual
                                     );
-                                    var message = optionalMessage
-                                        ? util.buildFailureMessage(
-                                              name,
-                                              passes,
-                                              actual,
-                                              expected1,
-                                              expected2,
-                                              optionalMessage
-                                          )
-                                        : util.buildFailureMessage(
-                                              name,
-                                              passes,
-                                              actual,
-                                              expected1,
-                                              expected2
-                                          );
+                                    var message = optionalMessage ?
+                                        util.buildFailureMessage(
+                                            name,
+                                            passes,
+                                            actual,
+                                            expected1,
+                                            expected2,
+                                            optionalMessage
+                                        ) :
+                                        util.buildFailureMessage(
+                                            name,
+                                            passes,
+                                            actual,
+                                            expected1,
+                                            expected2
+                                        );
                                     return {
                                         pass: passes,
                                         message: formatErrorMessage(
@@ -550,12 +546,12 @@
                 {},
             ],
             8: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     var matcherFactory = require('./matcher-factory');
                     var memberMatcherFactory = require('./member-matcher-factory');
 
                     module.exports = {
-                        getAdapters: function (globals) {
+                        getAdapters: function(globals) {
                             return {
                                 1: createFactory(getAdapter(1)),
                                 2: createFactory(getAdapter(2)),
@@ -564,7 +560,7 @@
                             };
 
                             function createFactory(adapter) {
-                                return function (name, matcher) {
+                                return function(name, matcher) {
                                     var matchersByName = {};
                                     matchersByName[name] = adapter(
                                         name,
@@ -576,10 +572,10 @@
                             }
 
                             function getAdapter(argsCount) {
-                                return function (name, matcher) {
-                                    var factory = isMemberMatcher(name)
-                                        ? memberMatcherFactory
-                                        : matcherFactory;
+                                return function(name, matcher) {
+                                    var factory = isMemberMatcher(name) ?
+                                        memberMatcherFactory :
+                                        matcherFactory;
                                     return factory[argsCount](name, matcher);
                                 };
                             }
@@ -593,7 +589,7 @@
                 { './matcher-factory': 9, './member-matcher-factory': 10 },
             ],
             9: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     module.exports = {
                         1: adapterForActual,
                         2: adapterForActualAndExpected,
@@ -601,7 +597,7 @@
                     };
 
                     function adapterForActual(name, matcher) {
-                        return function (received) {
+                        return function(received) {
                             var pass = matcher(received);
                             var infix = pass ? ' not ' : ' ';
                             var message =
@@ -610,7 +606,7 @@
                                 infix +
                                 getLongName(name);
                             return {
-                                message: function () {
+                                message: function() {
                                     return message;
                                 },
                                 pass: pass,
@@ -619,7 +615,7 @@
                     }
 
                     function adapterForActualAndExpected(name, matcher) {
-                        return function (received, expected) {
+                        return function(received, expected) {
                             var pass = matcher(expected, received);
                             var infix = pass ? ' not ' : ' ';
                             var message =
@@ -630,7 +626,7 @@
                                 ' ' +
                                 this.utils.printExpected(expected);
                             return {
-                                message: function () {
+                                message: function() {
                                     return message;
                                 },
                                 pass: pass,
@@ -639,7 +635,7 @@
                     }
 
                     function adapterForActualAndTwoExpected(name, matcher) {
-                        return function (received, expected1, expected2) {
+                        return function(received, expected1, expected2) {
                             var pass = matcher(expected1, expected2, received);
                             var infix = pass ? ' not ' : ' ';
                             var message =
@@ -652,7 +648,7 @@
                                 ', ' +
                                 this.utils.printExpected(expected2);
                             return {
-                                message: function () {
+                                message: function() {
                                     return message;
                                 },
                                 pass: pass,
@@ -667,7 +663,7 @@
                 {},
             ],
             10: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     module.exports = {
                         2: forKeyAndActual,
                         3: forKeyAndActualAndExpected,
@@ -675,7 +671,7 @@
                     };
 
                     function forKeyAndActual(name, matcher) {
-                        return function (received, key) {
+                        return function(received, key) {
                             var pass = matcher(key, received);
                             var infix = pass ? ' not ' : ' ';
                             var message =
@@ -686,7 +682,7 @@
                                 infix +
                                 getLongName(name);
                             return {
-                                message: function () {
+                                message: function() {
                                     return message;
                                 },
                                 pass: pass,
@@ -695,7 +691,7 @@
                     }
 
                     function forKeyAndActualAndExpected(name, matcher) {
-                        return function (received, key, expected) {
+                        return function(received, key, expected) {
                             var pass = matcher(key, expected, received);
                             var infix = pass ? ' not ' : ' ';
                             var message =
@@ -708,7 +704,7 @@
                                 ' ' +
                                 this.utils.printExpected(expected);
                             return {
-                                message: function () {
+                                message: function() {
                                     return message;
                                 },
                                 pass: pass,
@@ -717,7 +713,7 @@
                     }
 
                     function forKeyAndActualAndTwoExpected(name, matcher) {
-                        return function (received, key, expected1, expected2) {
+                        return function(received, key, expected1, expected2) {
                             var pass = matcher(
                                 key,
                                 expected1,
@@ -737,7 +733,7 @@
                                 ', ' +
                                 this.utils.printExpected(expected2);
                             return {
-                                message: function () {
+                                message: function() {
                                     return message;
                                 },
                                 pass: pass,
@@ -752,7 +748,7 @@
                 {},
             ],
             11: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var addMatchers = require('add-matchers');
@@ -851,8 +847,7 @@
                         emptyArray: matchersByName.toBeEmptyArray,
                         emptyObject: matchersByName.toBeEmptyObject,
                         evenNumber: matchersByName.toBeEvenNumber,
-                        greaterThanOrEqualTo:
-                            matchersByName.toBeGreaterThanOrEqualTo,
+                        greaterThanOrEqualTo: matchersByName.toBeGreaterThanOrEqualTo,
                         iso8601: matchersByName.toBeIso8601,
                         jsonString: matchersByName.toBeJsonString,
                         lessThanOrEqualTo: matchersByName.toBeLessThanOrEqualTo,
@@ -960,10 +955,10 @@
                 },
             ],
             12: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
-                    module.exports = function (array, truthTest) {
+                    module.exports = function(array, truthTest) {
                         for (var i = 0, len = array.length; i < len; i++) {
                             if (!truthTest(array[i])) {
                                 return false;
@@ -975,7 +970,7 @@
                 {},
             ],
             13: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     module.exports = {
@@ -990,7 +985,7 @@
                     };
 
                     function is(type) {
-                        return function (value) {
+                        return function(value) {
                             return (
                                 Object.prototype.toString.call(value) ===
                                 '[object ' + type + ']'
@@ -999,7 +994,7 @@
                     }
 
                     function isBooleanObject(trueOrFalse) {
-                        return function (value) {
+                        return function(value) {
                             return (
                                 module.exports.Boolean(value) &&
                                 value.valueOf() === trueOrFalse
@@ -1010,15 +1005,15 @@
                 {},
             ],
             14: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var reduce = require('./reduce');
 
-                    module.exports = function (object) {
+                    module.exports = function(object) {
                         return reduce(
                             object,
-                            function (keys, value, key) {
+                            function(keys, value, key) {
                                 return keys.concat(key);
                             },
                             []
@@ -1028,13 +1023,13 @@
                 { './reduce': 16 },
             ],
             15: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./is');
 
-                    module.exports = function (toBeX) {
-                        return function (key, actual) {
+                    module.exports = function(toBeX) {
+                        return function(key, actual) {
                             return is.Object(actual) && toBeX(actual[key]);
                         };
                     };
@@ -1042,17 +1037,15 @@
                 { './is': 13 },
             ],
             16: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./is');
 
-                    module.exports = function (collection, fn, memo) {
+                    module.exports = function(collection, fn, memo) {
                         if (is.Array(collection)) {
                             for (
-                                var i = 0, len = collection.length;
-                                i < len;
-                                i++
+                                var i = 0, len = collection.length; i < len; i++
                             ) {
                                 memo = fn(memo, collection[i], i, collection);
                             }
@@ -1074,19 +1067,19 @@
                 { './is': 13 },
             ],
             17: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeBefore = require('./toBeBefore');
 
-                    module.exports = function (otherDate, actual) {
+                    module.exports = function(otherDate, actual) {
                         return toBeBefore(actual, otherDate);
                     };
                 },
                 { './toBeBefore': 24 },
             ],
             18: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
@@ -1096,80 +1089,80 @@
                 { './lib/is': 13 },
             ],
             19: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var every = require('./lib/every');
                     var toBeArray = require('./toBeArray');
                     var toBeBoolean = require('./toBeBoolean');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeArray(actual) && every(actual, toBeBoolean);
                     };
                 },
                 { './lib/every': 12, './toBeArray': 18, './toBeBoolean': 25 },
             ],
             20: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var every = require('./lib/every');
                     var toBeArray = require('./toBeArray');
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeArray(actual) && every(actual, toBeNumber);
                     };
                 },
                 { './lib/every': 12, './toBeArray': 18, './toBeNumber': 44 },
             ],
             21: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var every = require('./lib/every');
                     var toBeArray = require('./toBeArray');
                     var toBeObject = require('./toBeObject');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeArray(actual) && every(actual, toBeObject);
                     };
                 },
                 { './lib/every': 12, './toBeArray': 18, './toBeObject': 45 },
             ],
             22: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeArray = require('./toBeArray');
 
-                    module.exports = function (size, actual) {
+                    module.exports = function(size, actual) {
                         return toBeArray(actual) && actual.length === size;
                     };
                 },
                 { './toBeArray': 18 },
             ],
             23: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var every = require('./lib/every');
                     var toBeArray = require('./toBeArray');
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeArray(actual) && every(actual, toBeString);
                     };
                 },
                 { './lib/every': 12, './toBeArray': 18, './toBeString': 50 },
             ],
             24: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeDate = require('./toBeDate');
 
-                    module.exports = function (otherDate, actual) {
+                    module.exports = function(otherDate, actual) {
                         return (
                             toBeDate(actual) &&
                             toBeDate(otherDate) &&
@@ -1180,7 +1173,7 @@
                 { './toBeDate': 27 },
             ],
             25: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
@@ -1190,7 +1183,7 @@
                 { './lib/is': 13 },
             ],
             26: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     module.exports = toBeCalculable;
@@ -1204,7 +1197,7 @@
                 {},
             ],
             27: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
@@ -1214,66 +1207,66 @@
                 { './lib/is': 13 },
             ],
             28: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeArrayOfSize = require('./toBeArrayOfSize');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeArrayOfSize(0, actual);
                     };
                 },
                 { './toBeArrayOfSize': 22 },
             ],
             29: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
                     var keys = require('./lib/keys');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return is.Object(actual) && keys(actual).length === 0;
                     };
                 },
                 { './lib/is': 13, './lib/keys': 14 },
             ],
             30: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return actual === '';
                     };
                 },
                 {},
             ],
             31: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeNumber(actual) && actual % 2 === 0;
                     };
                 },
                 { './toBeNumber': 44 },
             ],
             32: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return actual === false || is.False(actual);
                     }; // eslint-disable-line new-cap
                 },
                 { './lib/is': 13 },
             ],
             33: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
@@ -1283,19 +1276,19 @@
                 { './lib/is': 13 },
             ],
             34: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (otherNumber, actual) {
+                    module.exports = function(otherNumber, actual) {
                         return toBeNumber(actual) && actual >= otherNumber;
                     };
                 },
                 { './toBeNumber': 44 },
             ],
             35: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
@@ -1310,7 +1303,7 @@
                     //  )          end group 1
                     //  *          0 or more
                     // >           end with closing tag ">"
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return (
                             toBeString(actual) &&
                             actual.search(/<("[^"]*"|'[^']*'|[^'">])*>/) !== -1
@@ -1320,13 +1313,13 @@
                 { './toBeString': 50 },
             ],
             36: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
                     var toBeValidDate = require('./toBeValidDate');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return (
                             toBeString(actual) &&
                             (isMatch('1999-12-31', actual) ||
@@ -1341,14 +1334,10 @@
                     function isMatch(pattern, actual) {
                         var patterns = {
                             '1999-12-31': /^(\d{4})-(\d{2})-(\d{2})$/,
-                            '1999-12-31T23:59':
-                                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/,
-                            '1999-12-31T23:59:59':
-                                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/,
-                            '1999-12-31T23:59:59.000':
-                                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/,
-                            '1999-12-31T23:59:59.000Z':
-                                /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/,
+                            '1999-12-31T23:59': /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/,
+                            '1999-12-31T23:59:59': /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/,
+                            '1999-12-31T23:59:59.000': /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/,
+                            '1999-12-31T23:59:59.000Z': /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/,
                         };
                         return actual.search(patterns[pattern]) !== -1;
                     }
@@ -1356,10 +1345,10 @@
                 { './toBeString': 50, './toBeValidDate': 52 },
             ],
             37: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         try {
                             return JSON.parse(actual) !== null;
                         } catch (err) {
@@ -1370,24 +1359,24 @@
                 {},
             ],
             38: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (otherNumber, actual) {
+                    module.exports = function(otherNumber, actual) {
                         return toBeNumber(actual) && actual <= otherNumber;
                     };
                 },
                 { './toBeNumber': 44 },
             ],
             39: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (otherString, actual) {
+                    module.exports = function(otherString, actual) {
                         return (
                             toBeString(actual) &&
                             toBeString(otherString) &&
@@ -1398,12 +1387,12 @@
                 { './toBeString': 50 },
             ],
             40: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (number, epsilon, actual) {
+                    module.exports = function(number, epsilon, actual) {
                         return (
                             toBeNumber(actual) &&
                             actual >= number - epsilon &&
@@ -1414,56 +1403,56 @@
                 { './toBeNumber': 44 },
             ],
             41: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return is.Array(actual) && actual.length > 0;
                     };
                 },
                 { './lib/is': 13 },
             ],
             42: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
                     var keys = require('./lib/keys');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return is.Object(actual) && keys(actual).length > 0;
                     };
                 },
                 { './lib/is': 13, './lib/keys': 14 },
             ],
             43: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeString(actual) && actual.length > 0;
                     };
                 },
                 { './toBeString': 50 },
             ],
             44: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return !isNaN(parseFloat(actual)) && !is.String(actual);
                     };
                 },
                 { './lib/is': 13 },
             ],
             45: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
@@ -1473,34 +1462,34 @@
                 { './lib/is': 13 },
             ],
             46: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeNumber(actual) && actual % 2 !== 0;
                     };
                 },
                 { './toBeNumber': 44 },
             ],
             47: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return actual instanceof RegExp;
                     };
                 },
                 {},
             ],
             48: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (otherString, actual) {
+                    module.exports = function(otherString, actual) {
                         return (
                             toBeString(actual) &&
                             toBeString(otherString) &&
@@ -1511,12 +1500,12 @@
                 { './toBeString': 50 },
             ],
             49: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (otherString, actual) {
+                    module.exports = function(otherString, actual) {
                         return (
                             toBeString(actual) &&
                             toBeString(otherString) &&
@@ -1527,7 +1516,7 @@
                 { './toBeString': 50 },
             ],
             50: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
@@ -1537,48 +1526,48 @@
                 { './lib/is': 13 },
             ],
             51: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return actual === true || is.True(actual);
                     }; // eslint-disable-line new-cap
                 },
                 { './lib/is': 13 },
             ],
             52: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var is = require('./lib/is');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return is.Date(actual) && !isNaN(actual.getTime());
                     };
                 },
                 { './lib/is': 13 },
             ],
             53: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return toBeString(actual) && actual.search(/\S/) === -1;
                     };
                 },
                 { './toBeString': 50 },
             ],
             54: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         return (
                             toBeNumber(actual) &&
                             (actual === 0 || actual % 1 === 0)
@@ -1588,12 +1577,12 @@
                 { './toBeNumber': 44 },
             ],
             55: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNumber = require('./toBeNumber');
 
-                    module.exports = function (floor, ceiling, actual) {
+                    module.exports = function(floor, ceiling, actual) {
                         return (
                             toBeNumber(actual) &&
                             actual >= floor &&
@@ -1604,12 +1593,12 @@
                 { './toBeNumber': 44 },
             ],
             56: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNonEmptyString = require('./toBeNonEmptyString');
 
-                    module.exports = function (subString, actual) {
+                    module.exports = function(subString, actual) {
                         return (
                             toBeNonEmptyString(actual) &&
                             toBeNonEmptyString(subString) &&
@@ -1623,7 +1612,7 @@
                 { './toBeNonEmptyString': 43 },
             ],
             57: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1634,7 +1623,7 @@
                 { './lib/memberMatcherFor': 15, './toBeArray': 18 },
             ],
             58: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1645,7 +1634,7 @@
                 { './lib/memberMatcherFor': 15, './toBeArrayOfBooleans': 19 },
             ],
             59: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1656,7 +1645,7 @@
                 { './lib/memberMatcherFor': 15, './toBeArrayOfNumbers': 20 },
             ],
             60: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1667,13 +1656,13 @@
                 { './lib/memberMatcherFor': 15, './toBeArrayOfObjects': 21 },
             ],
             61: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeArrayOfSize = require('./toBeArrayOfSize');
 
-                    module.exports = function (key, size, actual) {
+                    module.exports = function(key, size, actual) {
                         return (
                             toBeObject(actual) &&
                             toBeArrayOfSize(size, actual[key])
@@ -1683,7 +1672,7 @@
                 { './toBeArrayOfSize': 22, './toBeObject': 45 },
             ],
             62: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1694,7 +1683,7 @@
                 { './lib/memberMatcherFor': 15, './toBeArrayOfStrings': 23 },
             ],
             63: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1705,7 +1694,7 @@
                 { './lib/memberMatcherFor': 15, './toBeBoolean': 25 },
             ],
             64: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1716,7 +1705,7 @@
                 { './lib/memberMatcherFor': 15, './toBeCalculable': 26 },
             ],
             65: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1727,13 +1716,13 @@
                 { './lib/memberMatcherFor': 15, './toBeDate': 27 },
             ],
             66: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeAfter = require('./toBeAfter');
 
-                    module.exports = function (key, date, actual) {
+                    module.exports = function(key, date, actual) {
                         return (
                             toBeObject(actual) && toBeAfter(date, actual[key])
                         );
@@ -1742,13 +1731,13 @@
                 { './toBeAfter': 17, './toBeObject': 45 },
             ],
             67: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeBefore = require('./toBeBefore');
 
-                    module.exports = function (key, date, actual) {
+                    module.exports = function(key, date, actual) {
                         return (
                             toBeObject(actual) && toBeBefore(date, actual[key])
                         );
@@ -1757,7 +1746,7 @@
                 { './toBeBefore': 24, './toBeObject': 45 },
             ],
             68: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1768,7 +1757,7 @@
                 { './lib/memberMatcherFor': 15, './toBeEmptyArray': 28 },
             ],
             69: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1779,7 +1768,7 @@
                 { './lib/memberMatcherFor': 15, './toBeEmptyObject': 29 },
             ],
             70: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1790,7 +1779,7 @@
                 { './lib/memberMatcherFor': 15, './toBeEmptyString': 30 },
             ],
             71: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1801,7 +1790,7 @@
                 { './lib/memberMatcherFor': 15, './toBeEvenNumber': 31 },
             ],
             72: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1812,7 +1801,7 @@
                 { './lib/memberMatcherFor': 15, './toBeFalse': 32 },
             ],
             73: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1823,7 +1812,7 @@
                 { './lib/memberMatcherFor': 15, './toBeHtmlString': 35 },
             ],
             74: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1834,7 +1823,7 @@
                 { './lib/memberMatcherFor': 15, './toBeIso8601': 36 },
             ],
             75: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1845,13 +1834,13 @@
                 { './lib/memberMatcherFor': 15, './toBeJsonString': 37 },
             ],
             76: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeString = require('./toBeString');
 
-                    module.exports = function (key, actual) {
+                    module.exports = function(key, actual) {
                         return (
                             toBeString(key) &&
                             toBeObject(actual) &&
@@ -1862,7 +1851,7 @@
                 { './toBeObject': 45, './toBeString': 50 },
             ],
             77: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1873,7 +1862,7 @@
                 { './lib/memberMatcherFor': 15, './toBeFunction': 33 },
             ],
             78: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1884,7 +1873,7 @@
                 { './lib/memberMatcherFor': 15, './toBeNonEmptyArray': 41 },
             ],
             79: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1895,7 +1884,7 @@
                 { './lib/memberMatcherFor': 15, './toBeNonEmptyObject': 42 },
             ],
             80: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1906,7 +1895,7 @@
                 { './lib/memberMatcherFor': 15, './toBeNonEmptyString': 43 },
             ],
             81: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1917,13 +1906,13 @@
                 { './lib/memberMatcherFor': 15, './toBeNumber': 44 },
             ],
             82: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeWithinRange = require('./toBeWithinRange');
 
-                    module.exports = function (key, floor, ceiling, actual) {
+                    module.exports = function(key, floor, ceiling, actual) {
                         return (
                             toBeObject(actual) &&
                             toBeWithinRange(floor, ceiling, actual[key])
@@ -1933,7 +1922,7 @@
                 { './toBeObject': 45, './toBeWithinRange': 55 },
             ],
             83: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1944,7 +1933,7 @@
                 { './lib/memberMatcherFor': 15, './toBeObject': 45 },
             ],
             84: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1955,7 +1944,7 @@
                 { './lib/memberMatcherFor': 15, './toBeOddNumber': 46 },
             ],
             85: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -1966,13 +1955,13 @@
                 { './lib/memberMatcherFor': 15, './toBeString': 50 },
             ],
             86: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeLongerThan = require('./toBeLongerThan');
 
-                    module.exports = function (key, other, actual) {
+                    module.exports = function(key, other, actual) {
                         return (
                             toBeObject(actual) &&
                             toBeLongerThan(other, actual[key])
@@ -1982,13 +1971,13 @@
                 { './toBeLongerThan': 39, './toBeObject': 45 },
             ],
             87: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeSameLengthAs = require('./toBeSameLengthAs');
 
-                    module.exports = function (key, other, actual) {
+                    module.exports = function(key, other, actual) {
                         return (
                             toBeObject(actual) &&
                             toBeSameLengthAs(other, actual[key])
@@ -1998,13 +1987,13 @@
                 { './toBeObject': 45, './toBeSameLengthAs': 48 },
             ],
             88: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toBeShorterThan = require('./toBeShorterThan');
 
-                    module.exports = function (key, other, actual) {
+                    module.exports = function(key, other, actual) {
                         return (
                             toBeObject(actual) &&
                             toBeShorterThan(other, actual[key])
@@ -2014,7 +2003,7 @@
                 { './toBeObject': 45, './toBeShorterThan': 49 },
             ],
             89: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -2025,13 +2014,13 @@
                 { './lib/memberMatcherFor': 15, './toBeTrue': 51 },
             ],
             90: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeObject = require('./toBeObject');
                     var toHaveMember = require('./toHaveMember');
 
-                    module.exports = function (key, actual) {
+                    module.exports = function(key, actual) {
                         return (
                             toBeObject(actual) &&
                             toHaveMember(key, actual) &&
@@ -2042,7 +2031,7 @@
                 { './toBeObject': 45, './toHaveMember': 76 },
             ],
             91: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -2053,7 +2042,7 @@
                 { './lib/memberMatcherFor': 15, './toBeWhitespace': 53 },
             ],
             92: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var memberMatcherFor = require('./lib/memberMatcherFor');
@@ -2064,12 +2053,12 @@
                 { './lib/memberMatcherFor': 15, './toBeWholeNumber': 54 },
             ],
             93: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
                     var toBeNonEmptyString = require('./toBeNonEmptyString');
 
-                    module.exports = function (subString, actual) {
+                    module.exports = function(subString, actual) {
                         return (
                             toBeNonEmptyString(actual) &&
                             toBeNonEmptyString(subString) &&
@@ -2080,10 +2069,10 @@
                 { './toBeNonEmptyString': 43 },
             ],
             94: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
-                    module.exports = function (actual) {
+                    module.exports = function(actual) {
                         try {
                             actual();
                             return false;
@@ -2095,10 +2084,10 @@
                 {},
             ],
             95: [
-                function (require, module, exports) {
+                function(require, module, exports) {
                     'use strict';
 
-                    module.exports = function (type, actual) {
+                    module.exports = function(type, actual) {
                         try {
                             actual();
                             return false;
@@ -2109,18 +2098,16 @@
                 },
                 {},
             ],
-        },
-        {},
+        }, {},
         [11]
     );
-}
-]]></script>
+}]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-18 17:09:27</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>5ca56b5e4784121058ceeb02d16d4318</sys_id>
-        <sys_mod_count>8</sys_mod_count>
+        <sys_mod_count>10</sys_mod_count>
         <sys_name>KLF_TestJasmineMatchers</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -2128,6 +2115,6 @@
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5ca56b5e4784121058ceeb02d16d4318</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-08-31 10:44:54</sys_updated_on>
+        <sys_updated_on>2024-09-27 23:56:22</sys_updated_on>
     </sys_script_include>
 </record_update>

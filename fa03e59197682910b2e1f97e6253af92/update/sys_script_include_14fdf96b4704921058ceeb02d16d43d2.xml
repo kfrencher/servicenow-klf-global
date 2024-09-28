@@ -6,7 +6,6 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSyncTest</name>
         <script><![CDATA[var testScopeName = 'x_53417_test_scope';
 
@@ -19,11 +18,8 @@ function KLF_RecordSyncTest() {
 
     function init() {
         var testUtils = new global.KLF_TestUtils();
-        var adminUser = testUtils.createAdminUser();
-        // @ts-ignore
-        var password = SNC.PasswordPolicyEvaluator.generateUserPassword(adminUser.getValue('user_name'));
-        adminUser.setDisplayValue('user_password', password);
-        adminUser.update();
+        var adminUser = testUtils.getOrCreateAdminUser();
+        var password = testUtils.setPasswordForUser(adminUser);
         var recordSync = new global.KLF_RecordSync(KLF_RecordSyncTest.createConnectionConfig(adminUser.getValue('user_name'), password));
         return {
             adminUser: adminUser,
@@ -36,7 +32,6 @@ function KLF_RecordSyncTest() {
         it('should load the xml record', function() {
             var sysId = '3e7b784447d4161058ceeb02d16d4335';
             var xml =
-                '<xml>' +
                 '<cmn_building>' +
                 '<contact display_value="Abel Tuter">62826bf03710200044e0bfc8bcbe5df1</contact>' +
                 '<floors>4</floors>' +
@@ -49,13 +44,12 @@ function KLF_RecordSyncTest() {
                 '<sys_mod_count>0</sys_mod_count>' +
                 '<sys_updated_by>admin</sys_updated_by>' +
                 '<sys_updated_on>2024-08-23 15:14:50</sys_updated_on>' +
-                '</cmn_building>' +
-                '</xml>';
+                '</cmn_building>';
 
             global.KLF_RecordSync.loadRecordByGlideUpdateManager2(xml);
 
             var gr = new GlideRecord('cmn_building');
-            expect(gr.get(sysId)).toBeTruthy();
+            expect(gr.get(sysId)).toBeTruthy('Should have loaded the record');
         });
 
         it('should not throw when XML is null', function() {
@@ -119,17 +113,17 @@ function KLF_RecordSyncTest() {
 
             // Record should not exist now
             gr = new GlideRecord(testTableName);
-            expect(gr.get(testRecordSysId)).toBeFalse();
+            expect(gr.get(testRecordSysId)).toBeFalse('Should not have record');
 
             // Send the record to the remote instance
             spyOn(recordSync, 'unloadRecordWithRelatedRecords').and.returnValue(unloadedResult);
             var response = recordSync.syncRecord(gr);
 
-            expect(response.success).toBeTrue();
+            expect(response.success).toBeTrue('Should have synced the record');
 
             // Record should exist now
             gr = new GlideRecord(testTableName);
-            expect(gr.get(testRecordSysId)).toBeTrue();
+            expect(gr.get(testRecordSysId)).toBeTrue('Should have record');
 
             // Get all the related records
             var result = recordSync.unloadRecordWithRelatedRecords(gr);
@@ -137,18 +131,18 @@ function KLF_RecordSyncTest() {
             var xmlDocument2 = new XMLDocument2();
             xmlDocument2.parseXML(resultXml);
 
-            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull();
-            expect(xmlDocument2.getNodeText('//fx_currency_instance/reference_amount')).toBe('100');
-            expect(xmlDocument2.getNodeText('//fx_price/reference_amount')).toBe('200');
-            expect(xmlDocument2.getNodeText('//sys_journal_field/value')).toBe('Test journal');
-            expect(xmlDocument2.getNodeText('//sys_attachment/file_name')).toBe('test.txt');
+            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull('Should have record');
+            expect(xmlDocument2.getNodeText('//fx_currency_instance/reference_amount')).toBe('100', 'Should have currency');
+            expect(xmlDocument2.getNodeText('//fx_price/reference_amount')).toBe('200', 'Should have price');
+            expect(xmlDocument2.getNodeText('//sys_journal_field/value')).toBe('Test journal', 'Should have journal');
+            expect(xmlDocument2.getNodeText('//sys_attachment/file_name')).toBe('test.txt', 'Should have attachment');
         });
     });
 
     describe('clearRemoteTestData', function() {
         it('should clear the test data on the remote instance', function() {
             var response = KLF_RecordSyncTest.clearRemoteTestData();
-            expect(response.getStatusCode()).toBe(200);
+            expect(response.getStatusCode()).toBe(200, 'Should have cleared the test data');
         });
     });
 
@@ -199,12 +193,12 @@ function KLF_RecordSyncTest() {
             var recordSync = testFixtures.recordSync;
             var failedRecordManifest = recordSync.syncTable('task', 'short_descriptionLIKEKLF_RecordSyncTest');
 
-            expect(failedRecordManifest.isEmpty()).toBeTrue();
+            expect(failedRecordManifest.isEmpty()).toBeTrue('Manifest should be empty because all records were synced');
 
             // Verify that the records were sent to the remote instance
             var missingRecordManifest = recordSync.validateSync(manifest);
             if (missingRecordManifest) {
-                expect(missingRecordManifest.isEmpty()).toBeTrue();
+                expect(missingRecordManifest.isEmpty()).toBeTrue('Should not have any missing records');
             } else {
                 fail('Missing record manifest should not be null');
             }
@@ -228,12 +222,12 @@ function KLF_RecordSyncTest() {
             var recordSync = testFixtures.recordSync;
             var failedRecordManifest = recordSync.syncTable('task', 'short_descriptionLIKEKLF_RecordSyncTest');
 
-            expect(failedRecordManifest.isEmpty()).toBeTrue();
+            expect(failedRecordManifest.isEmpty()).toBeTrue('Should not have any failed records');
 
             // Verify that the records were sent to the remote instance
             var missingRecordManifest = recordSync.validateSync(manifest);
             if (missingRecordManifest) {
-                expect(missingRecordManifest.getSysIdsForTable('task')).toContain(recordShouldNotBeSent.getUniqueValue());
+                expect(missingRecordManifest.getSysIdsForTable('task')).toContain(recordShouldNotBeSent.getUniqueValue(), 'Should have missing record');
             } else {
                 fail('Missing record manifest should not be null');
             }
@@ -330,7 +324,7 @@ function KLF_RecordSyncTest() {
             // Verify that the records were sent to the remote instance
             var missingRecordManifest = recordSync.validateSync(manifest);
             if (missingRecordManifest) {
-                expect(missingRecordManifest.isEmpty()).toBeTrue();
+                expect(missingRecordManifest.isEmpty()).toBeTrue('Should not have any missing records');
             } else {
                 fail('Missing record manifest should not be null');
             }
@@ -351,7 +345,7 @@ function KLF_RecordSyncTest() {
             });
             var missingTaskManifest = recordSync.validateSync(taskManifest);
             if (missingTaskManifest) {
-                expect(missingTaskManifest.isEmpty()).toBeTrue();
+                expect(missingTaskManifest.isEmpty()).toBeTrue('Should not have any missing records');
             } else {
                 fail('Missing task manifest should not be null');
             }
@@ -362,7 +356,7 @@ function KLF_RecordSyncTest() {
             });
             var missingRequestManifest = recordSync.validateSync(requestManifest);
             if (missingRequestManifest) {
-                expect(missingRequestManifest.isEmpty()).toBeFalse();
+                expect(missingRequestManifest.isEmpty()).toBeFalse('Should have missing excluded record');
             } else {
                 fail('Missing request manifest should not be null');
             }
@@ -412,7 +406,7 @@ function KLF_RecordSyncTest() {
 
             var xmlDocument2 = new XMLDocument2();
             xmlDocument2.parseXML(recordSync.documentToString(result));
-            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull();
+            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull('Should have record');
 
         });
 
@@ -427,8 +421,8 @@ function KLF_RecordSyncTest() {
 
             var xmlDocument2 = new XMLDocument2();
             xmlDocument2.parseXML(recordSync.documentToString(actualDocument));
-            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull();
-            expect(expectedDocument).toBe(actualDocument);
+            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull('Should have record');
+            expect(expectedDocument).toBe(actualDocument, 'Should be the same document');
         });
 
         it('should not allow the record to be saved', function() {
@@ -439,7 +433,7 @@ function KLF_RecordSyncTest() {
             recordSync.unloadRecord(gr);
 
             // Should return null if record failed to update
-            expect(gr.update()).toBeNull();
+            expect(gr.update()).toBeNull('Should not be able to update record');
         });
 
         it('should unload the extended record if the base record is provided', function() {
@@ -459,13 +453,13 @@ function KLF_RecordSyncTest() {
             gs.log(xml);
             var xmlDocument2 = new XMLDocument2();
             xmlDocument2.parseXML(xml);
-            expect(xmlDocument2.getFirstNode('//incident')).not.toBeNull();
+            expect(xmlDocument2.getFirstNode('//incident')).not.toBeNull('Should have extended record');
         });
 
         it('should use group mapping if provided', function() {
             // Create the test data
-            var group1 = testUtils.createGroup('group1');
-            var group2 = testUtils.createGroup('group2');
+            var group1 = testUtils.createGroup(testUtils.getRandomGroupName());
+            var group2 = testUtils.createGroup(testUtils.getRandomGroupName());
             var task = new GlideRecord('task');
             task.newRecord();
             task.assignment_group = group1.getUniqueValue();
@@ -493,9 +487,9 @@ function KLF_RecordSyncTest() {
             var xmlDocument2 = new XMLDocument2();
             xmlDocument2.parseXML(xml);
 
-            expect(xmlDocument2.getNodeText('//assignment_group')).toBe('group1');
-            expect(xmlDocument2.getNodeText('//group_list')).toContain('group1');
-            expect(xmlDocument2.getNodeText('//group_list')).toContain('group2');
+            expect(xmlDocument2.getNodeText('//assignment_group')).toBe('group1', 'Should have mapped assignment group');
+            expect(xmlDocument2.getNodeText('//group_list')).toContain('group1', 'Should have mapped group list');
+            expect(xmlDocument2.getNodeText('//group_list')).toContain('group2', 'Should have mapped group list');
         });
     });
 
@@ -525,19 +519,20 @@ function KLF_RecordSyncTest() {
             var result = recordSync.unloadRecordWithRelatedRecords(gr);
 
             var manifestObj = result.manifest.toObj();
+            gs.info(JSON.stringify(manifestObj, null, 4));
             var tables = Object.keys(manifestObj);
-            expect(tables).toContain('fx_currency_instance');
-            expect(tables).toContain('fx_price');
-            expect(tables).toContain('sys_journal_field');
-            expect(tables).toContain(testTableName);
+            expect(tables).toContain('fx_currency_instance', 'Should have currency instance');
+            expect(tables).toContain('fx_price', 'Should have price');
+            expect(tables).toContain('sys_journal_field', 'Should have journal field');
+            expect(tables).toContain(testTableName, 'Should have test table');
 
 
             var xmlDocument2 = new XMLDocument2();
             xmlDocument2.parseXML(recordSync.documentToString(result.document));
-            expect(xmlDocument2.getFirstNode('//fx_currency_instance')).not.toBeNull();
-            expect(xmlDocument2.getFirstNode('//fx_price')).not.toBeNull();
-            expect(xmlDocument2.getFirstNode('//sys_journal_field')).not.toBeNull();
-            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull();
+            expect(xmlDocument2.getFirstNode('//fx_currency_instance')).not.toBeNull('Should have currency instance');
+            expect(xmlDocument2.getFirstNode('//fx_price')).not.toBeNull('Should have price');
+            expect(xmlDocument2.getFirstNode('//sys_journal_field')).not.toBeNull('Should have journal field');
+            expect(xmlDocument2.getFirstNode('//' + testTableName)).not.toBeNull('Should have test table');
         });
     });
 
@@ -575,10 +570,10 @@ function KLF_RecordSyncTest() {
             var taskXml = recordSync.documentToString(taskDocument);
 
             var response = recordSync.sendToRemoteInstance(taskXml);
-            expect(response.success).toBeTruthy();
+            expect(response.success).toBeTruthy('Should have sent record');
 
             var remoteTask = new GlideRecord('task');
-            expect(remoteTask.get(task.getUniqueValue())).toBeTrue();
+            expect(remoteTask.get(task.getUniqueValue())).toBeTrue('Should have record');
         });
 
         it('should return a missing manifest representing records that were not inserted if a manifest is provided', function() {
@@ -587,13 +582,14 @@ function KLF_RecordSyncTest() {
             // Intentionally not inserting task here
             // The call to sendToRemoteInstance should insert the record
 
-            var group1 = testUtils.createGroup('group1');
+            var groupName = testUtils.getRandomGroupName();
+            var group1 = testUtils.createGroup(groupName);
 
             // This is a duplicate group with same name, but different sys_id
             // This will throw an error when trying to insert the duplicate group
             var duplicateGroup1 = new GlideRecord('sys_user_group');
             duplicateGroup1.newRecord();
-            duplicateGroup1.name = 'group1';
+            duplicateGroup1.name = groupName;
             testUtils.recordTracker.trackByGlideRecord(duplicateGroup1);
 
             var manifest = new global.KLF_RecordSync.Manifest();
@@ -603,10 +599,10 @@ function KLF_RecordSyncTest() {
             var groupXml = recordSync.documentToString(groupDocument);
 
             var response = recordSync.sendToRemoteInstance(groupXml, manifest);
-            expect(response.success).toBeTruthy();
+            expect(response.success).toBeTruthy('Should have sent record');
 
             if (response.missingManifest) {
-                expect(response.missingManifest.getSysIdsForTable('sys_user_group')).toEqual([duplicateGroup1.getUniqueValue()]);
+                expect(response.missingManifest.getSysIdsForTable('sys_user_group')).toBeEqual([duplicateGroup1.getUniqueValue()], 'Should have missing record');
             } else {
                 fail('Missing manifest should not be null');
             }
@@ -679,25 +675,16 @@ KLF_RecordSyncTest.clearRemoteTestData = function() {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-22 06:47:48</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>14fdf96b4704921058ceeb02d16d43d2</sys_id>
-        <sys_mod_count>168</sys_mod_count>
+        <sys_mod_count>197</sys_mod_count>
         <sys_name>KLF_RecordSyncTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_14fdf96b4704921058ceeb02d16d43d2</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-25 17:00:35</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 03:00:49</sys_updated_on>
     </sys_script_include>
-    <sys_es_latest_script action="INSERT_OR_UPDATE">
-        <id>14fdf96b4704921058ceeb02d16d43d2</id>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2024-08-24 22:09:49</sys_created_on>
-        <sys_id>39246fd44758961058ceeb02d16d4341</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-24 22:09:49</sys_updated_on>
-        <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
-    </sys_es_latest_script>
 </record_update>

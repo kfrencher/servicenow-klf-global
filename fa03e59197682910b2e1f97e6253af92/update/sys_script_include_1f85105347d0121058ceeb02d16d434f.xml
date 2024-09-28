@@ -6,7 +6,6 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_AtfAddStepsHelperTest</name>
         <script><![CDATA[// @ts-ignore
 function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqual) {
@@ -137,8 +136,8 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
                 // test2 has 1 step
                 // after adding 2 steps to test2, test2 should have 3 steps
                 atfAddStepsHelper.addTestSteps(test1.getUniqueValue(), test2.getUniqueValue());
-                expect(getStepCount(test1.getUniqueValue())).toEqual(2);
-                expect(getStepCount(test2.getUniqueValue())).toEqual(3);
+                expect(getStepCount(test1.getUniqueValue())).toBe(2, 'Test 1 should have 2 steps');
+                expect(getStepCount(test2.getUniqueValue())).toBe(3, 'Test 2 should have 3 steps');
             });
         });
 
@@ -171,7 +170,7 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
 
             it('Should return the max order number', function() {
                 var maxStepOrder = atfAddStepsHelper.getMaxStepOrder(test.getUniqueValue());
-                expect(maxStepOrder).toEqual(3);
+                expect(maxStepOrder).toBe(3, 'Max step order should be 3');
             });
         });
 
@@ -203,7 +202,7 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
 
             it('Should delete the test and all of its steps', function() {
                 atfAddStepsHelper.deleteTest(test.getUniqueValue());
-                expect(getStepCount(test.getUniqueValue())).toEqual(0);
+                expect(getStepCount(test.getUniqueValue())).toBe(0, 'Test should have 0 steps');
             });
         });
 
@@ -245,10 +244,10 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
                 atfAddStepsHelper.moveSteps(fromTest.getUniqueValue(), toTest.getUniqueValue());
 
                 // Checking to see that the from test has no steps
-                expect(getStepCount(fromTest.getUniqueValue())).toBe(0);
+                expect(getStepCount(fromTest.getUniqueValue())).toBe(0, 'From test should have 0 steps');
 
                 // Checking to see that the to test has the correct amount of steps
-                expect(getStepCount(toTest.getUniqueValue())).toBe(2);
+                expect(getStepCount(toTest.getUniqueValue())).toBe(2, 'To test should have 2 steps');
 
                 var step = new GlideRecord('sys_atf_step');
                 step.addQuery('test', toTest.getUniqueValue());
@@ -256,7 +255,7 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
 
                 while (step.next()) {
                     // Checking to see that the step config is correct
-                    expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue());
+                    expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue(), 'Step config is correct');
                 }
             });
         });
@@ -296,18 +295,18 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
                 var testCopy = new GlideRecord('sys_atf_test');
 
                 // Checking to see the test copy exists
-                expect(testCopy.get(testCopySysId)).toBe(true);
+                expect(testCopy.get(testCopySysId)).toBe(true, 'Test copy exists');
 
                 var step = new GlideRecord('sys_atf_step');
                 step.addQuery('test', testCopy.getUniqueValue());
                 step.query();
 
                 // Checking to see there are the right amount of steps
-                expect(step.getRowCount()).toBe(expectedStepCount);
+                expect(step.getRowCount()).toBe(expectedStepCount, 'Test copy should have 2 steps');
 
                 while (step.next()) {
                     // Checking to see that the step config is correct
-                    expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue());
+                    expect(step.getValue('step_config')).toBe(logConfig.getUniqueValue(), 'Step config is correct');
                 }
             });
         });
@@ -352,7 +351,7 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
                 var expectedOrder = expectedOrderStart;
                 while (step.next()) {
                     expectedOrder = expectedOrder + 1;
-                    expect(parseInt(step.getValue('order'))).toBe(expectedOrder);
+                    expect(parseInt(step.getValue('order'))).toBe(expectedOrder, 'Step order is correct');
                 }
             });
         });
@@ -362,14 +361,16 @@ function KLF_AtfAddStepsHelperTest(outputs, steps, params, stepResult, assertEqu
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-09-02 14:48:56</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>1f85105347d0121058ceeb02d16d434f</sys_id>
-        <sys_mod_count>7</sys_mod_count>
+        <sys_mod_count>12</sys_mod_count>
         <sys_name>KLF_AtfAddStepsHelperTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_1f85105347d0121058ceeb02d16d434f</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-02 15:04:44</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-27 17:45:32</sys_updated_on>
     </sys_script_include>
 </record_update>

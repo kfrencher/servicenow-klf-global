@@ -6,15 +6,8 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_TestUtilsTest</name>
-        <script><![CDATA[/**
- * @param {*} outputs 
- * @param {*} steps 
- * @param {*} params 
- * @param {*} stepResult 
- * @param {*} assertEqual 
- */
+        <script><![CDATA[// @ts-ignore
 function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     describe('', function() {
         /** @type {global.KLF_TestUtils} */
@@ -37,7 +30,7 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
             return task;
         }
 
-        fdescribe('RecordTracker', function() {
+        describe('RecordTracker', function() {
             // These 2 tests hit a lot of the code in the RecordTracker class
             // It will access trackByGlideRecord, getDocuments, hasGlideRecord, and trackBySysId
             it('should track records by GlideRecord', function() {
@@ -47,8 +40,8 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                     .trackByGlideRecord(task2);
 
                 var documents = recordTracker.getDocuments();
-                expect(documents.length).toBe(2);
-                expect(recordTracker.hasGlideRecord(task1)).toBe(true);
+                expect(documents.length).toBe(2, 'Number of documents');
+                expect(recordTracker.hasGlideRecord(task1)).toBe(true, 'Task 1 should be tracked');
             });
 
             it('should not add duplicates to document list', function() {
@@ -57,30 +50,32 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                     .trackByGlideRecord(task1);
 
                 var documents = recordTracker.getDocuments();
-                expect(documents.length).toBe(1);
-                expect(recordTracker.hasGlideRecord(task1)).toBe(true);
+                expect(documents.length).toBe(1, 'Number of documents');
+                expect(recordTracker.hasGlideRecord(task1)).toBe(true, 'Task 1 should be tracked');
             });
         });
 
         describe('impersonateUser()', function() {
             it('should impersonate the user with the given sys_id', function() {
-                var user = testUtils.createUser('testUser');
+                var user = testUtils.createUser(testUtils.getRandomUsername());
                 testUtils.impersonateUser(user.sys_id);
-                expect(user.getValue('sys_id')).toBe(gs.getUserID());
+                expect(user.getValue('sys_id')).toBe(gs.getUserID(), 'User should be impersonated');
             });
         });
 
         describe('createScope()', function() {
             it('should create a scope with the given name', function() {
-                var scope = testUtils.createScope('testScope');
-                expect(scope.get('scope', 'testScope')).toBe(true);
+                var scopeName = testUtils.getRandomAlphaNumericString();
+                var scope = testUtils.createScope(scopeName);
+                expect(scope.get('scope', scopeName)).toBe(true, 'Scope should be created');
             });
 
             it('should throw an error if the scope already exists', function() {
-                testUtils.createScope('testScope');
+                var scopeName = testUtils.getRandomAlphaNumericString();
+                testUtils.createScope(scopeName);
 
                 expect(function() {
-                    testUtils.createScope('testScope');
+                    testUtils.createScope(scopeName);
                 }).toThrow();
             });
 
@@ -93,13 +88,14 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
         describe('getScopeSysId', function() {
             it('should return the sys_id of the scope with the given name', function() {
-                var scope = testUtils.createScope('testScope');
-                expect(testUtils.getScopeSysId('testScope')).toBe(scope.getUniqueValue());
+                var scopeName = testUtils.getRandomAlphaNumericString();
+                var scope = testUtils.createScope(scopeName);
+                expect(testUtils.getScopeSysId(scopeName)).toBe(scope.getUniqueValue(), 'Scope should be created');
             });
 
             it('should throw an error if the scope does not exist', function() {
                 expect(function() {
-                    testUtils.getScopeSysId('non_existent_scope');
+                    testUtils.getScopeSysId(testUtils.getRandomAlphaNumericString());
                 }).toThrow();
             });
 
@@ -110,14 +106,16 @@ function KLF_TestUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:20:32</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>2d1b858c97b86550b2e1f97e6253af73</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>18</sys_mod_count>
         <sys_name>KLF_TestUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_2d1b858c97b86550b2e1f97e6253af73</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-03 11:59:35</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 03:47:54</sys_updated_on>
     </sys_script_include>
 </record_update>

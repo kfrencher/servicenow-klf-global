@@ -6,12 +6,13 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_UserUtilsTest</name>
         <script><![CDATA[// @ts-ignore
 function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     var testScopeName = 'x_53417_test_scope';
-	var chance = global.KLF_TestChance();
+    /** @type {Chance.Chance} */
+    // @ts-ignore
+    var chance = global.KLF_TestChance();
 
     function createUserUtils() {
         return new global.KLF_RecordSync_UserUtils({
@@ -92,7 +93,7 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
                 var actualFields = userUtils.getUserFields(testScopeSysId);
                 actualFields.sort(sortFieldsAscByColumnName);
 
-                expect(actualFields).toEqual(expectedFields);
+                expect(actualFields).toBeEqual(expectedFields, 'Fields are correct');
             });
         });
 
@@ -100,11 +101,11 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
             it('should find all the user fields in the specified table', function() {
                 var taskActualFields = userUtils.getUserFieldsInTable(testScopeName + '_task');
                 taskActualFields.sort(sortFieldsAscByColumnName);
-                expect(taskActualFields).toEqual(userFieldsInTask);
+                expect(taskActualFields).toBeEqual(userFieldsInTask, 'Task fields are correct');
 
                 var requestActualFields = userUtils.getUserFieldsInTable(testScopeName + '_request');
                 requestActualFields.sort(sortFieldsAscByColumnName);
-                expect(requestActualFields).toEqual(userFieldsInRequest);
+                expect(requestActualFields).toBeEqual(userFieldsInRequest, 'Request fields are correct');
             });
 
             it('should throw error if table name does not exist', function() {
@@ -136,14 +137,14 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
                 usernameField.display = true;
                 usernameField.update();
 
-                expect(userUtils.checkSysUserDisplayField()).toBe(true);
+                expect(userUtils.checkSysUserDisplayField()).toBe(true, 'Display field is user_name');
             });
 
             it('should return false if sys_user display field is not user_name', function() {
                 usernameField.display = false;
                 usernameField.update();
 
-                expect(userUtils.checkSysUserDisplayField()).toBe(false);
+                expect(userUtils.checkSysUserDisplayField()).toBe(false, 'Display field is not user_name');
             });
         });
 
@@ -162,7 +163,7 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
                 usernameField.display = true;
                 usernameField.update();
 
-                expect(userUtils.checkSysUserDisplayField()).toBe(true);
+                expect(userUtils.checkSysUserDisplayField()).toBe(true, 'Display field is user_name');
 
                 userUtils.clearSysUserDisplayField();
 
@@ -172,7 +173,7 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
                 sysUserDisplayField.addQuery('display', true);
                 sysUserDisplayField.query();
 
-                expect(sysUserDisplayField.hasNext()).toBe(false);
+                expect(sysUserDisplayField.hasNext()).toBe(false, 'Table should not have any display fields');
             });
         });
 
@@ -182,7 +183,7 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
             });
 
             it('should set the display field of the specified column in sys_user to true', function() {
-                expect(userUtils.checkSysUserDisplayField()).toBe(false);
+                expect(userUtils.checkSysUserDisplayField()).toBe(false, 'Display field is not user_name');
 
                 userUtils.updateSysUserDisplayField('user_name');
 
@@ -192,8 +193,8 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
                 sysUserDisplayField.query();
                 sysUserDisplayField.next();
 
-                expect(sysUserDisplayField.getRowCount()).toBe(1);
-                expect(sysUserDisplayField.getValue('element')).toBe('user_name');
+                expect(sysUserDisplayField.getRowCount()).toBe(1, 'Should have 1 row');
+                expect(sysUserDisplayField.getValue('element')).toBe('user_name', 'Display field is user_name');
             });
 
             it('should return the current display field name', function() {
@@ -206,7 +207,7 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
                 nameField.display = true;
                 nameField.update();
 
-                expect(userUtils.updateSysUserDisplayField('user_name')).toBe('name');
+                expect(userUtils.updateSysUserDisplayField('user_name')).toBe('name', 'Should be existing display field');
             });
 
             it('should throw an error if the specified column does not exist', function() {
@@ -226,9 +227,9 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
             var tableName = testScopeName + '_task';
 
             it('should return the unique users in the specified table', function() {
-                var user1 = testUtils.createUser(chance.string({length: 7, pool:'abcdefghijklmnopqrstuvwxyz'}));
-                var user2 = testUtils.createUser(chance.string({length: 7, pool:'abcdefghijklmnopqrstuvwxyz'}));
-                var user3 = testUtils.createUser(chance.string({length: 7, pool:'abcdefghijklmnopqrstuvwxyz'}));
+                var user1 = testUtils.createUser(chance.string({ length: 7, pool: 'abcdefghijklmnopqrstuvwxyz' }));
+                var user2 = testUtils.createUser(chance.string({ length: 7, pool: 'abcdefghijklmnopqrstuvwxyz' }));
+                var user3 = testUtils.createUser(chance.string({ length: 7, pool: 'abcdefghijklmnopqrstuvwxyz' }));
 
                 function createTask( /** @type {GlideRecord} */ user) {
                     var task = new GlideRecord(tableName);
@@ -243,7 +244,7 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
 
                 var uniqueUsers = userUtils.getUniqueUsersInTable(tableName);
                 var expectedUsers = [user1.getUniqueValue(), user2.getUniqueValue(), user3.getUniqueValue()].sort();
-                expect(uniqueUsers.sort()).toEqual(expectedUsers);
+                expect(uniqueUsers.sort()).toBeEqual(expectedUsers, 'Unique users are correct');
             });
 
             it('should throw error if table name does not exist', function() {
@@ -263,25 +264,16 @@ function KLF_RecordSync_UserUtilsTest(outputs, steps, params, stepResult, assert
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-21 00:12:18</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>01d95b8b47c0121058ceeb02d16d4365</sys_id>
-        <sys_mod_count>62</sys_mod_count>
+        <sys_mod_count>64</sys_mod_count>
         <sys_name>KLF_RecordSync_UserUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_01d95b8b47c0121058ceeb02d16d4365</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-26 22:40:33</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 02:47:42</sys_updated_on>
     </sys_script_include>
-    <sys_es_latest_script action="INSERT_OR_UPDATE">
-        <id>01d95b8b47c0121058ceeb02d16d4365</id>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2024-09-26 22:40:32</sys_created_on>
-        <sys_id>dda7294b4774121058ceeb02d16d43b5</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-26 22:40:32</sys_updated_on>
-        <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
-    </sys_es_latest_script>
 </record_update>

@@ -203,6 +203,13 @@ global.KLF_ScoperUtils.prototype = {
         uiFormSectionGr.query();
         while (uiFormSectionGr.next()) {
             this.defaultCreateTargetMetadataFromSourceMetadata(uiFormSectionGr, null, targetDocument);
+            // The form section will have a reference to the UI Section
+            if (!uiFormSectionGr.sys_ui_section.nil()) {
+                if (!this.isProcessed(uiFormSectionGr.getValue('sys_ui_section'))) {
+                    var uiSection = uiFormSectionGr.sys_ui_section.getRefRecord();
+                    this.createUiSectionTargetMetadataFromSourceMetadata(uiSection, targetDocument);
+                }
+            }
         }
 
         return targetParts;
@@ -211,9 +218,10 @@ global.KLF_ScoperUtils.prototype = {
     /**
      * Creates XML for the target UI Section record
      * @param {GlideRecord} source sys_ui_section record
+     * @param {Document} [providedDocument]
      */
-    createUiSectionTargetMetadataFromSourceMetadata: function(source) {
-        var targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(source);
+    createUiSectionTargetMetadataFromSourceMetadata: function(source, providedDocument) {
+        var targetParts = this.defaultCreateTargetMetadataFromSourceMetadata(source, null, providedDocument);
         var targetDocument = targetParts.targetRecordDocument;
 
         // Get the related UI Elements
@@ -689,7 +697,7 @@ global.KLF_ScoperUtils.prototype = {
         <sys_created_on>2024-09-13 19:56:20</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d165423a87285290e2041f8d3fbb354c</sys_id>
-        <sys_mod_count>121</sys_mod_count>
+        <sys_mod_count>123</sys_mod_count>
         <sys_name>KLF_ScoperUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -697,6 +705,6 @@ global.KLF_ScoperUtils.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d165423a87285290e2041f8d3fbb354c</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-18 12:10:20</sys_updated_on>
+        <sys_updated_on>2024-09-27 15:39:03</sys_updated_on>
     </sys_script_include>
 </record_update>

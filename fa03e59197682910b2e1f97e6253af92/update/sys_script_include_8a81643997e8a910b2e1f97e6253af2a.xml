@@ -6,25 +6,21 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_LdapGroupServiceTest</name>
-        <script><![CDATA[/**
- * 
- * @param {*} outputs 
- * @param {*} steps 
- * @param {*} params 
- * @param {*} stepResult 
- * @param {*} assertEqual 
- */
+        <script><![CDATA[// @ts-ignore
 function KLF_LdapGroupServiceTest(outputs, steps, params, stepResult, assertEqual) {
     describe('KLF_LdapGroupServiceTest.getGroupByDn', function() {
-        var expectedGroupName = 'test group';
+
+        /** @type {string} */
+        var expectedGroupName;
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
         beforeAll(function() {
-            var expectedGroup = new GlideRecord('sys_user_group');
-            expectedGroup.newRecord();
-            expectedGroup.name = expectedGroupName;
-            expectedGroup.source = 'ldap: ' + expectedGroupName;
-            expectedGroup.update();
+            testUtils = new global.KLF_TestUtils();
+            expectedGroupName = testUtils.getRandomGroupName();
+            var group = testUtils.createGroup(expectedGroupName);
+            group.source = 'ldap:' + expectedGroupName;
+            group.update();
         });
 
         try {
@@ -39,21 +35,21 @@ function KLF_LdapGroupServiceTest(outputs, steps, params, stepResult, assertEqua
 
         it('should return group when one exists', function() {
             var group = ldapGroupService.getGroupByDn(expectedGroupName);
-            expect(group).not.toBeNull();
+            expect(group).not.toBeNull('Group should exist');
             if (group) {
-                expect(group.getValue('name')).toBe(expectedGroupName);
+                expect(group.getValue('name')).toBe(expectedGroupName, 'Group name is correct');
             }
         });
 
         it('should not return a group when no group name is provided', function() {
             // @ts-ignore
             var group = ldapGroupService.getGroupByDn();
-            expect(group).toBeNull();
+            expect(group).toBeNull('Group should not exist');
         });
 
         it('should not return group when given a bad group name', function() {
             var group = ldapGroupService.getGroupByDn('INVALID GROUP NAME');
-            expect(group).toBeNull();
+            expect(group).toBeNull('Group should not exist');
         });
 
     });
@@ -61,14 +57,16 @@ function KLF_LdapGroupServiceTest(outputs, steps, params, stepResult, assertEqua
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-22 21:32:39</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>8a81643997e8a910b2e1f97e6253af2a</sys_id>
-        <sys_mod_count>1</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>KLF_LdapGroupServiceTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_8a81643997e8a910b2e1f97e6253af2a</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-02-25 14:40:39</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 00:19:28</sys_updated_on>
     </sys_script_include>
 </record_update>

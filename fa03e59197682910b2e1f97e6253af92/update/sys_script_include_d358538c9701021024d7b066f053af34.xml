@@ -131,6 +131,9 @@ global.KLF_RecordSync.Manifest.prototype = {
      * @param {GlideRecord} glideRecord 
      */
     addRecordByGlideRecord: function(glideRecord) {
+        if (!glideRecord.isValid()) {
+            throw 'Invalid GlideRecord with table name: ' + glideRecord.getTableName();
+        }
         this.addRecord(glideRecord.getTableName(), glideRecord.getUniqueValue());
     },
 
@@ -377,12 +380,21 @@ global.KLF_RecordSync.prototype = {
                 return null;
             }
 
+            /** @type {{result:[{sys_id:string}]}} */
+            var responseBody;
+            try {
+                responseBody = JSON.parse(response.getBody());
+            } catch (e) {
+                me.logError('Failed to parse the response from the target instance');
+                me.logError('Received status code: ' + response.getStatusCode());
+                me.logError('Received body: ' + response.getBody());
+                return null;
+            }
+
             // The sys_ids in the response represent records that already exist in the target instance
             // Subtract the sys_ids in the response from the sysIds array to get the sys_ids that do not exist in the target instance
             // This will be the sys_ids that need to be inserted into the target instance
             var targetSysIds = /** @type string[] */ ([]);
-            /** @type {{result:[{sys_id:string}]}} */
-            var responseBody = JSON.parse(response.getBody());
             responseBody.result.forEach(function(record) {
                 targetSysIds.push(record.sys_id);
             });
@@ -844,7 +856,7 @@ global.KLF_RecordSync.prototype = {
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>192</sys_mod_count>
+        <sys_mod_count>194</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -852,6 +864,6 @@ global.KLF_RecordSync.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-14 14:14:34</sys_updated_on>
+        <sys_updated_on>2024-09-28 03:09:32</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -6,7 +6,6 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_GroupUtilsTest</name>
         <script><![CDATA[function KLF_RecordSync_GroupUtilsTest() {
     var testScopeName = 'x_53417_test_scope';
@@ -111,7 +110,7 @@
                     field.sysId = '';
                 });
 
-                expect(actualFields).toEqual(groupFieldsInScope);
+                expect(actualFields).toBeEqual(groupFieldsInScope, 'Group fields in scope are correct');
             });
 
         });
@@ -134,7 +133,7 @@
                 taskActualFields.forEach(function(field) {
                     field.sysId = '';
                 });
-                expect(taskActualFields).toEqual(groupFieldsInTask);
+                expect(taskActualFields).toBeEqual(groupFieldsInTask, 'Group fields in task are correct');
 
                 var requestActualFields = groupUtils.getGroupFieldsInTable(testScopeName + '_request');
                 requestActualFields.sort(sortFieldsAscByColumnName);
@@ -142,7 +141,7 @@
                 requestActualFields.forEach(function(field) {
                     field.sysId = '';
                 });
-                expect(requestActualFields).toEqual(groupFieldsInRequest);
+                expect(requestActualFields).toBeEqual(groupFieldsInRequest, 'Group fields in request are correct');
             });
 
             it('should throw error if table name does not exist', function() {
@@ -162,9 +161,9 @@
             var tableName = testScopeName + '_task';
 
             it('should create a group mapping', function() {
-                var group1 = testUtils.createGroup('group1');
-                var group2 = testUtils.createGroup('group2');
-                var group3 = testUtils.createGroup('group3');
+                var group1 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group2 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group3 = testUtils.createGroup(testUtils.getRandomGroupName());
 
                 var remoteGroups = [{
                     sysId: 'group1',
@@ -182,11 +181,11 @@
 
                 var groupMapping = global.KLF_RecordSync_GroupUtils.createMappingFromRemote(remoteGroups);
 
-                expect(groupMapping.mapping).toEqual({
+                expect(groupMapping.mapping).toBeEqual({
                     group1: group1.getUniqueValue(),
                     group2: group2.getUniqueValue(),
                     group3: group3.getUniqueValue()
-                });
+                }, 'Group mapping is correct');
 
                 expect(groupMapping.hasMissingGroups).toBe(false);
                 expect(groupMapping.error).toBeFalsy();
@@ -214,15 +213,15 @@
 
                 var groupMapping = global.KLF_RecordSync_GroupUtils.createMappingFromRemote(remoteGroups);
 
-                expect(groupMapping.mapping).toEqual({
+                expect(groupMapping.mapping).toBeEqual({
                     group1: group1.getUniqueValue(),
                     group2: group2.getUniqueValue()
-                });
+                }, 'Group mapping is correct');
 
-                expect(groupMapping.hasMissingGroups).toBe(true);
-                expect(groupMapping.error).toBeFalsy();
-                expect(groupMapping.success).toBe(true);
-                expect(groupMapping.missingGroups).toEqual(['group3']);
+                expect(groupMapping.hasMissingGroups).toBe(true, 'Missing groups is true');
+                expect(groupMapping.error).toBeFalsy('No error');
+                expect(groupMapping.success).toBe(true, 'Success is true');
+                expect(groupMapping.missingGroups).toBeEqual(['group3'], 'Missing groups are correct');
             });
 
         });
@@ -246,10 +245,9 @@
 
                 var response = groupUtils.syncGroups([group1.getUniqueValue(), group2.getUniqueValue()]);
                 if (response) {
-                    expect(response.success).toBe(true);
+                    expect(response.success).toBe(true, 'Success is true');
                     if (response.missingManifest) {
-                        expect(response.success).toBeTrue();
-                        expect(response.missingManifest.isEmpty()).toBeTrue();
+                        expect(response.missingManifest.isEmpty()).toBeTrue('Missing manifest is empty. Meaning all groups were found');
                     } else {
                         fail('Missing manifest should not be null');
                     }
@@ -265,7 +263,7 @@
             });
 
             it('should return null if there are no groups to sync', function() {
-                expect(groupUtils.syncGroups([])).toBeNull();
+                expect(groupUtils.syncGroups([])).toBeNull('Response should be null');
             });
 
             it('should not throw exception if the quiet flag is set', function() {
@@ -322,8 +320,8 @@
         describe('updateNotifications()', function() {
 
             it('should update the notifications using the group mapping', function() {
-                var group1 = testUtils.createGroup('group1');
-                var group2 = testUtils.createGroup('group2');
+                var group1 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group2 = testUtils.createGroup(testUtils.getRandomGroupName());
 
                 // Create a few notifications
                 var notification1 = createNotification(testUtils, 'notification1', [group1]);
@@ -342,25 +340,25 @@
 
                 var updatedNotification1 = new GlideRecord('sysevent_email_action');
                 updatedNotification1.get(notification1.getUniqueValue());
-                expect(updatedNotification1.getValue('recipient_groups')).toContain('_group1');
+                expect(updatedNotification1.getValue('recipient_groups')).toContain('_group1', 'Notification 1 has group 1');
 
                 var updatedNotification2 = new GlideRecord('sysevent_email_action');
                 updatedNotification2.get(notification2.getUniqueValue());
-                expect(updatedNotification2.getValue('recipient_groups')).toContain('_group1');
-                expect(updatedNotification2.getValue('recipient_groups')).toContain('_group2');
+                expect(updatedNotification2.getValue('recipient_groups')).toContain('_group1', 'Notification 2 has group 1');
+                expect(updatedNotification2.getValue('recipient_groups')).toContain('_group2', 'Notification 2 has group 2');
 
-                expect(response.success).toBe(true);
-                expect(response.notUpdatedNotifications).toEqual([]);
-                expect(response.error).toBeFalsy();
-                expect(response.updatedNotifications.sort()).toEqual(notificationSysIds.sort());
+                expect(response.success).toBe(true, 'Success is true');
+                expect(response.notUpdatedNotifications).toBeEqual([]);
+                expect(response.error).toBeFalsy('No error');
+                expect(response.updatedNotifications.sort()).toBeEqual(notificationSysIds.sort(), 'Updated notifications are correct');
                 // Do not check for incomplete notifications. This test will probably have
                 // incomplete notifications because the group names are not real
                 // expect(response.incompleteNotifications).toEqual({});
             });
 
             it('should not update notification if not in group mapping', function() {
-                var group1 = testUtils.createGroup('group1');
-                var group2 = testUtils.createGroup('group2');
+                var group1 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group2 = testUtils.createGroup(testUtils.getRandomGroupName());
 
                 var notification = createNotification(testUtils, 'notification', [group1]);
 
@@ -374,13 +372,13 @@
 
                 var updatedNotification = new GlideRecord('sysevent_email_action');
                 updatedNotification.get(notification.getUniqueValue());
-                expect(updatedNotification.getValue('recipient_groups')).toContain(group1.getUniqueValue());
+                expect(updatedNotification.getValue('recipient_groups')).toContain(group1.getUniqueValue(), 'Notification has group 1');
 
-                expect(response.success).toBe(true);
-                expect(response.incompleteNotifications).toBeFalsy();
-                expect(response.notUpdatedNotifications).toEqual([]);
-                expect(response.error).toBeFalsy();
-                expect(response.updatedNotifications).toEqual(notificationSysIds);
+                expect(response.success).toBe(true, 'Success is true');
+                expect(response.incompleteNotifications).toBeFalsy('No incomplete notifications');
+                expect(response.notUpdatedNotifications).toBeEqual([], 'Not updated notifications are empty');
+                expect(response.error).toBeFalsy('No error');
+                expect(response.updatedNotifications).toBeEqual(notificationSysIds, 'Updated notifications are correct');
             });
 
             it('should throw error if notifications are not provided', function() {
@@ -398,11 +396,11 @@
             it('should return an empty response if no notifications are provided', function() {
                 var groupMapping = createEmptyGroupMapping();
                 var response = global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, []);
-                expect(response).toEqual({
+                expect(response).toBeEqual({
                     success: true,
                     updatedNotifications: [],
                     notUpdatedNotifications: []
-                });
+                }, 'Response is correct');
             });
 
             it('should find missing notifications if the notification does not exist', function() {
@@ -411,7 +409,7 @@
 
                 var response = global.KLF_RecordSync_GroupUtils.updateNotifications(groupMapping, fakeNotificationSysIds);
 
-                expect(response.notUpdatedNotifications.sort()).toEqual(fakeNotificationSysIds.sort());
+                expect(response.notUpdatedNotifications.sort()).toBeEqual(fakeNotificationSysIds.sort(), 'Not updated notifications are correct');
             });
 
 
@@ -419,8 +417,8 @@
 
         describe('getGroupsUsedInNotifications()', function() {
             it('should return the groups used in the specified notifications', function() {
-                var group1 = testUtils.createGroup('group1');
-                var group2 = testUtils.createGroup('group2');
+                var group1 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group2 = testUtils.createGroup(testUtils.getRandomGroupName());
 
                 // Create a few notifications
                 var notification1 = new GlideRecord('sysevent_email_action');
@@ -449,7 +447,7 @@
                 var expectedGroups = [group1.getUniqueValue(), group2.getUniqueValue()].sort();
                 var actualGroups = groupUtils.getGroupsUsedInNotifications(notificationSysIds).sort();
 
-                expect(expectedGroups).toEqual(actualGroups);
+                expect(expectedGroups).toBeEqual(actualGroups, 'Groups are correct');
             });
 
             it('should return an empty array if no groups are used in the notifications', function() {
@@ -467,11 +465,11 @@
 
                 var notificationSysIds = [notification1.getUniqueValue(), notification2.getUniqueValue()];
                 var actualGroups = groupUtils.getGroupsUsedInNotifications(notificationSysIds);
-                expect(actualGroups).toEqual([]);
+                expect(actualGroups).toBeEqual([], 'Groups are empty');
             });
 
             it('should return an empty array if an empty list of notifications is provided', function() {
-                expect(groupUtils.getGroupsUsedInNotifications([])).toEqual([]);
+                expect(groupUtils.getGroupsUsedInNotifications([])).toBeEqual([], 'Groups are empty');
             });
 
             it('should throw error if notificationSysIds is falsy', function() {
@@ -490,9 +488,9 @@
             var tableName = testScopeName + '_task';
 
             it('should return the unique groups in the specified table', function() {
-                var group1 = testUtils.createGroup('group1');
-                var group2 = testUtils.createGroup('group2');
-                var group3 = testUtils.createGroup('group3');
+                var group1 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group2 = testUtils.createGroup(testUtils.getRandomGroupName());
+                var group3 = testUtils.createGroup(testUtils.getRandomGroupName());
 
                 function createTask( /** @type {GlideRecord} */ group) {
                     var task = new GlideRecord(tableName);
@@ -507,7 +505,7 @@
 
                 var uniqueGroups = groupUtils.getUniqueGroupsInTable(tableName);
                 var expectedGroups = [group1.getUniqueValue(), group2.getUniqueValue(), group3.getUniqueValue()].sort();
-                expect(uniqueGroups.sort()).toEqual(expectedGroups);
+                expect(uniqueGroups.sort()).toBeEqual(expectedGroups, 'Groups are correct');
             });
 
             it('should throw error if table name does not exist', function() {
@@ -528,14 +526,16 @@
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-24 23:16:37</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>90733b9847d8961058ceeb02d16d43d9</sys_id>
-        <sys_mod_count>71</sys_mod_count>
+        <sys_mod_count>78</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_90733b9847d8961058ceeb02d16d43d9</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-01 22:05:25</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 00:28:04</sys_updated_on>
     </sys_script_include>
 </record_update>

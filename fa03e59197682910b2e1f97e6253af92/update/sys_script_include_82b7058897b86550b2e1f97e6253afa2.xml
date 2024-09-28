@@ -6,7 +6,6 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
-        <mobile_callable>false</mobile_callable>
         <name>KLF_TestUtils</name>
         <script><![CDATA[/**
  * This script include provides utility functions for unit testing.
@@ -45,6 +44,63 @@ global.KLF_TestUtils = function(config) {
     this.commonGroupName = _config.commonGroupName || gs.getProperty('KLF_TestUtils.common_group_name', 'KLF_TestGroup');
     this.commonUsername = _config.commonUsername || gs.getProperty('KLF_TestUtils.common_username', 'KLF_TestUser');
     this.adminUsername = _config.adminUsername || gs.getProperty('KLF_TestUtils.admin_username', 'KLF_TestAdminUser');
+};
+
+global.KLF_TestUtils.matchers = {
+    /**
+     * Copied from the jasmine deep equality matcher. The only difference
+     * is that this version allows for an additional message to be provided
+     * so that the message can be more descriptive in the case of a test failure
+     * @param {any} util 
+     * @param {any} customEqualityTesters 
+     */
+    toBeEqual: function(util, customEqualityTesters) {
+        customEqualityTesters = customEqualityTesters || [];
+
+        return {
+            /**
+             * @param {any} actual 
+             * @param {any} expected 
+             * @param {string} [additionalMessage] 
+             * @returns {{pass:boolean,message?:string}}
+             */
+            compare: function(actual, expected, additionalMessage) {
+                var result = {
+                    pass: false,
+                    message: ''
+                };
+
+                // @ts-ignore
+                var diffBuilder = jasmine.DiffBuilder();
+
+                result.pass = util.equals(actual, expected, customEqualityTesters, diffBuilder);
+
+                // TODO: only set error message if test fails
+                var message = diffBuilder.getMessage();
+                if (additionalMessage) {
+                    var formattedAdditionalMessage = "'" + additionalMessage + "'";
+                    result.message = message + ', ' + formattedAdditionalMessage;
+                } else {
+                    result.message = message;
+                }
+
+                return result;
+            }
+        };
+    }
+};
+
+/**
+ * Gets the property or throws an error if the property is not found
+ * @param {string} property - The name of the property to get
+ * @returns {string} The value of the property
+ */
+global.KLF_TestUtils.getProperty = function(property) {
+    var value = gs.getProperty(property);
+    if (!value) {
+        throw new Error('Property ' + property + ' not found');
+    }
+    return value;
 };
 
 /**
@@ -126,6 +182,44 @@ global.KLF_TestUtils.RecordTracker.prototype = {
 global.KLF_TestUtils.prototype = {
 
     glideRecordUtils: new global.KLF_GlideRecordUtils(),
+
+    /** @type {Chance.Chance} */
+    // @ts-ignore
+    chance: global.KLF_TestChance,
+
+    /**
+     * Uses the chance library to generate a string 
+     * containing only letters
+     * @param {number} [length=10] - The length of the string to generate
+     * @returns {string}
+     */
+    getRandomAlphaNumericString: function(length) {
+        return this.chance.string({
+            length: length || 10,
+            pool: 'abcdefghijklmnopqrstuvwxyz'
+        });
+    },
+
+    /**
+     * Uses the chance library to generate a string that looks
+     * like a username
+     * @returns {string}
+     */
+    getRandomUsername: function() {
+        return this.chance.string({
+            length: 7,
+            pool: 'abcdefghijklmnopqrstuvwxyz'
+        });
+    },
+
+    /**
+     * Uses the chance library to generate a string that looks
+     * like a group name
+     * @returns {string}
+     */
+    getRandomGroupName: function() {
+        return 'KLF_TestGroup_' + this.getRandomUsername();
+    },
 
     /**
      * @param {GlideRecord} glideRecord
@@ -234,7 +328,7 @@ global.KLF_TestUtils.prototype = {
     },
 
     /**
-     * Creates a user with no roles or groups to simulate a common user
+     * Creates a user with the admin role
      * @returns {GlideRecord} The newly created sys_user record
      */
     createAdminUser: function() {
@@ -245,11 +339,37 @@ global.KLF_TestUtils.prototype = {
     },
 
     /**
+     * Returns the admin user sys_user record or creates it if it does not exist
+     * @returns {GlideRecord} The sys_user record of the admin user
+     */
+    getOrCreateAdminUser: function() {
+        var user = new GlideRecord('sys_user');
+        if (user.get('user_name', this.adminUsername)) {
+            return user;
+        } else {
+            return this.createAdminUser();
+        }
+    },
+
+    /**
+     * Sets the password for the given user
+     * @param {GlideRecord} user 
+     * @returns {string} The password that was set
+     */
+    setPasswordForUser: function(user) {
+        // @ts-ignore
+        var password = SNC.PasswordPolicyEvaluator.generateUserPassword(user.getValue('user_name'));
+        user.setDisplayValue('user_password', password);
+        user.update();
+        return password;
+    },
+
+    /**
      * Creates a user with no roles or groups to simulate a common user
      * @returns {GlideRecord} The newly created sys_user record
      */
     createCommonUser: function() {
-        var user = this.createUser(this.commonUsername);
+        var user = this.createUser(this.getRandomUsername());
         this.recordTracker.trackByGlideRecord(user);
         return user;
     },
@@ -260,8 +380,8 @@ global.KLF_TestUtils.prototype = {
      * @returns {{group:GlideRecord,user:GlideRecord,groupMember:GlideRecord}} The newly created sys_user_group and associated sys_user and sys_user_grmember records
      */
     createCommonGroup: function() {
-        var group = this.createGroup(this.commonGroupName);
-        var user = this.getOrCreateCommonUser();
+        var group = this.createGroup(this.getRandomGroupName());
+        var user = this.createUser(this.getRandomUsername());
         var groupMember = this.addUserToGroup(group, user);
         return {
             group: group,
@@ -536,30 +656,20 @@ global.KLF_TestUtils.prototype = {
         }
         return scope.getUniqueValue();
     }
-
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:05:57</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>82b7058897b86550b2e1f97e6253afa2</sys_id>
-        <sys_mod_count>68</sys_mod_count>
+        <sys_mod_count>83</sys_mod_count>
         <sys_name>KLF_TestUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_82b7058897b86550b2e1f97e6253afa2</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-08 08:02:51</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-09-28 00:10:43</sys_updated_on>
     </sys_script_include>
-    <sys_es_latest_script action="INSERT_OR_UPDATE">
-        <id>82b7058897b86550b2e1f97e6253afa2</id>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2024-09-03 19:11:02</sys_created_on>
-        <sys_id>dc2b5e274718121058ceeb02d16d4336</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-03 19:11:02</sys_updated_on>
-        <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
-    </sys_es_latest_script>
 </record_update>

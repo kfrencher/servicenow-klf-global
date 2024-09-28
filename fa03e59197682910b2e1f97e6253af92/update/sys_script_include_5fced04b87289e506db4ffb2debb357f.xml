@@ -13,10 +13,10 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     gs.setProperty('KLF_ScoperUtils.processed_records', '{}');
     gs.setProperty('KLF_ScoperUtils.metadata_map', '{}');
 
-    var SOURCE_SCOPE = 'x_53417_scoper_1';
-    var TARGET_SCOPE = 'x_usga2_scoper_2';
+    var SOURCE_SCOPE = global.KLF_TestUtils.getProperty('KLF_ScoperUtilsTest.source_scope');
+    var TARGET_SCOPE = global.KLF_TestUtils.getProperty('KLF_ScoperUtilsTest.target_scope');
     var SCOPER_SAVE_UI_ACTION_SYS_ID = 'cfb0718d47a0961058ceeb02d16d438d';
-    var SOURCE_TABLE_NAME = 'x_53417_scoper_1_scoper_task';
+    var SOURCE_TABLE_NAME = SOURCE_SCOPE + '_scoper_task';
     var SOURCE_ROLE_NAME = SOURCE_SCOPE + '.scoper';
     var TARGET_TABLE_NAME = TARGET_SCOPE + '_scoper_task';
     var TARGET_ROLE_NAME = TARGET_SCOPE + '.scoper';
@@ -75,13 +75,13 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
         describe('isProcessed()', function() {
             it('should return false if the record has not been processed', function() {
-                expect(scoper.isProcessed(gs.generateGUID())).toBe(false);
+                expect(scoper.isProcessed(gs.generateGUID())).toBe(false, 'Record should not be processed');
             });
 
             it('should return true if the record has been processed', function() {
                 var sourceSysId = gs.generateGUID();
                 scoper.markRecordAsCopied(sourceSysId, gs.generateGUID());
-                expect(scoper.isProcessed(sourceSysId)).toBe(true);
+                expect(scoper.isProcessed(sourceSysId)).toBe(true, 'Record should be processed');
             });
         });
 
@@ -93,12 +93,12 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 }
 
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 var target = new GlideRecord('sys_user_role');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe(TARGET_ROLE_NAME);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
+                    expect(target.getValue('name')).toBe(TARGET_ROLE_NAME, 'Role name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be correct');
                 } else {
                     fail('Target Role not found');
                 }
@@ -115,16 +115,16 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 }
 
                 var targetMetadata = scoper.copyMetadataBySysId(sourceSysId);
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 var target = new GlideRecord('sys_ui_action');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('action_name')).toBe('scoper_save');
-                    expect(target.getValue('table')).not.toBeFalsy();
-                    expect(target.getValue('table')).not.toContain(SOURCE_SCOPE);
-                    expect(target.getValue('script')).not.toBeFalsy();
-                    expect(target.getValue('script')).not.toContain(SOURCE_SCOPE);
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('action_name')).toBe('scoper_save', 'Action name should be correct');
+                    expect(target.getValue('table')).not.toBeFalsy(), 'Table should not be empty';
+                    expect(target.getValue('table')).not.toContain(SOURCE_SCOPE, 'Table should not contain source scope');
+                    expect(target.getValue('script')).not.toBeFalsy(), 'Script should not be empty';
+                    expect(target.getValue('script')).not.toContain(SOURCE_SCOPE, 'Script should not contain source scope');
                 } else {
                     fail('Target UI Action not found');
                 }
@@ -148,14 +148,14 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 }
 
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 // Check if the UI Action Visibility records were copied
                 var target = new GlideRecord('sys_ui_action_view');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.sys_ui_view.name.toString()).toBe('sp');
-                    expect(target.getValue('sys_ui_action')).toBe(scoper.metadataMap[SCOPER_SAVE_UI_ACTION_SYS_ID]);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
+                    expect(target.sys_ui_view.name.toString()).toBe('sp', 'View name should be Service Portal');
+                    expect(target.getValue('sys_ui_action')).toBe(scoper.metadataMap[SCOPER_SAVE_UI_ACTION_SYS_ID], 'UI Action should be Scoper Save');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
                 } else {
                     fail('Target UI Action Visibility not found');
                 }
@@ -170,15 +170,15 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 }
 
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 var target = new GlideRecord('sys_script_include');
                 if (target.get(targetMetadata.getUniqueValue())) {
                     var targetApiName = TARGET_SCOPE + '.ScopeHelper';
-                    expect(target.getValue('api_name')).toBe(targetApiName);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('script')).not.toContain(SOURCE_SCOPE);
-                    expect(target.getValue('script')).not.toBeFalsy();
+                    expect(target.getValue('api_name')).toBe(targetApiName, 'API Name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('script')).not.toContain(SOURCE_SCOPE, 'Script should not contain source scope');
+                    expect(target.getValue('script')).not.toBeFalsy(), 'Script should not be empty';
                 } else {
                     fail('Target Script Include not found');
                 }
@@ -196,18 +196,18 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 }
 
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 var target = new GlideRecord('sys_script');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe('klf_br_scoper');
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('filter_condition')).toBe(source.getValue('filter_condition'));
+                    expect(target.getValue('name')).toBe('klf_br_scoper', 'Name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be correct');
+                    expect(target.getValue('filter_condition')).toBe(source.getValue('filter_condition'), 'Filter condition should be correct');
                     // Check if the table name is updated
                     // @ts-ignore
-                    expect(target.getValue('collection')).toBe(tableMap[SOURCE_TABLE_NAME]);
+                    expect(target.getValue('collection')).toBe(tableMap[SOURCE_TABLE_NAME], 'Table name should be correct');
                     // All references to the source scope should be updated to the target scope
-                    expect(target.getValue('script')).not.toContain(SOURCE_SCOPE);
+                    expect(target.getValue('script')).not.toContain(SOURCE_SCOPE, 'Script should be correct');
                 } else {
                     fail('Target Business Rule not found');
                 }
@@ -230,16 +230,16 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
                 // Copy the column
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 // Check if the column exists in the target table
                 var target = new GlideRecord('sys_dictionary');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME);
-                    expect(target.getValue('element')).toBe(columnName);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('column_label')).toBe('Description');
-                    expect(target.getValue('internal_type')).toBe(columnType);
+                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME, 'Table name should be correct');
+                    expect(target.getValue('element')).toBe(columnName, 'Column name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('column_label')).toBe('Description', 'Column label should be Description');
+                    expect(target.getValue('internal_type')).toBe(columnType, 'Column type should be correct');
                 } else {
                     fail('Target Column not found');
                 }
@@ -268,8 +268,8 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
                 var target = new GlideRecord('sys_ui_view');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe('scoper');
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
+                    expect(target.getValue('name')).toBe('scoper', 'Name should be scoper');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
                 } else {
                     fail('Target UI View not found');
                 }
@@ -307,14 +307,14 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
                 // Copy the UI List
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 // Check if the UI List was copied
                 var target = new GlideRecord('sys_ui_list');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('view')).toBe(testView.getUniqueValue());
+                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME, 'Table name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('view')).toBe(testView.getUniqueValue(), 'View should be correct');
                 } else {
                     fail('Target UI List not found');
                 }
@@ -336,7 +336,7 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                     });
                 }
 
-                expect(targetElements).toEqual(sourceElements);
+                expect(targetElements).toBeEqual(sourceElements, 'Target UI List Elements should be the same as source UI List Elements');
 
             });
         });
@@ -374,14 +374,14 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
                 // Copy the UI Section
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 // Check if the UI Section was copied
                 var target = new GlideRecord('sys_ui_section');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('view')).toBe(testView.getUniqueValue());
+                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME, 'Table name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('view')).toBe(testView.getUniqueValue(), 'View should be correct');
                 } else {
                     fail('Target UI Section not found');
                 }
@@ -404,7 +404,7 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                     });
                 }
 
-                expect(targetElements).toEqual(sourceElements);
+                expect(targetElements).toBeEqual(sourceElements, 'Target UI Elements should be the same as source UI Elements');
             });
         });
 
@@ -422,60 +422,58 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 }
 
                 // Get the related UI Form Sections ordered ascending by position
-                var sourceSectionGr = new GlideRecord('sys_ui_form_section');
-                sourceSectionGr.orderBy('position');
-                sourceSectionGr.addQuery('sys_ui_form', source.getUniqueValue());
-                sourceSectionGr.query();
-                if (!sourceSectionGr.hasNext()) {
+                var sourceFormSectionGr = new GlideRecord('sys_ui_form_section');
+                sourceFormSectionGr.orderBy('position');
+                sourceFormSectionGr.addQuery('sys_ui_form', source.getUniqueValue());
+                sourceFormSectionGr.query();
+                if (!sourceFormSectionGr.hasNext()) {
                     fail('Source UI Sections not found');
                 }
-                var sourceSections = [];
-                while (sourceSectionGr.next()) {
-                    sourceSections.push({
-                        section: sourceSectionGr.getValue('sys_ui_section'),
-                        position: sourceSectionGr.getValue('position')
+                var sourceFormSections = [];
+                while (sourceFormSectionGr.next()) {
+                    sourceFormSections.push({
+                        section: sourceFormSectionGr.getValue('sys_ui_section'),
+                        position: sourceFormSectionGr.getValue('position')
                     });
                 }
 
                 // Copy the UI Form
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata should not be the same as source metadata');
 
                 // Check if the UI Form was copied
                 var target = new GlideRecord('sys_ui_form');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('view')).toBe(testView.getUniqueValue());
+                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME, 'Table name should be correct');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('view')).toBe(testView.getUniqueValue(), 'View should be correct');
                 } else {
                     fail('Target UI Form not found');
                 }
 
                 // Check if the related UI Form Sections were also copied
-                var targetSectionGr = new GlideRecord('sys_ui_form_section');
-                targetSectionGr.orderBy('position');
-                targetSectionGr.addQuery('sys_ui_form', target.getUniqueValue());
-                targetSectionGr.query();
-                if (!targetSectionGr.hasNext()) {
+                var targetFormSectionGr = new GlideRecord('sys_ui_form_section');
+                targetFormSectionGr.orderBy('position');
+                targetFormSectionGr.addQuery('sys_ui_form', target.getUniqueValue());
+                targetFormSectionGr.query();
+                if (!targetFormSectionGr.hasNext()) {
                     fail('Target UI Form Sections not found');
                 }
 
-                var targetSections = [];
-                while (targetSectionGr.next()) {
-                    targetSections.push({
-                        section: targetSectionGr.getValue('sys_ui_section'),
-                        position: targetSectionGr.getValue('position')
+                var targetFormSections = [];
+                while (targetFormSectionGr.next()) {
+                    targetFormSections.push({
+                        section: targetFormSectionGr.getValue('sys_ui_section'),
+                        position: targetFormSectionGr.getValue('position')
                     });
                 }
 
-                expect(targetSections.length).toEqual(2);
+                expect(targetFormSections.length).toBe(2, 'Number of sections should be correct');
                 // The target section sys_id should be mapped to the source section sys_id
-                gs.info(JSON.stringify(scoper.metadataMap, null, 4));
-                gs.info(JSON.stringify(sourceSections, null, 4));
-                expect(targetSections[0].section).toEqual(scoper.metadataMap[sourceSections[0].section]);
-                expect(targetSections[0].position).toEqual(sourceSections[0].position);
-                expect(targetSections[1].section).toEqual(scoper.metadataMap[sourceSections[1].section]);
-                expect(targetSections[1].position).toEqual(sourceSections[1].position);
+                expect(targetFormSections[0].section).toBe(scoper.metadataMap[sourceFormSections[0].section], 'First section should be mapped');
+                expect(targetFormSections[0].position).toBe(sourceFormSections[0].position, 'First section position');
+                expect(targetFormSections[1].section).toBe(scoper.metadataMap[sourceFormSections[1].section], 'Second section should be mapped');
+                expect(targetFormSections[1].position).toBe(sourceFormSections[1].position, 'Second section position should be correct');
             });
         });
 
@@ -512,14 +510,14 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
                 // Copy the UI Related List
                 var targetMetadata = scoper.copyMetadataBySysId(source.getUniqueValue());
-                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue());
+                expect(targetMetadata.getUniqueValue()).not.toBe(source.getUniqueValue(), 'Target metadata sys_id should not be the same as source sys_id');
 
                 // Check if the UI Related List was copied
                 var target = new GlideRecord('sys_ui_related_list');
                 if (target.get(targetMetadata.getUniqueValue())) {
-                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME);
-                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID);
-                    expect(target.getValue('view')).toBe(testView.getUniqueValue());
+                    expect(target.getValue('name')).toBe(TARGET_TABLE_NAME, 'Target table name');
+                    expect(target.getValue('sys_scope')).toBe(TARGET_SCOPE_SYS_ID, 'Scope should be target scope');
+                    expect(target.getValue('view')).toBe(testView.getUniqueValue(), 'View should be correct');
                 } else {
                     fail('Target UI Related List not found');
                 }
@@ -543,14 +541,14 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                     });
                 }
 
-                expect(targetEntries.length).toBe(sourceEntries.length);
+                expect(targetEntries.length).toBe(sourceEntries.length, 'Number of entries');
 
                 // This is a standard related list
                 var targetEntry1 = targetEntries[0];
                 // This related_list field value looks something like x_53417_scoper_1_scoper_task.parent
                 // so the table name should be updated
-                expect(targetEntry1.related_list).not.toContain(SOURCE_SCOPE);
-                expect(targetEntry1.related_list).toContain(TARGET_SCOPE);
+                expect(targetEntry1.related_list).not.toContain(SOURCE_SCOPE, 'Related list should not contain source scope');
+                expect(targetEntry1.related_list).toContain(TARGET_SCOPE, 'Related list should contain target scope');
 
                 // This is a defined Relationship (sys_relationship)
                 // This related_list field value looks something like REL:d559ab8b87a89290e2041f8d3fbb35c4
@@ -559,7 +557,7 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 var sourceEntry2 = sourceEntries[1];
                 var sourceRelationshipSysId = sourceEntry2.related_list.split('REL:')[1];
                 var targetRelationshipSysId = scoper.metadataMap[sourceRelationshipSysId];
-                expect(targetEntry2.related_list).toContain(targetRelationshipSysId);
+                expect(targetEntry2.related_list).toContain(targetRelationshipSysId, 'Relationship sys_id should contain target sys_id');
             });
         });
     });
@@ -569,7 +567,7 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_created_on>2024-09-14 07:06:34</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>5fced04b87289e506db4ffb2debb357f</sys_id>
-        <sys_mod_count>76</sys_mod_count>
+        <sys_mod_count>101</sys_mod_count>
         <sys_name>KLF_ScoperUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -577,6 +575,6 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5fced04b87289e506db4ffb2debb357f</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-17 14:11:24</sys_updated_on>
+        <sys_updated_on>2024-09-28 03:45:04</sys_updated_on>
     </sys_script_include>
 </record_update>
