@@ -7,14 +7,9 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_RecordSyncTest</name>
-        <script><![CDATA[var testScopeName = 'x_53417_test_scope';
-
-function KLF_RecordSyncTest() {
+        <script><![CDATA[function KLF_RecordSyncTest() {
+    var testScopeName = 'x_53417_test_scope';
     var testTableName = gs.getProperty('KLF_RecordSyncTest.testTableName');
-    var remoteInstanceUrl = gs.getProperty('KLF_RecordSyncTest.remoteInstanceUrl');
-    var remoteAdminUser = gs.getProperty('KLF_RecordSyncTest.remoteAdminUsername');
-
-    var remoteAdminPassword = gs.getProperty('KLF_RecordSyncTest.remoteAdminPassword');
 
     function init() {
         var testUtils = new global.KLF_TestUtils();
@@ -116,14 +111,19 @@ function KLF_RecordSyncTest() {
             expect(gr.get(testRecordSysId)).toBeFalse('Should not have record');
 
             // Send the record to the remote instance
-            spyOn(recordSync, 'unloadRecordWithRelatedRecords').and.returnValue(unloadedResult);
+            var recordSyncSpy = spyOn(global.KLF_RecordSync.prototype, 'unloadRecordWithRelatedRecords');
+            recordSyncSpy.and.returnValue(unloadedResult);
             var response = recordSync.syncRecord(gr);
+            recordSyncSpy.and.callThrough();
 
             expect(response.success).toBeTrue('Should have synced the record');
 
             // Record should exist now
             gr = new GlideRecord(testTableName);
-            expect(gr.get(testRecordSysId)).toBeTrue('Should have record');
+            if (!gr.get(testRecordSysId)) {
+                fail('Record should exist');
+                return;
+            }
 
             // Get all the related records
             var result = recordSync.unloadRecordWithRelatedRecords(gr);
@@ -338,7 +338,7 @@ function KLF_RecordSyncTest() {
             var recordSync = testFixtures.recordSync;
             recordSync.syncAllDataInScope(testScopeName, [testScopeName + '_request']);
 
-            // Only tasks should be synced
+            // All tasks should be synced because they aren't in the excluded tables list
             var taskManifest = new global.KLF_RecordSync.Manifest();
             tasks.forEach(function(task) {
                 taskManifest.addRecordByGlideRecord(task);
@@ -350,12 +350,14 @@ function KLF_RecordSyncTest() {
                 fail('Missing task manifest should not be null');
             }
 
+            // The requests should not be synced because they are in the excluded tables list
             var requestManifest = new global.KLF_RecordSync.Manifest();
             requests.forEach(function(request) {
                 requestManifest.addRecordByGlideRecord(request);
             });
             var missingRequestManifest = recordSync.validateSync(requestManifest);
             if (missingRequestManifest) {
+                gs.info(JSON.stringify(missingRequestManifest.toObj(), null, 4));
                 expect(missingRequestManifest.isEmpty()).toBeFalse('Should have missing excluded record');
             } else {
                 fail('Missing request manifest should not be null');
@@ -488,8 +490,44 @@ function KLF_RecordSyncTest() {
             xmlDocument2.parseXML(xml);
 
             expect(xmlDocument2.getNodeText('//assignment_group')).toBe('group1', 'Should have mapped assignment group');
-            expect(xmlDocument2.getNodeText('//group_list')).toContain('group1', 'Should have mapped group list');
-            expect(xmlDocument2.getNodeText('//group_list')).toContain('group2', 'Should have mapped group list');
+            expect(xmlDocument2.getNodeText('//group_list')).toContain('group1', 'Should have mapped group1');
+            expect(xmlDocument2.getNodeText('//group_list')).toContain('group2', 'Should have mapped group2');
+        });
+
+        it('should use user mapping if provided', function() {
+            // Create the test data
+            var user1 = testUtils.createUser(testUtils.getRandomUsername());
+            var user2 = testUtils.createUser(testUtils.getRandomUsername());
+            var task = new GlideRecord('task');
+            task.newRecord();
+            task.assigned_to = user1.getUniqueValue();
+            task.additional_assignee_list = [user1.getUniqueValue(), user2.getUniqueValue()].join(',');
+            task.update();
+            testUtils.recordTracker.trackByGlideRecord(task);
+
+            // Create a user mapping to use
+            /** @type {{[sysId:string]:string}} */
+            var mapping = {};
+            mapping[user1.getUniqueValue()] = 'user1';
+            mapping[user2.getUniqueValue()] = 'user2';
+            var recordSync = testFixtures.recordSync;
+            recordSync.userMapping = {
+                hasMissingUsers: false,
+                missingUsers: [],
+                success: true,
+                mapping: mapping
+            };
+
+            // Unload the record which should use the mapping
+            var document = recordSync.unloadRecord(task);
+
+            var xml = recordSync.documentToString(document);
+            var xmlDocument2 = new XMLDocument2();
+            xmlDocument2.parseXML(xml);
+
+            expect(xmlDocument2.getNodeText('//assigned_to')).toBe('user1', 'Should have mapped assigned to');
+            expect(xmlDocument2.getNodeText('//additional_assignee_list')).toContain('user1', 'Should have mapped user1');
+            expect(xmlDocument2.getNodeText('//additional_assignee_list')).toContain('user2', 'Should have mapped user2');
         });
     });
 
@@ -677,7 +715,7 @@ KLF_RecordSyncTest.clearRemoteTestData = function() {
         <sys_created_on>2024-08-22 06:47:48</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>14fdf96b4704921058ceeb02d16d43d2</sys_id>
-        <sys_mod_count>197</sys_mod_count>
+        <sys_mod_count>213</sys_mod_count>
         <sys_name>KLF_RecordSyncTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -685,6 +723,6 @@ KLF_RecordSyncTest.clearRemoteTestData = function() {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_14fdf96b4704921058ceeb02d16d43d2</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-28 03:00:49</sys_updated_on>
+        <sys_updated_on>2024-09-29 21:07:02</sys_updated_on>
     </sys_script_include>
 </record_update>

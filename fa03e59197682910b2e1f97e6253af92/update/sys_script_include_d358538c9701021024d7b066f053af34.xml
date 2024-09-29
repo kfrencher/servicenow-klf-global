@@ -140,7 +140,13 @@ global.KLF_RecordSync.Manifest.prototype = {
      */
     addRecordByGlideRecord: function(glideRecord) {
         if (!glideRecord.isValid()) {
-            throw 'Invalid GlideRecord with table name: ' + glideRecord.getTableName();
+            // I'm going to try to get the sys_id from the record. This
+            // might fail 
+            try {
+                throw 'Invalid GlideRecord with table name: ' + glideRecord.getTableName() + ' and sys_id: ' + glideRecord.getUniqueValue();
+            } catch (e) {
+                throw 'Invalid GlideRecord with table name: ' + glideRecord.getTableName();
+            }
         }
         this.addRecord(glideRecord.getTableName(), glideRecord.getUniqueValue());
     },
@@ -294,7 +300,7 @@ global.KLF_RecordSync.prototype = {
         var me = this;
         var missingManifest = new global.KLF_RecordSync.Manifest();
         tables.forEach(function(table) {
-            missingManifest.addManifest(me.syncTable(table));
+            missingManifest.addManifest(me.syncTable(table, '', excludedTables));
         });
         return missingManifest;
     },
@@ -317,7 +323,7 @@ global.KLF_RecordSync.prototype = {
     syncRecord: function(glideRecord) {
         var unloadDocument = this.createUnloadDocument();
         var unloadedData = this.unloadRecordWithRelatedRecords(glideRecord, unloadDocument);
-        return this.sendToRemoteInstance(this.documentToString(unloadDocument), unloadedData.manifest);
+        return this.sendToRemoteInstance(this.documentToString(unloadedData.document), unloadedData.manifest);
     },
 
     /**
@@ -330,9 +336,11 @@ global.KLF_RecordSync.prototype = {
      * This will return a manifest of records that were not inserted into the target instance
      * @param {string} tableName
      * @param {string} [encodedQueryString]
+     * @param {string[]} [excludedTables] This may be necessary if the table is extended and you want to exclude some of the
+     * tables that extend the base table
      * @returns {global.KLF_RecordSync.Manifest}
      */
-    syncTable: function(tableName, encodedQueryString) {
+    syncTable: function(tableName, encodedQueryString, excludedTables) {
         var me = this;
         var missingRecordsManifest = new global.KLF_RecordSync.Manifest();
 
@@ -356,10 +364,15 @@ global.KLF_RecordSync.prototype = {
                 source.orderBy('number');
             }
 
-            source.chooseWindow(start, start + chunkSize);
             if (encodedQueryString) {
                 source.addEncodedQuery(encodedQueryString);
             }
+
+            if (excludedTables && source.isValidField('sys_class_name')) {
+                source.addQuery('sys_class_name', 'NOT IN', excludedTables);
+            }
+
+            source.chooseWindow(start, start + chunkSize);
             source.query();
 
             var sourceSysIds = [];
@@ -447,6 +460,10 @@ global.KLF_RecordSync.prototype = {
             if (encodedQueryString) {
                 this.logInfo(encodedQueryString);
                 glideRecord.addEncodedQuery(encodedQueryString);
+            }
+            if (excludedTables && glideRecord.isValidField('sys_class_name')) {
+                this.logInfo('Excluding tables: ' + excludedTables);
+                glideRecord.addQuery('sys_class_name', 'NOT IN', excludedTables);
             }
             glideRecord.query();
             var totalRecords = glideRecord.getRowCount();
@@ -1007,7 +1024,7 @@ global.KLF_RecordSync.prototype = {
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>198</sys_mod_count>
+        <sys_mod_count>205</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -1015,6 +1032,6 @@ global.KLF_RecordSync.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-29 06:45:30</sys_updated_on>
+        <sys_updated_on>2024-09-29 21:05:45</sys_updated_on>
     </sys_script_include>
 </record_update>
