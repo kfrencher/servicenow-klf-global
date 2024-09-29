@@ -162,27 +162,102 @@ the target instance. The open API spec for the REST API is located at
 
 Example Usage:
 ```javascript
-/**
- * When initializing the KLF_RecordSync object you must pass in a configuration object
- * that contains connection information to the target instance.
- */
-var recordSync = new global.KLF_RecordSync({
-    username: 'admin',
-    password: gs.getProperty('KLF_RecordSync.user.password'), // Retrieve password from encoded password property
-    instanceUrl: 'https://dev188047.service-now.com',
-    chunkSize: 220
+(function() {
+    var scope = 'x_53417_demo';
+
+    /**
+     * When initializing the KLF_RecordSync object you must pass in a configuration object
+     * that contains connection information to the target instance.
+     */
+    function getConnectionConfig() {
+        var connectionConfig = {
+            instanceUrl: 'https://dev229555.service-now.com/',
+            username: 'admin',
+            password: gs.getProperty('KLF_RecordSync.password'),
+            chunkSize: 20
+        };
+        return connectionConfig;
+    }
+
+    /**
+     * Creates a user mapping for the target instance
+     * @returns {KLF_RecordSync_UserMapping}
+     */
+    function createUserMapping() {
+        var connectionConfig = getConnectionConfig();
+        var userUtils = new global.KLF_RecordSync_UserUtils(connectionConfig);
+        var users = userUtils.getUniqueUsersInScope(scope);
+        return userUtils.createUserMapping(users, scope);
+    }
+
+    /**
+     * Creates a group mapping for the target instance
+     * @returns {KLF_RecordSync_GroupMapping}
+     */
+    function createGroupMapping() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var groups = groupUtils.getUniqueGroupsInScope(scope);
+        return groupUtils.createGroupMapping(groups, scope);
+    }
+
+    /**
+     * Checks the target instance for notifications that need to be updated
+     */
+    function checkNotifications() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var notifications = groupUtils.getNotificationsUsingGroupsInScope(scope);
+        if (notifications.length > 0) {
+            gs.info('Check Notifications: ' + notifications.join('\n'));
+        } else {
+            gs.info('No notifications found');
+        }
+    }
+
+    /**
+     * Updates the notifications in the target instance
+     */
+    function updateNotifications() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var notifications = groupUtils.getNotificationsUsingGroupsInScope(scope);
+        groupUtils.updateRemoteNotifications(groupUtils.getGroupMapping(scope), notifications);
+    }
+
+    function transferData() {
+        var connectionConfig = getConnectionConfig();
+        var userMapping = new global.KLF_RecordSync_UserUtils(connectionConfig).getUserMapping(scope);
+        var groupMapping = new global.KLF_RecordSync_GroupUtils(connectionConfig).getGroupMapping(scope);
+        var recordSync = new global.KLF_RecordSync(connectionConfig, userMapping, groupMapping);
+
+        // Example of syncing all the data in a scope
+        // This will find all tables in the x_53417_demo scope and sync all the data in those tables
+        recordSync.syncAllDataInScope('x_53417_demo');
+
+        // Example of including approvals that are associated with the scope
+        // This shows that you can also sync data that is outside of the scope as sysapproval_approver records
+        // are in the global scope
+        var demoApproval = new GlideRecord('sysapproval_approver');
+        demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
+        recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
+    }
+
+    // Checks to see if there are any notifications that need to be updated
+    checkNotifications();
+
+    // Creates the user mapping. This is necessary to map the users in the source instance to the users in the target instance
+    createUserMapping();
+
+    // Creates the group mapping. This is necessary to map the groups in the source instance to the groups in the target instance
+    createGroupMapping();
+
+    // Transfers the data from the source instance to the target instance
+    transferData();
+
+    // Updates the notifications in the target instance. This is necessary for notifications that directly reference groups
+    updateNotifications();
 });
-
-// Example of syncing all the data in a scope
-// This will find all tables in the x_53417_demo scope and sync all the data in those tables
-recordSync.syncAllDataInScope('x_53417_demo');
-
-// Example of including approvals that are associated with the scope
-// This shows that you can also sync data that is outside of the scope as sysapproval_approver records
-// are in the global scope
-var demoApproval = new GlideRecord('sysapproval_approver');
-demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
-recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
 ```
 
 #### KLF_RecordSync_UserUtils
