@@ -7,7 +7,13 @@
         <client_callable>false</client_callable>
         <description/>
         <name>KLF_RecordSync</name>
-        <script><![CDATA[//@ts-ignore
+        <script><![CDATA[/**
+ * Possible enhancements:
+ * - Add the ability to resume an export. Would need the ability to track where you are in an export
+ * - Maybe sort the tables in order and keep track of when a table is completed
+ * - Might even need to track where you are in the table. Maybe by sorting by created date
+ */
+//@ts-ignore
 var global = global || {};
 
 /**
@@ -37,6 +43,7 @@ var global = global || {};
  * @class KLF_RecordSync
  * @param {KLF_RecordSyncConnectionConfig} connectionConfig
  * @param {KLF_RecordSync_GroupMapping?} [groupMapping]
+ * @param {KLF_RecordSync_UserMapping?} [userMapping]
  * @example
  * var recordSync = new global.KLF_RecordSync({
  *     username: 'admin',
@@ -55,9 +62,10 @@ var global = global || {};
  * demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
  * recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
  */
-global.KLF_RecordSync = function(connectionConfig, groupMapping) {
+global.KLF_RecordSync = function(connectionConfig, groupMapping, userMapping) {
     this.connectionConfig = connectionConfig;
     this.groupMapping = groupMapping;
+    this.userMapping = userMapping;
 };
 
 /**
@@ -571,39 +579,82 @@ global.KLF_RecordSync.prototype = {
     },
 
     /**
+     * Maps a reference field using the provided mapping
+     * @param {GlideRecord} glideRecord
+     * @param {string} fieldName 
+     * @param {{[key: string]: string}} mapping
+     */
+    mapReferenceField: function(glideRecord, fieldName, mapping) {
+        var value = mapping[glideRecord.getValue(fieldName)] ||
+            glideRecord.getValue(fieldName);
+        glideRecord.setValue(fieldName, value);
+    },
+
+    /**
+     * Maps a list field using the provided mapping
+     * @param {GlideRecord} glideRecord
+     * @param {string} fieldName 
+     * @param {{[key: string]: string}} mapping
+     */
+    mapListField: function(glideRecord, fieldName, mapping) {
+        var value = glideRecord.getValue(fieldName);
+        if (!value) {
+            return;
+        }
+        var groupSysIds = value.split(',');
+        var mappedSysIds = groupSysIds.map(function(sysId) {
+            return mapping[sysId] || sysId;
+        });
+        glideRecord.setValue(fieldName, mappedSysIds.join(','));
+    },
+
+    /**
+     * Uses the user mapping to map the users in the record to the users in the target instance
+     * @param {GlideRecord} glideRecord 
+     */
+    mapUsers: function(glideRecord) {
+        var me = this;
+
+        if (!me.userMapping) {
+            return;
+        }
+
+        var mapping = me.userMapping.mapping;
+
+        // Need to find all the fields that are user references
+        var elements = new global.ArrayUtil().convertArray(glideRecord.getElements());
+        elements.forEach(function(element) {
+            var elementDescriptor = element.getED();
+            if (elementDescriptor) {
+                var internalType = elementDescriptor.getInternalType();
+                var table;
+                if (internalType == 'reference') {
+                    table = elementDescriptor.getReference();
+                    if (table == 'sys_user') {
+                        me.mapReferenceField(glideRecord, element.getName(), mapping);
+                    }
+                } else if (internalType == 'glide_list') {
+                    table = elementDescriptor.getReference();
+                    if (table == 'sys_user') {
+                        me.mapListField(glideRecord, element.getName(), mapping);
+                    }
+                }
+            }
+        });
+    },
+
+    /**
      * Uses the group mapping to map the groups in the record to the groups in the target instance
      * @param {GlideRecord} glideRecord 
      */
     mapGroups: function(glideRecord) {
-        /**
-         * @param {string} fieldName 
-         */
-        function mapReferenceField(fieldName) {
-            var value = mapping[glideRecord.getValue(fieldName)] ||
-                glideRecord.getValue(fieldName);
-            glideRecord.setValue(fieldName, value);
-        }
+        var me = this;
 
-        /**
-         * @param {string} fieldName 
-         */
-        function mapListField(fieldName) {
-            var value = glideRecord.getValue(fieldName);
-            if (!value) {
-                return;
-            }
-            var groupSysIds = value.split(',');
-            var mappedSysIds = groupSysIds.map(function(sysId) {
-                return mapping[sysId] || sysId;
-            });
-            glideRecord.setValue(fieldName, mappedSysIds.join(','));
-        }
-
-        if (!this.groupMapping) {
+        if (!me.groupMapping) {
             return;
         }
 
-        var mapping = this.groupMapping.mapping;
+        var mapping = me.groupMapping.mapping;
 
         // Need to find all the fields that are group references
         var elements = new global.ArrayUtil().convertArray(glideRecord.getElements());
@@ -615,12 +666,12 @@ global.KLF_RecordSync.prototype = {
                 if (internalType == 'reference') {
                     table = elementDescriptor.getReference();
                     if (table == 'sys_user_group') {
-                        mapReferenceField(element.getName());
+                        me.mapReferenceField(glideRecord, element.getName(), mapping);
                     }
                 } else if (internalType == 'glide_list') {
                     table = elementDescriptor.getReference();
                     if (table == 'sys_user_group') {
-                        mapListField(element.getName());
+                        me.mapListField(glideRecord, element.getName(), mapping);
                     }
                 }
             }
@@ -643,6 +694,9 @@ global.KLF_RecordSync.prototype = {
         // This will map the groups in the record to the groups in the target instance
         // if a group mapping is provided in the constructor
         this.mapGroups(glideRecord);
+
+        // This will map the users in the record to the users in the target instance
+        this.mapUsers(glideRecord);
 
         // @ts-ignore
         var _document = document || global.GlideXMLUtil.newDocument('unload');
@@ -850,13 +904,110 @@ global.KLF_RecordSync.prototype = {
         return numberColumn.next() && Boolean(numberColumn.active);
     }
 
-};]]></script>
+};
+
+(function() {
+    var scope = 'x_53417_demo';
+
+    /**
+     * When initializing the KLF_RecordSync object you must pass in a configuration object
+     * that contains connection information to the target instance.
+     */
+    function getConnectionConfig() {
+        var connectionConfig = {
+            instanceUrl: 'https://dev229555.service-now.com/',
+            username: 'admin',
+            password: gs.getProperty('KLF_RecordSync.password'),
+            chunkSize: 20
+        };
+        return connectionConfig;
+    }
+
+    /**
+     * Creates a user mapping for the target instance
+     * @returns {KLF_RecordSync_UserMapping}
+     */
+    function createUserMapping() {
+        var connectionConfig = getConnectionConfig();
+        var userUtils = new global.KLF_RecordSync_UserUtils(connectionConfig);
+        var users = userUtils.getUniqueUsersInScope(scope);
+        return userUtils.createUserMapping(users, scope);
+    }
+
+    /**
+     * Creates a group mapping for the target instance
+     * @returns {KLF_RecordSync_GroupMapping}
+     */
+    function createGroupMapping() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var groups = groupUtils.getUniqueGroupsInScope(scope);
+        return groupUtils.createGroupMapping(groups, scope);
+    }
+
+    /**
+     * Checks the target instance for notifications that need to be updated
+     */
+    function checkNotifications() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var notifications = groupUtils.getNotificationsUsingGroupsInScope(scope);
+        if (notifications.length > 0) {
+            gs.info('Check Notifications: ' + notifications.join('\n'));
+        } else {
+            gs.info('No notifications found');
+        }
+    }
+
+    /**
+     * Updates the notifications in the target instance
+     */
+    function updateNotifications() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var notifications = groupUtils.getNotificationsUsingGroupsInScope(scope);
+        groupUtils.updateRemoteNotifications(groupUtils.getGroupMapping(scope), notifications);
+    }
+
+    function transferData() {
+        var connectionConfig = getConnectionConfig();
+        var userMapping = new global.KLF_RecordSync_UserUtils(connectionConfig).getUserMapping(scope);
+        var groupMapping = new global.KLF_RecordSync_GroupUtils(connectionConfig).getGroupMapping(scope);
+        var recordSync = new global.KLF_RecordSync(connectionConfig, userMapping, groupMapping);
+
+        // Example of syncing all the data in a scope
+        // This will find all tables in the x_53417_demo scope and sync all the data in those tables
+        recordSync.syncAllDataInScope('x_53417_demo');
+
+        // Example of including approvals that are associated with the scope
+        // This shows that you can also sync data that is outside of the scope as sysapproval_approver records
+        // are in the global scope
+        var demoApproval = new GlideRecord('sysapproval_approver');
+        demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
+        recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
+    }
+
+    // Checks to see if there are any notifications that need to be updated
+    checkNotifications();
+
+    // Creates the user mapping. This is necessary to map the users in the source instance to the users in the target instance
+    createUserMapping();
+
+    // Creates the group mapping. This is necessary to map the groups in the source instance to the groups in the target instance
+    createGroupMapping();
+
+    // Transfers the data from the source instance to the target instance
+    transferData();
+
+    // Updates the notifications in the target instance. This is necessary for notifications that directly reference groups
+    updateNotifications();
+});]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>194</sys_mod_count>
+        <sys_mod_count>198</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -864,6 +1015,6 @@ global.KLF_RecordSync.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-28 03:09:32</sys_updated_on>
+        <sys_updated_on>2024-09-29 06:45:30</sys_updated_on>
     </sys_script_include>
 </record_update>

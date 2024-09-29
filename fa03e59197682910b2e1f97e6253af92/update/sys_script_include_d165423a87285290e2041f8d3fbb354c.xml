@@ -9,6 +9,12 @@
         <name>KLF_ScoperUtils</name>
         <script><![CDATA[var global = global || {};
 /**
+ * TODO:
+ * - Add a way to find scripts that need to have "global" prefix to applied to objects. If the global
+ * prefix is not applied the object will not be referenced correctly when the script is scoped.
+ * - Log statements in script includes may need to be updated to use gs.info instead of gs.log because
+ * gs.log is not available in scoped scripts.
+ * 
  * Object used to copy application elements from one scope to another.
  * This is useful when you want to duplicate a scoped application to a new scope.
  * 
@@ -697,7 +703,7 @@ global.KLF_ScoperUtils.prototype = {
         <sys_created_on>2024-09-13 19:56:20</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d165423a87285290e2041f8d3fbb354c</sys_id>
-        <sys_mod_count>123</sys_mod_count>
+        <sys_mod_count>125</sys_mod_count>
         <sys_name>KLF_ScoperUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -705,6 +711,6 @@ global.KLF_ScoperUtils.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d165423a87285290e2041f8d3fbb354c</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-27 15:39:03</sys_updated_on>
+        <sys_updated_on>2024-09-29 19:06:21</sys_updated_on>
     </sys_script_include>
 </record_update>
