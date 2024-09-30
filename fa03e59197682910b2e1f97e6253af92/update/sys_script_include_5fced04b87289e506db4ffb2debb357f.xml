@@ -473,6 +473,8 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
                 expect(targetFormSections[0].section).toBe(scoper.metadataMap[sourceFormSections[0].section], 'First section should be mapped');
                 expect(targetFormSections[0].position).toBe(sourceFormSections[0].position, 'First section position');
                 expect(targetFormSections[1].section).toBe(scoper.metadataMap[sourceFormSections[1].section], 'Second section should be mapped');
+                gs.log('metadataMap:\n' + JSON.stringify(scoper.metadataMap, null, 2));
+                gs.log('processedRecords:\n' + scoper.getSysProperty('KLF_ScoperUtils.processed_records'));
                 expect(targetFormSections[1].position).toBe(sourceFormSections[1].position, 'Second section position should be correct');
             });
         });
@@ -567,7 +569,7 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_created_on>2024-09-14 07:06:34</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>5fced04b87289e506db4ffb2debb357f</sys_id>
-        <sys_mod_count>101</sys_mod_count>
+        <sys_mod_count>102</sys_mod_count>
         <sys_name>KLF_ScoperUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -575,6 +577,6 @@ function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5fced04b87289e506db4ffb2debb357f</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-28 03:45:04</sys_updated_on>
+        <sys_updated_on>2024-09-30 14:16:57</sys_updated_on>
     </sys_script_include>
 </record_update>
