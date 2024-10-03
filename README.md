@@ -10,6 +10,7 @@ These are script includes that execute in the `global` scope. They are used acro
 - [KLF_LdapGroupService](#KLF_LdapGroupService)
 - [KLF_MetricUtils](#KLF_MetricUtils)
 - [KLF_RecordSync](#KLF_RecordSync)
+- [KLF_ScoperUtils](#KLF_ScoperUtils)
 - [KLF_SPUtils](#KLF_SPUtils)
 - [KLF_TestUtils](#KLF_TestUtils)
 
@@ -276,6 +277,81 @@ With this utility you can:
 - Create a mapping of the groups in the local system to the groups in the remote system
 - Sync the groups in the local system with the remote system
 - Update the group sys_ids in notifications that are transferred to the remote system
+
+## KLF_ScoperUtils
+Object used to copy application elements from one scope to another.
+This is useful when you want to duplicate a scoped application to a new scope.
+Without this object copying the application elements by hand would be a manual and error prone process.
+
+TODO:
+- [ ] Add a way to find scripts that need to have "global" prefix to applied to objects. If the global
+prefix is not applied the object will not be referenced correctly when the script is scoped.
+- [ ] Log statements in script includes may need to be updated to use gs.info instead of gs.log because
+gs.log is not available in scoped scripts.
+
+When copying artifacts the scope name will be updated. Table names will be updated based on the provided table map. Sometimes artifacts will have references
+to other artifacts. When that is the case the metadata map will update the sys_ids for those references.
+
+The following ServiceNow objects can be copied:
+- Script Include (sys_script_include)
+- Business Rule (sys_script)
+- UI Action (sys_ui_action)
+- UI View (sys_ui_view)
+- UI Form (sys_ui_form)
+- UI Form Section (sys_ui_section)
+- UI List (sys_ui_list)
+- UI Related List (sys_ui_related_list)
+- Relationship (sys_relationship)
+- Column (sys_ui_column)
+- System Property (sys_properties)
+- Report (sys_report)
+- UI Page (sys_ui_page)
+- UI Policy (sys_ui_policy)
+- UI Script (sys_ui_script)
+- Client Script (sys_client_script)
+- REST Message (sys_rest_message)
+- Reponsive Dashboard
+
+Example usage:
+```javascript
+/** 
+ * Constructing the scoper object to copy metadata from
+ * x_my_source_scope to x_my_target_scope
+ * @type {global.KLF_ScoperUtils} 
+*/
+var scoper = new global.KLF_ScoperUtils({
+  sourceScope: 'x_my_source_scope',
+  targetScope: 'x_my_target_scope',
+  tableMap: {
+    'x_my_source_scope_task': 'x_my_target_scope_task',
+    'x_my_source_scope_request': 'x_my_target_scope_request'
+  }
+});
+
+// Copy a role from one scope to another
+var role = new GlideRecord('sys_user_role');
+role.get('name', 'x_my_source_scope_user');
+scoper.copyMetadataBySysId(role.getUniqueValue());
+
+// Copy a UI Action from one scope to another
+var uiAction = new GlideRecord('sys_ui_action');
+uiAction.get('name', 'x_my_source_scope_save');
+scoper.copyMetadataBySysId(uiAction.getUniqueValue());
+
+// Copy a Script Include from one scope to another
+var scriptInclude = new GlideRecord('sys_script_include');
+scriptInclude.get('name', 'x_my_source_scope_script');
+scoper.copyMetadataBySysId(scriptInclude.getUniqueValue());
+
+// Copy all the metadata from one scope to another
+// Get all the source scope's metadata and copy it to the target scope
+var metadataGr = new GlideRecord('sys_metadata');
+metadataGr.addQuery('sys_scope', scoper.sourceScopeSysId);
+metadataGr.query();
+while (metadataGr.next()) {
+    scoper.copyMetadataBySysId(metadataGr.getUniqueValue());
+}
+```
 
 ## KLF_SPUtils
 
