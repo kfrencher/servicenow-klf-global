@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_TestMockRESTAPIRequest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>KLF_TestMockRESTAPIRequest</name>
+        <script><![CDATA[var global = global || {};
+
+/**
+ * Creates a mock RESTAPIRequest object for testing purposes.
+ * @constructor
+ * @param {Object} config - Configuration object for the mock request.
+ * @param {string} [config.url='https://example.com/api/endpoint'] - The full URL of the request.
+ * @param {string} [config.uri='/api/endpoint'] - The URI part of the URL.
+ * @param {string} [config.queryString=''] - The query string part of the URL.
+ * @param {Object} [config.body] - The request body.
+ */
+global.KLF_TestMockRESTAPIRequest = function(config) {
+    config = config || {};
+    this.url = config.url || 'https://example.com/api/endpoint';
+    this.uri = config.uri || '/api/endpoint';
+    this.queryString = config.queryString || '';
+    this.body = config.body || new global.KLF_TestMockRESTAPIRequest.MockRESTAPIRequestBody();
+    /** @type {{[key:string]:string}} */
+    this.headers = {};
+    /** @type {{[key:string]:string}} */
+    this.queryParams = {};
+    this.parseQueryString();
+};
+
+/**
+ * Gets the value of the specified header.
+ * @param {string} headerName - The name of the header.
+ * @returns {string} The value of the header, or an empty string if not found.
+ */
+global.KLF_TestMockRESTAPIRequest.prototype.getHeader = function(headerName) {
+    return this.headers[headerName] || '';
+};
+
+/**
+ * Gets the list of supported response content types.
+ * @returns {string[]} An array of supported content types.
+ */
+global.KLF_TestMockRESTAPIRequest.prototype.getSupportedResponseContentTypes = function() {
+    return ['application/json', 'application/xml', 'text/plain'];
+};
+
+/**
+ * Gets the requested query category from the query parameters.
+ * @returns {string} The value of the 'sysparm_query_category' parameter, or an empty string if not found.
+ */
+global.KLF_TestMockRESTAPIRequest.prototype.getRequestedQueryCategory = function() {
+    return this.queryParams['sysparm_query_category'] || '';
+};
+
+/**
+ * Sets a header value.
+ * @param {string} headerName - The name of the header.
+ * @param {string} headerValue - The value of the header.
+ */
+global.KLF_TestMockRESTAPIRequest.prototype.setHeader = function(headerName, headerValue) {
+    this.headers[headerName] = headerValue;
+};
+
+/**
+ * Sets the query string and parses it.
+ * @param {string} queryString - The query string to set.
+ */
+global.KLF_TestMockRESTAPIRequest.prototype.setQueryString = function(queryString) {
+    this.queryString = queryString;
+    this.parseQueryString();
+};
+
+/**
+ * Parses the query string into key-value pairs.
+ */
+global.KLF_TestMockRESTAPIRequest.prototype.parseQueryString = function() {
+    this.queryParams = {};
+    if (this.queryString) {
+        var pairs = this.queryString.split('&');
+        for (var i = 0; i < pairs.length; i++) {
+            var pair = pairs[i].split('=');
+            var key = decodeURIComponent(pair[0]);
+            var value = decodeURIComponent(pair[1] || '');
+            this.queryParams[key] = value;
+        }
+    }
+};
+
+/**
+ * Creates a mock RESTAPIRequestBody object for testing purposes.
+ * @constructor
+ * @param {string} [dataString='{"key": "value"}'] - The JSON string representing the body data.
+ * @param {Object} [dataStream=null] - The data stream object (not implemented in this mock).
+ */
+global.KLF_TestMockRESTAPIRequest.MockRESTAPIRequestBody = function(dataString, dataStream) {
+    this.dataString = dataString || '{"key": "value"}';
+    this.dataStream = dataStream || null;
+    /** @type {any} */
+    this.jsonData = null;
+    this.currentIndex = 0;
+};
+
+/**
+ * Gets the next entry from the body data.
+ * @returns {Object|null} The next entry, or null if there are no more entries.
+ */
+global.KLF_TestMockRESTAPIRequest.MockRESTAPIRequestBody.prototype.nextEntry = function() {
+    if (!this.jsonData) {
+        this.jsonData = JSON.parse(this.dataString);
+    }
+
+    if (Array.isArray(this.jsonData)) {
+        if (this.currentIndex < this.jsonData.length) {
+            return this.jsonData[this.currentIndex++];
+        }
+    } else {
+        if (this.currentIndex === 0) {
+            this.currentIndex++;
+            return this.jsonData;
+        }
+    }
+
+    return null;
+};
+
+/**
+ * Checks if there are more entries in the body data.
+ * @returns {boolean} True if there are more entries, false otherwise.
+ */
+global.KLF_TestMockRESTAPIRequest.MockRESTAPIRequestBody.prototype.hasNext = function() {
+    if (!this.jsonData) {
+        this.jsonData = JSON.parse(this.dataString);
+    }
+
+    if (Array.isArray(this.jsonData)) {
+        return this.currentIndex < this.jsonData.length;
+    } else {
+        return this.currentIndex === 0;
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>kenneth.frencher</sys_created_by>
+        <sys_created_on>2024-10-15 13:07:03</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>469a958d2b5192100060ff42fe91bf58</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>KLF_TestMockRESTAPIRequest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_469a958d2b5192100060ff42fe91bf58</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2024-10-18 14:14:58</sys_updated_on>
+    </sys_script_include>
+</record_update>
