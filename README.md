@@ -288,6 +288,8 @@ TODO:
 prefix is not applied the object will not be referenced correctly when the script is scoped.
 - [ ] Log statements in script includes may need to be updated to use gs.info instead of gs.log because
 gs.log is not available in scoped scripts.
+- [ ] What happens when you try to copy data onto something that extends the task table. If you go from a u_task to an
+x_task table and the sys_id doesn't change then I assume you will get a unique key constraint.
 
 When copying artifacts the scope name will be updated. Table names will be updated based on the provided table map. Sometimes artifacts will have references
 to other artifacts. When that is the case the metadata map will update the sys_ids for those references.
