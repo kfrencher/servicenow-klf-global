@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_UserUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * When transferring data between ServiceNow instances users referenced in the source data set may not exist 
  * in the target instance. This utility contains functions to help manage the user data when transferring
@@ -261,13 +262,13 @@ global.KLF_RecordSync_UserUtils.prototype = {
      * Finds all the fields that reference sys_user in a scoped app. This attempts to find
      * all the user fields in the system. The user fields will include both reference fields and
      * list fields that reference sys_user
-     * @param {string} scopeSysId sys_scope.sys_id
+     * @param {string} scope sys_scope.scope
      * @returns {KLF_RecordSync_UserField[]}
      */
-    getUserFieldsInScope: function(scopeSysId) {
+    getUserFieldsInScope: function(scope) {
         var me = this;
         var dataTransferUtils = new global.KLF_DataTransferUtils();
-        var tables = dataTransferUtils.getTablesInScope(scopeSysId);
+        var tables = dataTransferUtils.getTablesInScope(scope);
         return tables.reduce(function(allFields, tableName) {
             return allFields.concat(me.getUserFieldsInTable(tableName));
         }, []);
@@ -546,25 +547,16 @@ global.KLF_RecordSync_UserUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-07-30 12:03:43</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>dfa92c90477b461058ceeb02d16d43a6</sys_id>
-        <sys_mod_count>17</sys_mod_count>
+        <sys_mod_count>19</sys_mod_count>
         <sys_name>KLF_RecordSync_UserUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dfa92c90477b461058ceeb02d16d43a6</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-26 23:27:49</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-04-29 21:13:29</sys_updated_on>
     </sys_script_include>
-    <sys_es_latest_script action="INSERT_OR_UPDATE">
-        <id>dfa92c90477b461058ceeb02d16d43a6</id>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2024-09-26 23:27:48</sys_created_on>
-        <sys_id>6572bd4347b4121058ceeb02d16d4382</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-09-26 23:27:48</sys_updated_on>
-        <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
-    </sys_es_latest_script>
 </record_update>

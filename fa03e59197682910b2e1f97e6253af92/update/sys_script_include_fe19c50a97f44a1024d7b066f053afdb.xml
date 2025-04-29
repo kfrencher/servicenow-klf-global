@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_DataTransferUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * This was an initial attempt to create a utility to export data from a scoped application. The core of it
  * uses updated sets to export data. While this method does work it creates a large amount of data in the source
@@ -50,10 +51,8 @@ var global = global || {};
  * incident.next();
  * var transferUtils = new global.KLF_DataTransferUtils();
  * transferUtils.enhancedAddToUpdateSet(incident);
- * @param {boolean} [isGlobal=false] true if the application is a global application
  */
-global.KLF_DataTransferUtils = function(isGlobal) {
-    this.isGlobal = isGlobal;
+global.KLF_DataTransferUtils = function() {
 };
 
 /**
@@ -61,10 +60,9 @@ global.KLF_DataTransferUtils = function(isGlobal) {
  * Logs the export summary to syslog with the source of KLF_DataTransferUtils
  * Refer to {@link global.KLF_DataTransferUtils.generateExportSummary}
  * @param {string} scopeName
- * @param {boolean} isGlobal
  */
-global.KLF_DataTransferUtils.logExportSummary = function(scopeName, isGlobal) {
-    var transferUtils = new global.KLF_DataTransferUtils(isGlobal);
+global.KLF_DataTransferUtils.logExportSummary = function(scopeName) {
+    var transferUtils = new global.KLF_DataTransferUtils();
     gs.log(JSON.stringify(transferUtils.generateExportSummary(scopeName), null, 4), 'KLF_DataTransferUtils');
 };
 
@@ -346,14 +344,17 @@ global.KLF_DataTransferUtils.prototype = {
 
         var tables = [];
         var tableDefinition = new GlideRecord("sys_db_object");
-        if (this.isGlobal) {
-            // if this is a global namespace then use the name because
-            // all global scopes will have a namespace of global, but the
-            // name will be different
-            tableDefinition.addQuery("sys_scope.name", scopeNamespace);
-        } else {
-            tableDefinition.addQuery("sys_scope.scope", scopeNamespace);
-        }
+		// Scope.Scope = scopeNamespace
+		// OR
+		// Scope.Name = scopeNamespace AND Scope.Scope = global
+        tableDefinition.addEncodedQuery([
+			'sys_scope.scope=' + scopeNamespace,
+			'^scriptable_table=false',
+			'^NQ', // This means New Query. It's a way of running two distinct filters
+			'sys_scope.name=' + scopeNamespace,
+			'^sys_scope.scope=global',
+			'^scriptable_table=false'
+		]);
         tableDefinition.addQuery("scriptable_table", false);
         tableDefinition.query();
         while (tableDefinition.next()) {
@@ -677,14 +678,16 @@ global.KLF_DataTransferUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-08 21:43:04</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>fe19c50a97f44a1024d7b066f053afdb</sys_id>
-        <sys_mod_count>85</sys_mod_count>
+        <sys_mod_count>88</sys_mod_count>
         <sys_name>KLF_DataTransferUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_fe19c50a97f44a1024d7b066f053afdb</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-02 23:00:16</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-04-29 21:00:23</sys_updated_on>
     </sys_script_include>
 </record_update>

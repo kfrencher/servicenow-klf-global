@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_GroupUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * When transferring data between ServiceNow instances groups referenced in the source data set may not exist 
  * in the target instance. This utility contains functions to help manage the group data when transferring
@@ -549,7 +550,14 @@ global.KLF_RecordSync_GroupUtils.prototype = {
     getNotificationsUsingGroupsInScope: function(scope) {
         var notification = new GlideRecord('sysevent_email_action');
         notification.addQuery('sys_scope.scope', scope);
-        notification.addNotNullQuery('recipient_groups');
+		notification.addEncodedQuery([
+			'sys_scope.scope=' + scopeNamespace,
+			'^recipient_groupsISNOTEMPTY',
+			'^NQ', // This means New Query. It's a way of running two distinct filters
+			'sys_scope.name=' + scopeNamespace,
+			'^sys_scope.scope=global',
+			'^recipient_groupsISNOTEMPTY'
+		]);
         notification.query();
         var notifications = [];
         while (notification.next()) {
@@ -614,14 +622,16 @@ global.KLF_RecordSync_GroupUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-06-01 16:45:24</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>2654359d97a6021024d7b066f053af84</sys_id>
-        <sys_mod_count>104</sys_mod_count>
+        <sys_mod_count>105</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_2654359d97a6021024d7b066f053af84</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-25 14:33:23</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-04-29 21:06:37</sys_updated_on>
     </sys_script_include>
 </record_update>
