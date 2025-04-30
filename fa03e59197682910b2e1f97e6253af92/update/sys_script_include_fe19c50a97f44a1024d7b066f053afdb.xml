@@ -354,7 +354,7 @@ global.KLF_DataTransferUtils.prototype = {
 			'sys_scope.name=' + scopeNamespace,
 			'^sys_scope.scope=global',
 			'^scriptable_table=false'
-		]);
+		].join(''));
         tableDefinition.addQuery("scriptable_table", false);
         tableDefinition.query();
         while (tableDefinition.next()) {
@@ -680,7 +680,7 @@ global.KLF_DataTransferUtils.prototype = {
         <sys_created_on>2024-03-08 21:43:04</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>fe19c50a97f44a1024d7b066f053afdb</sys_id>
-        <sys_mod_count>88</sys_mod_count>
+        <sys_mod_count>89</sys_mod_count>
         <sys_name>KLF_DataTransferUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -688,6 +688,6 @@ global.KLF_DataTransferUtils.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_fe19c50a97f44a1024d7b066f053afdb</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-04-29 21:00:23</sys_updated_on>
+        <sys_updated_on>2025-04-30 00:41:41</sys_updated_on>
     </sys_script_include>
 </record_update>
