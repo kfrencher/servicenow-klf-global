@@ -33,84 +33,121 @@ var global = global || {};
  *     }
  * });
  */
-global.KLF_MigratorUtils = function(config) {
+global.KLF_MigratorUtils = function (config) {
 	var _config = config || {};
-    var sourceScopeSysId = config.sourceScopeSysId || this.getScopeSysId(_config.sourceScope);
-    if (!sourceScopeSysId) {
-        throw 'Source scope not found';
-    }
+	var sourceScopeSysId = config.sourceScopeSysId || this.getScopeSysId(_config.sourceScope);
+	if (!sourceScopeSysId) {
+		throw 'Source scope not found';
+	}
 
-    var targetScopeSysId = config.targetScopeSysId || this.getScopeSysId(_config.targetScope);
-    if (!targetScopeSysId) {
-        throw 'Target scope not found';
-    }
+	var targetScopeSysId = config.targetScopeSysId || this.getScopeSysId(_config.targetScope);
+	if (!targetScopeSysId) {
+		throw 'Target scope not found';
+	}
 
-    this.sourceScope = _config.sourceScope;
-    this.sourceScopeSysId = sourceScopeSysId;
-    this.targetScope = _config.targetScope;
-    this.targetScopeSysId = targetScopeSysId;
-    this.tableMap = _config.tableMap || {};
+	this.sourceScope = _config.sourceScope;
+	this.sourceScopeSysId = sourceScopeSysId;
+	this.targetScope = _config.targetScope;
+	this.targetScopeSysId = targetScopeSysId;
+	this.tableMap = _config.tableMap || {};
 };
 
 global.KLF_MigratorUtils.prototype = {
-/**
-     * Updates the scope found in the string using the source scope.
-     * @param {string} string 
-     * @returns {string}
-     */
-    updateScope: function(string) {
-        var _string = string.replace(new RegExp(this.sourceScope, 'g'), this.targetScope);
-        return string.replace(new RegExp(this.sourceScopeSysId, 'g'), this.targetScopeSysId);
-    },
-
-    /**
-     * Updates the table names found in the string using the table map.
-     * 
-     * @param {string} string 
-     * @returns {string}
-     */
-    updateTableNames: function(string) {
-        if (!string) {
-            return string;
-        }
-
-        for (var sourceTableName in this.tableMap) {
-            var targetTableName = this.tableMap[sourceTableName];
-            string = string.replace(new RegExp(sourceTableName, 'g'), targetTableName);
-        }
-        return string;
-    },
-	
 	/**
-     * Retrieves the sys_id of a scope by its name.
-     * @param {string} scopeName - The name of the scope to look up.
-     * @returns {string|null} The sys_id of the scope if found, null otherwise.
-     */
-    getScopeSysId: function(scopeName) {
-        var scopeGr = new GlideRecord('sys_scope');
-        if (scopeGr.get('scope', scopeName)) {
-            return scopeGr.getUniqueValue();
-        }
-        // Could be global scope. Need to check by name
-        var globalScope = new GlideRecord('sys_scope');
-        globalScope.addQuery('name', scopeName);
-        globalScope.query();
-        if (globalScope.getRowCount() === 1) {
-            globalScope.next();
-            return globalScope.getUniqueValue();
-        } else if (globalScope.getRowCount() > 1) {
-            throw 'Ambiguous scope name. More than one scope found with the name: ' + scopeName;
-        }
+		 * Updates the scope found in the string using the source scope.
+		 * @param {string} string 
+		 * @returns {string}
+		 */
+	updateScope: function (string) {
+		var _string = string.replace(new RegExp(this.sourceScope, 'g'), this.targetScope);
+		return string.replace(new RegExp(this.sourceScopeSysId, 'g'), this.targetScopeSysId);
+	},
 
-        return null;
-    }
+	/**
+	 * Updates the table names found in the string using the table map.
+	 * 
+	 * @param {string} string 
+	 * @returns {string}
+	 */
+	updateTableNames: function (string) {
+		if (!string) {
+			return string;
+		}
+
+		for (var sourceTableName in this.tableMap) {
+			var targetTableName = this.tableMap[sourceTableName];
+			string = string.replace(new RegExp(sourceTableName, 'g'), targetTableName);
+		}
+		return string;
+	},
+
+	/**
+	 * Retrieves the sys_id of a scope by its name.
+	 * @param {string} scopeName - The name of the scope to look up.
+	 * @returns {string|null} The sys_id of the scope if found, null otherwise.
+	 */
+	getScopeSysId: function (scopeName) {
+		var scopeGr = new GlideRecord('sys_scope');
+		if (scopeGr.get('scope', scopeName)) {
+			return scopeGr.getUniqueValue();
+		}
+		// Could be global scope. Need to check by name
+		var globalScope = new GlideRecord('sys_scope');
+		globalScope.addQuery('name', scopeName);
+		globalScope.query();
+		if (globalScope.getRowCount() === 1) {
+			globalScope.next();
+			return globalScope.getUniqueValue();
+		} else if (globalScope.getRowCount() > 1) {
+			throw 'Ambiguous scope name. More than one scope found with the name: ' + scopeName;
+		}
+
+		return null;
+	},
+
+	/**
+	 * @param {global.KLF_RecordSync.Manifest} manifest
+	 */
+	updateManifest: function (manifest) {
+		var me = this;
+		var targetManifest = global.KLF_RecordSync.Manifest();
+
+		// The manifest will have the source table names
+		// I need to replace the source table names with the target table names
+
+		manifest.getTables().forEach(function (sourceTableName) {
+			var targetTableName = me.tableMap[sourceTableName];
+			targetManifest.addRecords(targetTableName, manifest.getSysIdsForTable(sourceTableName));
+		});
+
+		return targetManifest;
+	},
+
+	/**
+	 * @param {string} xml
+	 * @param {global.KLF_RecordSync.Manifest} [manifest]
+	 * @returns {xml: string, manifest?: global.KLF_RecordSync.Manifest}
+	 */
+	transformData: function (xml, manifest) {
+		var _xml = this.updateScope(xml);
+		_xml = this.updateTableNames(_xml);
+		var _manifest = manifest ? this.updateManifest(manifest) : undefined;
+
+		// This function is called when the record is sent to the target instance
+		// You can use this function to log the XML or do any other processing you need to do
+		gs.log('beforeTransfer XML: ' + _xml);
+		return {
+			xml: _xml,
+			manifest: _manifest
+		};
+	}
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2025-04-30 19:30:49</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>a61315288315e2103c9299e0deaad380</sys_id>
-        <sys_mod_count>7</sys_mod_count>
+        <sys_mod_count>13</sys_mod_count>
         <sys_name>KLF_MigratorUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -118,6 +155,6 @@ global.KLF_MigratorUtils.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_a61315288315e2103c9299e0deaad380</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-01 11:51:58</sys_updated_on>
+        <sys_updated_on>2025-05-01 20:04:41</sys_updated_on>
     </sys_script_include>
 </record_update>
