@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_fix">
+    <sys_script_fix action="INSERT_OR_UPDATE">
+        <before>false</before>
+        <description/>
+        <name>KLF Test Migration</name>
+        <record_for_rollback>false</record_for_rollback>
+        <script><![CDATA[(function() {
+    var sourceScope = 'KLF Test Global'; // The scope to sync data from
+    var scopeSysId = '34746a042bd5a2100060ff42fe91bf28'; // 
+
+    var targetScope = 'x_53417_klf_test'; // The scope to sync data from
+    var targetScopeSysId = '5374f750835da2103c9299e0deaad367'; // 
+
+    /**
+     * When initializing the KLF_RecordSync object you must pass in a configuration object
+     * that contains connection information to the target instance.
+     */
+    function getConnectionConfig() {
+        var connectionConfig = {
+            instanceUrl: 'https://dev229555.service-now.com/',
+            username: 'admin',
+            password: gs.getProperty('KLF_RecordSync.password'),
+            chunkSize: 20
+        };
+        return connectionConfig;
+    }
+
+    /**
+     * Creates a user mapping for the target instance
+     * @returns {KLF_RecordSync_UserMapping}
+     */
+    function createUserMapping() {
+        var connectionConfig = getConnectionConfig();
+        var userUtils = new global.KLF_RecordSync_UserUtils(connectionConfig);
+        var users = userUtils.getUniqueUsersInScope(sourceScope);
+        return userUtils.createUserMapping(users, sourceScope);
+    }
+
+    /**
+     * Creates a group mapping for the target instance
+     * @returns {KLF_RecordSync_GroupMapping}
+     */
+    function createGroupMapping() {
+        var connectionConfig = getConnectionConfig();
+        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+        var groups = groupUtils.getUniqueGroupsInScope(sourceScope);
+        return groupUtils.createGroupMapping(groups, sourceScope);
+    }
+
+    function transferData() {
+        var connectionConfig = getConnectionConfig();
+        var userMapping = new global.KLF_RecordSync_UserUtils(connectionConfig).getUserMapping(sourceScope);
+        var groupMapping = new global.KLF_RecordSync_GroupUtils(connectionConfig).getGroupMapping(sourceScope);
+        var recordSync = new global.KLF_RecordSync(connectionConfig, userMapping, groupMapping, function(xml, manifest) {
+            var _xml = xml;
+            var migratorUtils = new global.KLF_MigratorUtils({
+                sourceScope: sourceScope,
+                sourceScopeSysId: scopeSysId,
+                targetScope: targetScope,
+                targetScopeSysId: targetScopeSysId,
+                tableMap: {
+                    'u_klf_test_task': 'x_53417_klf_test_test_task'
+                }
+            });
+            _xml = migratorUtils.updateScope(xml);
+            _xml = migratorUtils.updateTableNames(_xml);
+
+            // This function is called when the record is sent to the target instance
+            // You can use this function to log the XML or do any other processing you need to do
+            gs.log('beforeTransfer XML: ' + _xml);
+            return {
+                xml: _xml,
+                manifest: manifest
+            };
+        });
+
+        var record = new GlideRecord('u_klf_test_task');
+        record.get('5a1116a42bd126100060ff42fe91bfde');
+        // Example of syncing all the data in a scope
+        // This will find all tables in the x_53417_demo scope and sync all the data in those tables
+        recordSync.syncRecord(record);
+    }
+
+    // Creates the user mapping. This is necessary to map the users in the source instance to the users in the target instance
+    // createUserMapping();
+
+    // Creates the group mapping. This is necessary to map the groups in the source instance to the groups in the target instance
+    // createGroupMapping();
+
+    // Transfers the data from the source instance to the target instance
+    transferData();
+})();]]></script>
+        <sys_class_name>sys_script_fix</sys_class_name>
+        <sys_created_by>kenneth.frencher</sys_created_by>
+        <sys_created_on>2025-04-30 21:01:38</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>994865ec33592e10504662989d5c7b20</sys_id>
+        <sys_mod_count>26</sys_mod_count>
+        <sys_name>KLF Test Migration</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_fix_994865ec33592e10504662989d5c7b20</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-05-01 12:43:32</sys_updated_on>
+        <unloadable>false</unloadable>
+    </sys_script_fix>
+</record_update>

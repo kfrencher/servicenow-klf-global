@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_MigratorUtils</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_MigratorUtils</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[//@ts-ignore
+var global = global || {};
+
+/**
+ * @typedef {Object} KLF_MigratorUtilsConfig
+ * @property {string} sourceScope - The scope of the source records.
+ * @property {string} [sourceScopeSysId] - The scope of the source records.
+ * @property {string} targetScope - The scope of the target records.
+ * @property {string} [targetScopeSysId] - The scope of the target records.
+ * @property {{[sourceTableName: string]: string}} [tableMap] - A map of source table names to target table names.
+ * @property {{[sourceMetadataSysId: string]: string}} [metadataMap] - A map of source metadata sys_ids to target metadata sys_ids. 
+ */
+
+/**
+ * @param {KLF_MigratorUtilsConfig} config 
+ * @example
+ * var scoper = new global.KLF_MigratorUtils({
+ *     sourceScope: 'x_53417_scoper_1',
+ *     targetScope: 'x_53417_scoper_2',
+ *     tableMap: {
+ *         'x_53417_scoper_1_scoper_task': 'x_53417_scoper_2_scoper_task'
+ *     }
+ * });
+ */
+global.KLF_MigratorUtils = function(config) {
+	var _config = config || {};
+    var sourceScopeSysId = config.sourceScopeSysId || this.getScopeSysId(_config.sourceScope);
+    if (!sourceScopeSysId) {
+        throw 'Source scope not found';
+    }
+
+    var targetScopeSysId = config.targetScopeSysId || this.getScopeSysId(_config.targetScope);
+    if (!targetScopeSysId) {
+        throw 'Target scope not found';
+    }
+
+    this.sourceScope = _config.sourceScope;
+    this.sourceScopeSysId = sourceScopeSysId;
+    this.targetScope = _config.targetScope;
+    this.targetScopeSysId = targetScopeSysId;
+    this.tableMap = _config.tableMap || {};
+};
+
+global.KLF_MigratorUtils.prototype = {
+/**
+     * Updates the scope found in the string using the source scope.
+     * @param {string} string 
+     * @returns {string}
+     */
+    updateScope: function(string) {
+        var _string = string.replace(new RegExp(this.sourceScope, 'g'), this.targetScope);
+        return string.replace(new RegExp(this.sourceScopeSysId, 'g'), this.targetScopeSysId);
+    },
+
+    /**
+     * Updates the table names found in the string using the table map.
+     * 
+     * @param {string} string 
+     * @returns {string}
+     */
+    updateTableNames: function(string) {
+        if (!string) {
+            return string;
+        }
+
+        for (var sourceTableName in this.tableMap) {
+            var targetTableName = this.tableMap[sourceTableName];
+            string = string.replace(new RegExp(sourceTableName, 'g'), targetTableName);
+        }
+        return string;
+    },
+	
+	/**
+     * Retrieves the sys_id of a scope by its name.
+     * @param {string} scopeName - The name of the scope to look up.
+     * @returns {string|null} The sys_id of the scope if found, null otherwise.
+     */
+    getScopeSysId: function(scopeName) {
+        var scopeGr = new GlideRecord('sys_scope');
+        if (scopeGr.get('scope', scopeName)) {
+            return scopeGr.getUniqueValue();
+        }
+        // Could be global scope. Need to check by name
+        var globalScope = new GlideRecord('sys_scope');
+        globalScope.addQuery('name', scopeName);
+        globalScope.query();
+        if (globalScope.getRowCount() === 1) {
+            globalScope.next();
+            return globalScope.getUniqueValue();
+        } else if (globalScope.getRowCount() > 1) {
+            throw 'Ambiguous scope name. More than one scope found with the name: ' + scopeName;
+        }
+
+        return null;
+    }
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-04-30 19:30:49</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
+        <sys_id>a61315288315e2103c9299e0deaad380</sys_id>
+        <sys_mod_count>7</sys_mod_count>
+        <sys_name>KLF_MigratorUtils</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_a61315288315e2103c9299e0deaad380</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-05-01 11:51:58</sys_updated_on>
+    </sys_script_include>
+</record_update>

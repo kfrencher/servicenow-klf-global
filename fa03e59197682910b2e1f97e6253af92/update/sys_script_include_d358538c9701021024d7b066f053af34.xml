@@ -6,7 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * Possible enhancements:
  * - Add the ability to resume an export. Would need the ability to track where you are in an export
@@ -44,6 +46,9 @@ var global = global || {};
  * @param {KLF_RecordSyncConnectionConfig} connectionConfig
  * @param {KLF_RecordSync_GroupMapping?} [groupMapping]
  * @param {KLF_RecordSync_UserMapping?} [userMapping]
+ * @param {(xml:string, manifest?:global.KLF_RecordSync.Manifest) => {xml:string, manifest?:global.KLF_RecordSync.Manifest}} [beforeTransfer] A function that is called 
+ * before the transfer is made. This is useful if you want to modify the XML before it is sent to the target instance
+ * 
  * @example
  * var recordSync = new global.KLF_RecordSync({
  *     username: 'admin',
@@ -62,10 +67,11 @@ var global = global || {};
  * demoApproval.addQuery('source_table', 'STARTSWITH', 'x_53417_demo');
  * recordSync.syncTable('sysapproval_approver', demoApproval.getEncodedQuery());
  */
-global.KLF_RecordSync = function(connectionConfig, groupMapping, userMapping) {
+global.KLF_RecordSync = function(connectionConfig, groupMapping, userMapping, beforeTransfer) {
     this.connectionConfig = connectionConfig;
     this.groupMapping = groupMapping;
     this.userMapping = userMapping;
+    this.beforeTransfer = beforeTransfer;
 };
 
 /**
@@ -822,15 +828,25 @@ global.KLF_RecordSync.prototype = {
      * 
      * @param {string} xml 
      * @param {global.KLF_RecordSync.Manifest} [manifest]
+     * before the request is sent. It can be used to modify the XML or manifest before sending it to the target instance
      * @returns {KLF_SendToRemoteInstanceResponse}
      */
     sendToRemoteInstance: function(xml, manifest) {
+        var _xml = xml;
+        var _manifest = manifest;
+
+        if (this.beforeTransfer) {
+            var result = this.beforeTransfer(xml, manifest);
+            _xml = result.xml;
+            _manifest = result.manifest;
+        }
+
         var request = this.createRestMessage();
         request.setHttpMethod('POST');
         request.setRequestHeader('Content-Type', 'application/xml');
         var endpoint = request.getEndpoint() + gs.getProperty('KLF_RecordSync.endpoint.import.path');
         request.setEndpoint(endpoint);
-        request.setRequestBody(xml);
+        request.setRequestBody(_xml);
         var response = request.execute();
         if (response.getStatusCode() != 200) {
             this.logError('Failed to load the record into the target instance');
@@ -845,11 +861,11 @@ global.KLF_RecordSync.prototype = {
 
         var payload = response.getBody();
 
-        if (manifest) {
+        if (_manifest) {
             return {
                 success: true,
                 payload: payload,
-                missingManifest: this.validateSync(manifest)
+                missingManifest: this.validateSync(_manifest)
             };
         } else {
             return {
@@ -1024,7 +1040,7 @@ global.KLF_RecordSync.prototype = {
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>205</sys_mod_count>
+        <sys_mod_count>208</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -1032,6 +1048,6 @@ global.KLF_RecordSync.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-29 21:05:45</sys_updated_on>
+        <sys_updated_on>2025-05-01 00:20:59</sys_updated_on>
     </sys_script_include>
 </record_update>
