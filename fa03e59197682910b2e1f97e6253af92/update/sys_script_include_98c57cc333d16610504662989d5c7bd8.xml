@@ -18,6 +18,8 @@
  * - table sys_db_object
  * - table sys_dictionary collection record
  * - sys_number entry if the table has automatic numbering
+ * - NOTE: This does not check sys_number_counter. sys_number_counter must be set to a higher value than the source table.
+ *   You must check this manually.
  * 
  * TABLE FIELDS:
  * - sys_dictionary entry for the field
@@ -25,6 +27,18 @@
  * - sys_choice entry for the field if it is a choice field
  * - sys_dictionary.attributes entry for the field
  * - sys_dictionary_override entry for the field
+ * 
+ * @example
+ * // Assign a local reference to the validator
+ * var validator = KLF_TableValidator.TableValidator; 
+ * 
+ * // Set to true to disable debug logging. You can set this to false to see greater detail.
+ * KLF_TableValidator.quiet = true; 
+ * 
+ * // Validate the table and column names between two tables. First argument is the source table, second argument is the target table.
+ * // This will validate the table has been scoped properly and log the results to the system log.
+ * // The log uses "KLF_TableValidator" as the source.
+ * validator.validateAndLogResults('u_klf_test_task', 'x_53417_klf_test_test_task');
  */
 
 /** 
@@ -48,7 +62,24 @@
  * Object to validate the table and column names between two tables.
  */
 var KLF_TableValidator = (function() {
+
+    var BULLET = '\u2022 ';
+    var CHECKMARK = '\u2713 ';
+    var XMARK = '\u2717 ';
+
     var FLDS = {
+        SYS_CHOICE: [
+            'dependent_value',
+            'element',
+            'hint',
+            'inactive',
+            'label',
+            'language',
+            'sequence',
+            'synonyms',
+            'value'
+        ],
+
         SYS_DB_OBJECT: [
             'access',
             'actions_access',
@@ -138,12 +169,10 @@ var KLF_TableValidator = (function() {
             'element',
             'mandatory',
             'mandatory_override',
-            'name',
             'read_only',
             'read_only_override',
             'reference_qual',
-            'reference_qual_override',
-            'sys_id'
+            'reference_qual_override'
         ],
 
         SYS_DOCUMENTATION: [
@@ -366,9 +395,9 @@ var KLF_TableValidator = (function() {
             errors = errors.concat(validateColumnDictionaryEntry(sourceTable, sourceDictionaryEntry, targetTable, targetDictionaryEntry));
 
             if (errors.length === 0) {
-                logDebug('\u{2713} "' + columnPair.sourceField.name + '" column configuration is valid');
+                logDebug(CHECKMARK + ' "' + columnPair.sourceField.name + '" column configuration is valid');
             } else {
-                logDebug('\u{2717} "' + columnPair.sourceField.name + '" column configuration is not valid');
+                logDebug(XMARK + ' "' + columnPair.sourceField.name + '" column configuration is not valid');
             }
 
             return errors;
@@ -409,12 +438,6 @@ var KLF_TableValidator = (function() {
         function validateChoices(sourceDictionaryEntry, targetDictionaryEntry) {
             var errors = [];
 
-            // Query sys_choice
-            // sys_choice.element = fieldName
-            // sys_choice.name = tableName
-
-            // Validate label, value, dependent_value, hint, sequence, inactive
-
             // Query source choices first
             var sourceChoices = [];
             var sourceChoiceGR = new GlideRecord('sys_choice');
@@ -423,6 +446,7 @@ var KLF_TableValidator = (function() {
             sourceChoiceGR.query();
             while (sourceChoiceGR.next()) {
                 sourceChoices.push({
+                    sysId: sourceChoiceGR.getUniqueValue(),
                     name: sourceChoiceGR.getValue('name'),
                     element: sourceChoiceGR.getValue('element'),
                     label: sourceChoiceGR.getValue('label'),
@@ -442,11 +466,24 @@ var KLF_TableValidator = (function() {
                 targetChoiceGR.addQuery('element', element);
                 targetChoiceGR.addQuery('label', sourceChoice.label);
                 targetChoiceGR.addQuery('value', sourceChoice.value);
-                targetChoiceGR.addQuery('sequence', sourceChoice.sequence);
-                targetChoiceGR.addQuery('inactive', sourceChoice.inactive);
                 targetChoiceGR.query();
                 if (!targetChoiceGR.next()) {
                     errors.push('Choice missing - ' + name + '.' + element + ': ' + sourceChoice.label + '[' + sourceChoice.value + ']');
+                    return;
+                }
+
+                var sourceChoiceGR = new GlideRecord('sys_choice');
+                if (!sourceChoiceGR.get(sourceChoice.sysId)) {
+                    throw 'Could not find source choice: ' + sourceChoice.sysId;
+                }
+
+                var recordErrors = validateGlideRecordFields(sourceChoiceGR, targetChoiceGR, FLDS.SYS_CHOICE);
+                if (recordErrors.length > 0) {
+                    var errorHeader = ('Choice mismatch - ' + sourceChoice.label + '[' + sourceChoice.value + ']');
+                    var subErrors = recordErrors.map(function(error) {
+                        return '  ' + error;
+                    }).join('\n');
+                    errors.push(errorHeader + '\n' + subErrors);
                 }
             });
 
@@ -629,15 +666,21 @@ var KLF_TableValidator = (function() {
                 }
             }, {});
 
+            var separator = '\n=======================================================================================================================================\n';
+
+            if (Object.keys(filteredResults).length === 0) {
+                return '\n\n' + report.title + '\n\n' + CHECKMARK + ' No errors found' + separator;
+            }
+
+
             var formattedResults = Object.keys(filteredResults).map(function(fieldOrTable) {
                 var results = filteredResults[fieldOrTable];
                 var formattedResults = results.map(function(result) {
-                    return '\u2022 ' + result;
+                    return BULLET + result;
                 });
                 return '\n' + fieldOrTable + '\n\n' + formattedResults.join('\n\n');
             });
 
-            var separator = '\n=======================================================================================================================================\n';
 
             formattedResults.unshift('\n\n' + report.title);
             formattedResults.push('');
@@ -671,9 +714,9 @@ var KLF_TableValidator = (function() {
 
 
             if (errors.length === 0) {
-                logInfo('\u{2713} Table columns match');
+                logInfo(CHECKMARK + ' All table columns exist in target table');
             } else {
-                logInfo('\u{2717} Table columns are missing');
+                logInfo(XMARK + ' Table columns are missing');
             }
 
             return errors;
@@ -849,19 +892,13 @@ var KLF_TableValidator = (function() {
         ColumnValidator: _KLF_ColumnValidator,
         TableValidator: _KLF_TableValidator
     };
-})();
-
-(function() {
-    var validator = KLF_TableValidator.TableValidator;
-    KLF_TableValidator.quiet = true; // Set to true to disable debug logging
-    validator.validateAndLogResults('u_klf_test_task', 'x_53417_klf_test_test_task');
 })();]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2025-05-08 11:45:07</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>98c57cc333d16610504662989d5c7bd8</sys_id>
-        <sys_mod_count>138</sys_mod_count>
+        <sys_mod_count>151</sys_mod_count>
         <sys_name>KLF_TableValidator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -869,6 +906,6 @@ var KLF_TableValidator = (function() {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_98c57cc333d16610504662989d5c7bd8</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-09 17:44:46</sys_updated_on>
+        <sys_updated_on>2025-05-09 19:20:05</sys_updated_on>
     </sys_script_include>
 </record_update>
