@@ -333,6 +333,58 @@ global.KLF_RecordSync.prototype = {
     },
 
     /**
+     * This is used to filter out the sys_ids that are already in the target instance
+     * It's primarily used to prevent sending unnecessary data to the target instance
+     * Refer to {@link global.KLF_RecordSync.syncTable} for an example of how this is used
+     * @param {string[]} sourceSysIds 
+     * @param {string} tableName 
+     * @returns {string[]?}
+     */
+    getSysIdsToInsert: function(sourceSysIds, tableName) {
+        // Query the remote instance using the REST table API for the records that are in the sysIds array
+        var request = this.createRestMessage();
+        request.setHttpMethod('GET');
+        var endpointPath = '/api/now/table/' + tableName;
+        var query = [
+            'sysparm_fields=sys_id',
+            'sysparm_query=sys_idIN' + encodeURIComponent(sourceSysIds.join(','))
+        ].join('&');
+        var endpoint = request.getEndpoint() + endpointPath + '?' + query;
+        request.setEndpoint(endpoint);
+        var response = request.execute();
+
+        if (response.getStatusCode() != 200) {
+            this.logError('Failed to get the records from the target instance');
+            this.logError('Received status code: ' + response.getStatusCode());
+            this.logError('Received body: ' + response.getBody());
+            return null;
+        }
+
+        /** @type {{result:[{sys_id:string}]}} */
+        var responseBody;
+        try {
+            responseBody = JSON.parse(response.getBody());
+        } catch (e) {
+            this.logError('Failed to parse the response from the target instance');
+            this.logError('Received status code: ' + response.getStatusCode());
+            this.logError('Received body: ' + response.getBody());
+            return null;
+        }
+
+        // The sys_ids in the response represent records that already exist in the target instance
+        // Subtract the sys_ids in the response from the sysIds array to get the sys_ids that do not exist in the target instance
+        // This will be the sys_ids that need to be inserted into the target instance
+        var targetSysIds = /** @type string[] */ ([]);
+        responseBody.result.forEach(function(record) {
+            targetSysIds.push(record.sys_id);
+        });
+
+        return sourceSysIds.filter(function(sysId) {
+            return targetSysIds.indexOf(sysId) === -1;
+        });
+    },
+
+    /**
      * Syncs data from one table in a ServiceNow instance to the same table in a different ServiceNow instance 
      * You can provide an encoded query string to filter the records that are synced
      * 
@@ -388,61 +440,27 @@ global.KLF_RecordSync.prototype = {
 
             me.logInfo('Chunk: ' + start + ' to ' + (start + chunkSize) + ' of ' + totalRecords);
 
-            // Query the remote instance using the REST table API for the records that are in the sysIds array
-            var request = me.createRestMessage();
-            request.setHttpMethod('GET');
-            var endpointPath = '/api/now/table/' + tableName;
-            var query = [
-                'sysparm_fields=sys_id',
-                'sysparm_query=sys_idIN' + encodeURIComponent(sourceSysIds.join(','))
-            ].join('&');
-            var endpoint = request.getEndpoint() + endpointPath + '?' + query;
-            request.setEndpoint(endpoint);
-            var response = request.execute();
+            var sysIdsToInsert = me.getSysIdsToInsert(sourceSysIds, tableName);
 
-            if (response.getStatusCode() != 200) {
-                me.logError('Failed to get the records from the target instance');
-                me.logError('Received status code: ' + response.getStatusCode());
-                me.logError('Received body: ' + response.getBody());
+            if (!Array.isArray(sysIdsToInsert)) {
+                me.logError('Failed to get the sys_ids to insert');
                 return null;
             }
-
-            /** @type {{result:[{sys_id:string}]}} */
-            var responseBody;
-            try {
-                responseBody = JSON.parse(response.getBody());
-            } catch (e) {
-                me.logError('Failed to parse the response from the target instance');
-                me.logError('Received status code: ' + response.getStatusCode());
-                me.logError('Received body: ' + response.getBody());
-                return null;
-            }
-
-            // The sys_ids in the response represent records that already exist in the target instance
-            // Subtract the sys_ids in the response from the sysIds array to get the sys_ids that do not exist in the target instance
-            // This will be the sys_ids that need to be inserted into the target instance
-            var targetSysIds = /** @type string[] */ ([]);
-            responseBody.result.forEach(function(record) {
-                targetSysIds.push(record.sys_id);
-            });
-            var sysIdsToInsert = sourceSysIds.filter(function(sysId) {
-                return targetSysIds.indexOf(sysId) === -1;
-            });
 
             me.logInfo(tableName + ' Syncing ' + sysIdsToInsert.length + ' records: ');
 
             // Requery the source for the records that need to be inserted into the target instance
-            var sourceToInsert = new GlideRecord(tableName);
-            sourceToInsert.addQuery('sys_id', 'IN', sysIdsToInsert.join(','));
-            sourceToInsert.query();
-            var unloadDocument = me.createUnloadDocument();
-            var manifest = new global.KLF_RecordSync.Manifest();
-            while (sourceToInsert.next()) {
-                var unloadedData = me.unloadRecordWithRelatedRecords(sourceToInsert, unloadDocument);
-                manifest.addManifest(unloadedData.manifest);
-            }
-
-            if (sysIdsToInsert.length > 0) {
+			if (sysIdsToInsert.length > 0) {
+				var sourceToInsert = new GlideRecord(tableName);
+				sourceToInsert.addQuery('sys_id', 'IN', sysIdsToInsert.join(','));
+				sourceToInsert.query();
+				var unloadDocument = me.createUnloadDocument();
+				var manifest = new global.KLF_RecordSync.Manifest();
+				while (sourceToInsert.next()) {
+					var unloadedData = me.unloadRecordWithRelatedRecords(sourceToInsert, unloadDocument);
+					manifest.addManifest(unloadedData.manifest);
+				}
+            
                 var remoteResponse = me.sendToRemoteInstance(me.documentToString(unloadDocument), manifest);
                 if (remoteResponse.success) {
                     if (remoteResponse.missingManifest) {
@@ -1040,7 +1058,7 @@ global.KLF_RecordSync.prototype = {
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>208</sys_mod_count>
+        <sys_mod_count>217</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -1048,6 +1066,6 @@ global.KLF_RecordSync.prototype = {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-01 00:20:59</sys_updated_on>
+        <sys_updated_on>2025-05-05 22:04:11</sys_updated_on>
     </sys_script_include>
 </record_update>
