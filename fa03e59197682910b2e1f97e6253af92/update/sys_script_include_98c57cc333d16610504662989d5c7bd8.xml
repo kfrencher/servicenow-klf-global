@@ -18,8 +18,7 @@
  * - table sys_db_object
  * - table sys_dictionary collection record
  * - sys_number entry if the table has automatic numbering
- * - NOTE: This does not check sys_number_counter. sys_number_counter must be set to a higher value than the source table.
- *   You must check this manually.
+ * - sys_number_counter. if the table has automatic numbering sys_number_counter must be set to a higher value than the source table.
  * 
  * TABLE FIELDS:
  * - sys_dictionary entry for the field
@@ -785,6 +784,33 @@ var KLF_TableValidator = (function() {
                         ' does not have the same number reference\n  prefix as source table ' +
                         sourceTableName + ' - "' + sourceNumberPrefix + '" vs "' + targetNumberPrefix + '"');
                 }
+
+                // Make sure the sys_number_counter is set to a higher value than the source table
+                /**
+                 * @param {string} tableName
+                 * @returns {GlideRecord?}
+                 */
+                function getNumberCounter(tableName) {
+                    var counter = new GlideRecord('sys_number_counter');
+                    if (!counter.get('table', tableName)) {
+                        errors.push('Number Counter not found for table ' + tableName);
+                        return null;
+                    }
+                    return counter;
+                }
+                var sourceNumberCounter = getNumberCounter(sourceTableName);
+                var targetNumberCounter = getNumberCounter(targetTableName);
+                if (sourceNumberCounter && targetNumberCounter) {
+                    var sourceNumber = Number(sourceNumberCounter.getValue('number'));
+                    var targetNumber = Number(targetNumberCounter.getValue('number'));
+                    if (targetNumber < sourceNumber) {
+                        errors.push(
+                            'Target table ' +
+                            targetTableName +
+                            ' does not have a higher number reference\n  counter than source table ' +
+                            sourceTableName + ' [' + sourceNumber + '] vs ' + targetTableName + '[' + targetNumber + ']');
+                    }
+                }
             }
 
             // Validate sys_db_object fields
@@ -898,7 +924,7 @@ var KLF_TableValidator = (function() {
         <sys_created_on>2025-05-08 11:45:07</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>98c57cc333d16610504662989d5c7bd8</sys_id>
-        <sys_mod_count>151</sys_mod_count>
+        <sys_mod_count>157</sys_mod_count>
         <sys_name>KLF_TableValidator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -906,6 +932,6 @@ var KLF_TableValidator = (function() {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_98c57cc333d16610504662989d5c7bd8</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-09 19:20:05</sys_updated_on>
+        <sys_updated_on>2025-05-10 14:09:02</sys_updated_on>
     </sys_script_include>
 </record_update>
