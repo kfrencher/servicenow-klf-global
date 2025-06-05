@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_CalendarCreator</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[//@ts-ignore -- I know this throws an error, but it allows VSCode to autocomplete the methods
 var global = global || {};
 
@@ -43,11 +44,11 @@ var global = global || {};
  * 
  * // This will generate Fiscal Quarter calendar for the years 1999 to 2040
  * // This must be run in global scope
- * // You will receive the error: "Could not find calendar using name: Fiscal Year"
+ * // You will receive the error: "Could not find calendar using name: Fiscal Quarter"
  * // if you have not created a calendar with the name "Fiscal Quarter" in the system
  * // before calling this method
- * global.KLF_CalendarCreator.createFiscalYearNameEntries(1999, 2040);
- * global.KLF_CalendarCreator.createFiscalYearEntries(1999, 2040); 
+ * global.KLF_CalendarCreator.createFiscalQuarterNameEntries(1999, 2040);
+ * global.KLF_CalendarCreator.createFiscalQuarterEntries(1999, 2040); 
  */
 
 global.KLF_CalendarCreator = (function() {
@@ -93,13 +94,13 @@ global.KLF_CalendarCreator = (function() {
          */
         getQuarterDateRange: function(quarterName, year) {
             if (quarterName == 'Q1') {
-                return [year - 1 + '-10-01 00:00:00', year + '-01-01 00:00:00'];
+                return [year - 1 + '-10-01 00:00:00', year - 1 + '-12-31 23:59:59'];
             } else if (quarterName == 'Q2') {
-                return [year + '-01-01 00:00:00', year + '-04-01 00:00:00'];
+                return [year + '-01-01 00:00:00', year + '-03-31 23:59:59'];
             } else if (quarterName == 'Q3') {
-                return [year + '-04-01 00:00:00', year + '-07-01 00:00:00'];
+                return [year + '-04-01 00:00:00', year + '-06-30 23:59:59'];
             } else if (quarterName == 'Q4') {
-                return [year + '-07-01 00:00:00', year + '-10-01 00:00:00'];
+                return [year + '-07-01 00:00:00', year + '-09-30 23:59:59'];
             } else {
                 throw 'No date range defined for quarter: ' + quarterName;
             }
@@ -225,7 +226,7 @@ global.KLF_CalendarCreator = (function() {
          * @returns {[string,string]} A pair representing the start and end
          */
         getYearDateRange: function(year) {
-            return [year - 1 + '-10-01 00:00:00', year + '-10-01'];
+            return [year - 1 + '-10-01 00:00:00', year + '-09-30 23:59:59'];
         },
 
         /**
@@ -323,14 +324,16 @@ global.KLF_CalendarCreator = (function() {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-02 14:04:03</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>77b1e09547f3821058ceeb02d16d4310</sys_id>
-        <sys_mod_count>12</sys_mod_count>
+        <sys_mod_count>14</sys_mod_count>
         <sys_name>KLF_CalendarCreator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_77b1e09547f3821058ceeb02d16d4310</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-02 14:27:48</sys_updated_on>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-06-05 20:56:58</sys_updated_on>
     </sys_script_include>
 </record_update>

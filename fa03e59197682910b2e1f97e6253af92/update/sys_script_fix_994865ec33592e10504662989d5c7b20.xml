@@ -52,23 +52,29 @@
         var userMapping = new global.KLF_RecordSync_UserUtils(connectionConfig).getUserMapping(sourceScope);
         var groupMapping = new global.KLF_RecordSync_GroupUtils(connectionConfig).getGroupMapping(sourceScope);
 
-		var migratorUtils = new global.KLF_MigratorUtils({
-			sourceScope: sourceScope,
-			sourceScopeSysId: scopeSysId,
-			targetScope: targetScope,
-			targetScopeSysId: targetScopeSysId,
-			tableMap: {
-				'u_klf_test_task': 'x_53417_klf_test_test_task'
-			}
-		});
-
-        var recordSync = new global.KLF_RecordSync(connectionConfig, userMapping, groupMapping, migratorUtils.transformData.bind(migratorUtils));
+        /** @type {KLF_MigratorUtils_Class} */
+        // @ts-ignore
+        var migratorUtils = new global.KLF_MigratorUtils({
+                sourceScope: sourceScope,
+                sourceScopeSysId: scopeSysId,
+                targetScope: targetScope,
+                targetScopeSysId: targetScopeSysId,
+                tableMap: {
+                    'u_klf_test_task': 'x_53417_klf_test_test_task'
+                }
+            },
+            connectionConfig,
+            userMapping,
+            groupMapping
+        );
 
         var record = new GlideRecord('u_klf_test_task');
-        record.get('5a1116a42bd126100060ff42fe91bfde');
+        record.get('e05571fd2b5d2a100060ff42fe91bfe5');
         // Example of syncing all the data in a scope
         // This will find all tables in the x_53417_demo scope and sync all the data in those tables
-        recordSync.syncRecord(record);
+        migratorUtils.syncRecord(record);
+        // migratorUtils.syncTable('u_klf_test_task');
+
     }
 
     // Creates the user mapping. This is necessary to map the users in the source instance to the users in the target instance
@@ -85,7 +91,7 @@
         <sys_created_on>2025-04-30 21:01:38</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>994865ec33592e10504662989d5c7b20</sys_id>
-        <sys_mod_count>29</sys_mod_count>
+        <sys_mod_count>32</sys_mod_count>
         <sys_name>KLF Test Migration</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -93,7 +99,7 @@
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_fix_994865ec33592e10504662989d5c7b20</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-01 20:01:21</sys_updated_on>
+        <sys_updated_on>2025-05-27 12:44:02</sys_updated_on>
         <unloadable>false</unloadable>
     </sys_script_fix>
 </record_update>
