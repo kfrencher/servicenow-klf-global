@@ -45,6 +45,7 @@
  * The values are an array of error messages for that field or table.
  * @typedef {{
  *   title:string,
+ *   columnNameResult: string,
  *   results: {[fieldOrTable:string]:string[]}
  * }} KLF_ValidationReport
  */
@@ -87,7 +88,6 @@ var KLF_TableValidator = (function() {
             'client_scripts_access',
             'configuration_access',
             'create_access',
-            'create_access_controls',
             'delete_access',
             'extension_model',
             'is_extendable',
@@ -317,6 +317,7 @@ var KLF_TableValidator = (function() {
          * @returns {string[]}
          */
         function validateAttributes(sourceDictionaryEntry, targetDictionaryEntry) {
+            var excludedAttributes = ['edge_encryption_enabled'];
             /**
              * Attributes will look like this:
              * ref_ac_columns=user_name;first_name;last_name,ref_ac_columns_search=true 
@@ -327,7 +328,7 @@ var KLF_TableValidator = (function() {
              *   ref_ac_columns_search: 'true'
              * }
              * @param {string?} attributes 
-             * @returns {{[key:string]:string}}
+             * @returns {{[key:string]:string?}}
              */
             function toAttributeMap(attributes) {
                 if (!attributes) {
@@ -342,18 +343,22 @@ var KLF_TableValidator = (function() {
                         map[parts[0].trim()] = null;
                     }
                     return map;
-                }, {});
+                }, /** @type {{[key:string]:string?}} */ ({}));
             }
 
             /**
-             * @param {{[key:string]:string}} sourceMap 
-             * @param {{[key:string]:string}} targetMap 
+             * @param {{[key:string]:string?}} sourceMap 
+             * @param {{[key:string]:string?}} targetMap 
              * @returns {string[]}
              */
             function compareAttributeMap(sourceMap, targetMap) {
-                var errors = [];
+                var errors = /** @type string[] */ ([]);
 
                 Object.keys(sourceMap).forEach(function(key) {
+                    if (excludedAttributes.indexOf(key) >= 0) {
+                        return;
+                    }
+
                     if (targetMap[key] !== sourceMap[key]) {
                         errors.push('Attribute ' + key + ' does not match: ' + sourceMap[key] + ' vs ' + targetMap[key]);
                     }
@@ -366,7 +371,7 @@ var KLF_TableValidator = (function() {
             var sourceAttributes = sourceDictionaryEntry.getValue('attributes');
             var sourceAttributeMap = toAttributeMap(sourceAttributes);
             var targetAttributes = targetDictionaryEntry.getValue('attributes');
-            var targetAttributeMap = toAttributeMap(targetAttributes)
+            var targetAttributeMap = toAttributeMap(targetAttributes);
             return compareAttributeMap(sourceAttributeMap, targetAttributeMap);
         }
 
@@ -409,7 +414,7 @@ var KLF_TableValidator = (function() {
          * @returns {string[]}
          */
         function validateGlideRecordFields(sourceGR, targetGR, fieldsToCheck) {
-            var errors = [];
+            var errors = /** @type string[] */ ([]);
             fieldsToCheck.forEach(function(field) {
                 var fieldType = String(sourceGR[field].getED().getInternalType());
                 var sourceValue = sourceGR.getValue(field);
@@ -435,7 +440,7 @@ var KLF_TableValidator = (function() {
          * @returns {string[]} errors
          */
         function validateChoices(sourceDictionaryEntry, targetDictionaryEntry) {
-            var errors = [];
+            var errors = /** @type string[] */ ([]);
 
             // Query source choices first
             var sourceChoices = [];
@@ -498,7 +503,7 @@ var KLF_TableValidator = (function() {
          * @returns {string[]} errors
          */
         function validateDictionaryOverrides(sourceTable, sourceDictionaryEntry, targetTable, targetDictionaryEntry) {
-            var errors = [];
+            var errors = /** @type string[] */ ([]);
 
             // Get sys_dictionary_override table for source and target. There should be one for each
             var sourceOverride = new GlideRecord('sys_dictionary_override');
@@ -614,7 +619,7 @@ var KLF_TableValidator = (function() {
          * @returns {string[]}
          */
         function validateColumnDictionaryEntry(sourceTable, sourceDictionaryEntry, targetTable, targetDictionaryEntry) {
-            var errors = [];
+            var errors = /** @type string[] */ ([]);
 
             // Validate the sys_dictionary record for the field
             errors = errors.concat(validateGlideRecordFields(sourceDictionaryEntry, targetDictionaryEntry, FLDS.SYS_DICTIONARY));
@@ -663,7 +668,7 @@ var KLF_TableValidator = (function() {
                     filteredResults[fieldOrTable] = results;
                     return filteredResults;
                 }
-            }, {});
+            }, /** @type {{[fieldOrTable:string]:string[]}} */ ({}));
 
             var separator = '\n=======================================================================================================================================\n';
 
@@ -681,6 +686,7 @@ var KLF_TableValidator = (function() {
             });
 
 
+            formattedResults.unshift('\n' + report.columnNameResult);
             formattedResults.unshift('\n\n' + report.title);
             formattedResults.push('');
 
@@ -713,9 +719,9 @@ var KLF_TableValidator = (function() {
 
 
             if (errors.length === 0) {
-                logInfo(CHECKMARK + ' All table columns exist in target table');
+                logDebug(CHECKMARK + ' All table columns exist in target table');
             } else {
-                logInfo(XMARK + ' Table columns are missing');
+                logDebug(XMARK + ' Table columns are missing');
             }
 
             return errors;
@@ -731,9 +737,14 @@ var KLF_TableValidator = (function() {
          */
         function pairColumns(sourceFields, targetFields) {
             return sourceFields.map(function(sourceField) {
-                var targetField = targetFields.find(function(targetField) {
-                    return targetField.name === sourceField.name;
-                });
+                var targetField = null;
+                for (var i = 0; i < targetFields.length; i++) {
+                    var candidateTargetField = targetFields[i];
+                    if (candidateTargetField.name === sourceField.name) {
+                        targetField = candidateTargetField;
+                        break;
+                    }
+                }
                 if (!targetField) {
                     return null;
                 }
@@ -775,8 +786,8 @@ var KLF_TableValidator = (function() {
                     errors.push('Target table ' + targetTableName + ' does not have a number reference');
                 }
 
-                var sourceNumberPrefix = sourceDbObject.number_ref.prefix.toString()
-                var targetNumberPrefix = targetDbObject.number_ref.prefix.toString()
+                var sourceNumberPrefix = sourceDbObject.number_ref.prefix.toString();
+                var targetNumberPrefix = targetDbObject.number_ref.prefix.toString();
                 if (sourceNumberPrefix !== targetNumberPrefix) {
                     errors.push(
                         'Target table ' +
@@ -863,7 +874,7 @@ var KLF_TableValidator = (function() {
          */
         function validate(sourceTable, targetTable) {
             logDebug('Validating ' + sourceTable + ' against ' + targetTable);
-            var errors = [];
+            var errors = /** @type string[] */ ([]);
 
             /** @type {{[fieldOrTable:string]:string[]}} */
             var results = {};
@@ -888,7 +899,11 @@ var KLF_TableValidator = (function() {
             var targetFields = getFieldsForTable(targetTable);
 
             // We need to make sure each field in the column is the same between the two tables
-            errors = errors.concat(validateColumnNames(sourceFields, targetFields));
+            var columnNameErrors = validateColumnNames(sourceFields, targetFields);
+            var columnNameResult = (columnNameErrors.length === 0) ?
+                (CHECKMARK + ' All table columns exist in target table') :
+                (XMARK + ' Table columns are missing');
+            errors = errors.concat(columnNameErrors);
 
             var columnPairs = pairColumns(sourceFields, targetFields);
 
@@ -901,8 +916,9 @@ var KLF_TableValidator = (function() {
             results[sourceTable] = errors;
             return {
                 title: 'Validation Results for ' + sourceTable + ' against ' + targetTable,
+                columnNameResult: columnNameResult,
                 results: results
-            }
+            };
         }
 
         return {
@@ -916,7 +932,8 @@ var KLF_TableValidator = (function() {
 
     return {
         ColumnValidator: _KLF_ColumnValidator,
-        TableValidator: _KLF_TableValidator
+        TableValidator: _KLF_TableValidator,
+        quiet: true
     };
 })();]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
@@ -924,7 +941,7 @@ var KLF_TableValidator = (function() {
         <sys_created_on>2025-05-08 11:45:07</sys_created_on>
         <sys_customer_update>false</sys_customer_update>
         <sys_id>98c57cc333d16610504662989d5c7bd8</sys_id>
-        <sys_mod_count>157</sys_mod_count>
+        <sys_mod_count>165</sys_mod_count>
         <sys_name>KLF_TableValidator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
@@ -932,6 +949,6 @@ var KLF_TableValidator = (function() {
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_98c57cc333d16610504662989d5c7bd8</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-10 14:09:02</sys_updated_on>
+        <sys_updated_on>2025-05-13 15:55:50</sys_updated_on>
     </sys_script_include>
 </record_update>
