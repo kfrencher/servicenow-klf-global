@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_angular_provider">
+    <sp_angular_provider action="INSERT_OR_UPDATE">
+        <name>KLF_OAuthUtilService</name>
+        <script><![CDATA[function KLF_OAuthUtilService($window) {
+	return {
+		/**
+		 * This will initiate an OAuth Authorization flow using the provided OAuth Entity Profile. This code was copied from the "Get OAuth Token" UI Action that is on the "REST Message" table. It is the code that is used to retrieve a token when clicking the related UI Action
+		 * 
+		 * After the token is retrieved it is saved in the OAuth Credential [oauth_credential] table. Refer to
+		 * {@link KLF_OAuthHelper} script include for more details on how to retrieve the token.
+		 * 
+		 * @param {string} requestorContext A name that is used to group the retrieved tokens under. This is typically a table name like sys_user
+		 * @param {string} requestor Typically a sys_id from the table name provided in requestorContext
+		 * @param {string} oauthEntityProfileSysId oauth_entity_profile.sys_id To use for the flow
+		 */
+		initiateAuthorizationCodeFlow: function (requestorContext, requestor, oauthEntityProfileSysId) {
+			var oauthInitiatorUrl = '/oauth_initiator.do' +
+				'?oauth_requestor_context=' + requestorContext +
+				'&oauth_requestor=' + requestor +
+				'&oauth_provider_profile=' + oauthEntityProfileSysId +
+				'&response_type=code';
+			$window.open(oauthInitiatorUrl);
+		}
+	};
+}]]></script>
+        <sys_class_name>sp_angular_provider</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-07-18 21:48:25</sys_created_on>
+        <sys_id>d6c7288ac4ba221020d2af62322a083e</sys_id>
+        <sys_mod_count>11</sys_mod_count>
+        <sys_name>KLF_OAuthUtilService</sys_name>
+        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sp_angular_provider_d6c7288ac4ba221020d2af62322a083e</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-07-19 22:01:25</sys_updated_on>
+        <type>service</type>
+    </sp_angular_provider>
+    <sys_claim action="INSERT_OR_UPDATE">
+        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
+        <claim_timestamp>19824b4ce9a0000001</claim_timestamp>
+        <metadata_update_name>sp_angular_provider_d6c7288ac4ba221020d2af62322a083e</metadata_update_name>
+        <previous_claim_app_version>1.1.0</previous_claim_app_version>
+        <previous_claim_name>KLF Global</previous_claim_name>
+        <previous_claim_scope>fa03e59197682910b2e1f97e6253af92</previous_claim_scope>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-07-19 22:01:25</sys_created_on>
+        <sys_id>2645f15ac4f2a21020d2af62322a0893</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-07-19 22:01:25</sys_updated_on>
+    </sys_claim>
+</record_update>

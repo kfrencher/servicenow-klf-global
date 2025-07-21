@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_OAuthHelper</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_OAuthHelper</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[class KLF_OAuthHelper {
+    /**
+     * These parameters are needed to lookup the specific OAuth Requestor Profile [oauth_requestor_profile].
+     * The oauth_requestor_profile is needed to lookup tokens in the OAuth Credential [oauth_credential] table.
+     * The OAuth Credential table is where OAuth tokens are stored after ServiceNow executes an OAuth flow.
+     * 
+     * These values are provided when the OAuth token is initially retrieved. Typically using the oauth_initiator API. For more information look at "OAuth Outbound" in the ServiceNow documentation.
+     * 
+     * You can find an example of initiating an OAuth flow in the "Get OAuth Token" UI Action that is on the "REST Message" table
+     * 
+     * @param {string} requestorContext oauth_requestor_profile.requestor_context
+     * @param {string} requestorSysId oauth_requestor_profile.requestor_id
+     * @param {string} oauthEntityProfileSysId oauth_requestor_profile.oauth_entity_profile
+     * @param {number} [minimumTokenExpirationInSeconds=28800] If the token expires in less than this amount of time then the call to {KLF_OAuthHelper.getToken} will return null even if the token exists. The default is 8 hours
+     */
+    constructor(requestorContext, requestorSysId, oauthEntityProfileSysId, minimumTokenExpirationInSeconds = 28800) {
+        this.requestorContext = requestorContext;
+        this.requestorSysId = requestorSysId;
+        this.oauthEntityProfileSysId = oauthEntityProfileSysId;
+        this.minimumTokenExpirationInSeconds = minimumTokenExpirationInSeconds;
+    }
+
+    /**
+     * Returns an object that can be used to retrieve a token from OAuth Credentials [oauth_credential] or can
+     * be used to initiate a flow using "oauth_initiator"
+     * @returns {{
+     * requestorContext: string,
+     * requestorSysId: string,
+     * oauthEntityProfileSysId: string,
+     * hasAccessToken: boolean
+     * }}
+     */
+    getTokenInfo() {
+        return {
+            requestorContext: this.requestorContext,
+            requestorSysId: this.requestorSysId,
+            oauthEntityProfileSysId: this.oauthEntityProfileSysId,
+            hasAccessToken: this.hasAccessToken()
+        };
+    }
+
+    /**
+     * Returns true if access token exists and the token expiration is far enough in the future
+     * @returns {boolean}
+     */
+    hasAccessToken() {
+        return !!this.getAccessToken();
+    }
+
+    /**
+     * @returns {string?} Returns the base64 encoded access token if one exists and is far enough in the future. Elses returns null
+     */
+    getAccessToken() {
+        var oAuthClient = new sn_auth.GlideOAuthClient();
+        var glideToken = oAuthClient.getToken(this.requestorSysId, this.oauthEntityProfileSysId);
+        if (glideToken) {
+            var expiresIn = glideToken.getExpiresIn();
+            if (expiresIn > this.minimumTokenExpirationInSeconds) {
+                return glideToken.getAccessToken();
+            }
+        }
+        return null;
+    }
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-07-18 21:32:04</sys_created_on>
+        <sys_id>7da4a486c4ba221020d2af62322a08ba</sys_id>
+        <sys_mod_count>16</sys_mod_count>
+        <sys_name>KLF_OAuthHelper</sys_name>
+        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_7da4a486c4ba221020d2af62322a08ba</sys_update_name>
+        <sys_updated_by>kenneth.frencher</sys_updated_by>
+        <sys_updated_on>2025-07-19 21:43:59</sys_updated_on>
+    </sys_script_include>
+    <sys_claim action="INSERT_OR_UPDATE">
+        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
+        <claim_timestamp>198249551ed0000001</claim_timestamp>
+        <metadata_update_name>sys_script_include_7da4a486c4ba221020d2af62322a08ba</metadata_update_name>
+        <previous_claim_app_version>1.1.0</previous_claim_app_version>
+        <previous_claim_name>KLF Global</previous_claim_name>
+        <previous_claim_scope>fa03e59197682910b2e1f97e6253af92</previous_claim_scope>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-07-19 21:27:02</sys_created_on>
+        <sys_id>ba6daddec4b2a21020d2af62322a08a6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-07-19 21:27:02</sys_updated_on>
+    </sys_claim>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>7da4a486c4ba221020d2af62322a08ba</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-07-18 21:32:04</sys_created_on>
+        <sys_id>faf46042c4ba221020d2af62322a0839</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-07-18 21:32:04</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
