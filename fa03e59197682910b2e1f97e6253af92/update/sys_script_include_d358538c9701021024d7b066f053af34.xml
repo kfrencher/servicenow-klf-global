@@ -299,14 +299,15 @@ global.KLF_RecordSync.prototype = {
      * list
      * @param {string} scopeNamespace
      * @param {string[]} [excludedTables]
+     * @param {boolean} [forceSync] If true, will sync all records regardless of whether they exist in the target instance
      * @returns {global.KLF_RecordSync.Manifest}
      */
-    syncAllDataInScope: function(scopeNamespace, excludedTables) {
+    syncAllDataInScope: function(scopeNamespace, excludedTables, forceSync) {
         var tables = this.dataTransferUtils.getBaseTablesInScope(scopeNamespace, excludedTables);
         var me = this;
         var missingManifest = new global.KLF_RecordSync.Manifest();
         tables.forEach(function(table) {
-            missingManifest.addManifest(me.syncTable(table, '', excludedTables));
+            missingManifest.addManifest(me.syncTable(table, '', excludedTables, forceSync));
         });
         return missingManifest;
     },
@@ -396,9 +397,10 @@ global.KLF_RecordSync.prototype = {
      * @param {string} [encodedQueryString]
      * @param {string[]} [excludedTables] This may be necessary if the table is extended and you want to exclude some of the
      * tables that extend the base table
+     * @param {boolean} [forceSync] If true, will sync all records regardless of whether they exist in the target instance
      * @returns {global.KLF_RecordSync.Manifest}
      */
-    syncTable: function(tableName, encodedQueryString, excludedTables) {
+    syncTable: function(tableName, encodedQueryString, excludedTables, forceSync) {
         var me = this;
         var missingRecordsManifest = new global.KLF_RecordSync.Manifest();
 
@@ -440,7 +442,7 @@ global.KLF_RecordSync.prototype = {
 
             me.logInfo('Chunk: ' + start + ' to ' + (start + chunkSize) + ' of ' + totalRecords);
 
-            var sysIdsToInsert = me.getSysIdsToInsert(sourceSysIds, tableName);
+            var sysIdsToInsert = forceSync ? sourceSysIds : me.getSysIdsToInsert(sourceSysIds, tableName);
 
             if (!Array.isArray(sysIdsToInsert)) {
                 me.logError('Failed to get the sys_ids to insert');
@@ -1056,16 +1058,14 @@ global.KLF_RecordSync.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>217</sys_mod_count>
+        <sys_mod_count>219</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-05 22:04:11</sys_updated_on>
+        <sys_updated_on>2025-09-09 05:50:41</sys_updated_on>
     </sys_script_include>
 </record_update>
