@@ -77,14 +77,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2025-07-18 21:32:04</sys_created_on>
         <sys_id>7da4a486c4ba221020d2af62322a08ba</sys_id>
-        <sys_mod_count>16</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>KLF_OAuthHelper</sys_name>
-        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_7da4a486c4ba221020d2af62322a08ba</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-07-19 21:43:59</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-10-26 15:21:25</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>

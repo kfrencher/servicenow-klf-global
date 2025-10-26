@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_MetricUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * This script includes functions for working with metrics. Metrics are located in the Metrics module.
  * They are used to generated data associated with a record so that it can be used in reports.
@@ -66,10 +67,11 @@ global.KLF_MetricUtils.prototype = {
      * called from the business rule that will be in the application scope.
      */
     queueMetricUpdate: function() {
-        var gru = new GlideScriptRecordUtil.get(current);
+        var gru = GlideScriptRecordUtil.get(current);
         var fieldsChanged = gru.getChangedFieldNames();
         var gr = getDefinitions(fieldsChanged);
-        fields = '';
+        /** @type {string} */
+        var fields = '';
         while (gr.next())
             fields += gr.field + ',';
 
@@ -78,6 +80,10 @@ global.KLF_MetricUtils.prototype = {
             gs.eventQueue('metric.update', current, fields, current.sys_mod_count, 'metric_update');
         }
 
+        /**
+         * @param {string[]} fields 
+         * @returns {GlideAggregate}
+         */
         function getDefinitions(fields) {
             var gr = new GlideAggregate('metric_definition');
             gr.addActiveQuery();
@@ -94,13 +100,13 @@ global.KLF_MetricUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-02-25 16:12:56</sys_created_on>
         <sys_id>566edaa897d5a110b2e1f97e6253af3c</sys_id>
-        <sys_mod_count>10</sys_mod_count>
+        <sys_mod_count>13</sys_mod_count>
         <sys_name>KLF_MetricUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_566edaa897d5a110b2e1f97e6253af3c</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-04 17:55:46</sys_updated_on>
+        <sys_updated_on>2025-10-26 15:50:52</sys_updated_on>
     </sys_script_include>
 </record_update>

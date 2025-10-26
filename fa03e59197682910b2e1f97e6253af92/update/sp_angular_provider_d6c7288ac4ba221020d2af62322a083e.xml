@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_angular_provider">
     <sp_angular_provider action="INSERT_OR_UPDATE">
         <name>KLF_OAuthUtilService</name>
-        <script><![CDATA[function KLF_OAuthUtilService($window) {
+        <script><![CDATA[/**
+ * @param {angular.IWindowService} $window 
+ */
+function KLF_OAuthUtilService($window) {
 	return {
 		/**
 		 * This will initiate an OAuth Authorization flow using the provided OAuth Entity Profile. This code was copied from the "Get OAuth Token" UI Action that is on the "REST Message" table. It is the code that is used to retrieve a token when clicking the related UI Action
@@ -27,14 +30,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2025-07-18 21:48:25</sys_created_on>
         <sys_id>d6c7288ac4ba221020d2af62322a083e</sys_id>
-        <sys_mod_count>11</sys_mod_count>
+        <sys_mod_count>12</sys_mod_count>
         <sys_name>KLF_OAuthUtilService</sys_name>
-        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_angular_provider_d6c7288ac4ba221020d2af62322a083e</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2025-07-19 22:01:25</sys_updated_on>
+        <sys_updated_on>2025-10-26 14:56:55</sys_updated_on>
         <type>service</type>
     </sp_angular_provider>
     <sys_claim action="INSERT_OR_UPDATE">

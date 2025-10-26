@@ -3,7 +3,8 @@
         <active>true</active>
         <description/>
         <name>KLF_Zip</name>
-        <script><![CDATA[var KLF_Zip = (function (Packages) {
+        <script><![CDATA[// @ts-nocheck
+var KLF_Zip = (function (Packages) {
 	var File = Packages.java.io.File;
 	var FileInputStream = Packages.java.io.FileInputStream;
 	var FileOutputStream = Packages.java.io.FileOutputStream;
@@ -62,7 +63,7 @@
         <sys_domain>global</sys_domain>
         <sys_domain_path>/</sys_domain_path>
         <sys_id>e625472b9715a110b2e1f97e6253af50</sys_id>
-        <sys_mod_count>28</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_name>KLF_Zip</sys_name>
         <sys_overrides/>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
@@ -70,6 +71,6 @@
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>ecc_agent_script_include_e625472b9715a110b2e1f97e6253af50</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-03-10 00:05:07</sys_updated_on>
+        <sys_updated_on>2025-10-26 15:59:50</sys_updated_on>
     </ecc_agent_script_include>
 </record_update>
