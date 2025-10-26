@@ -51,9 +51,24 @@ var global = global || {};
  * global.KLF_CalendarCreator.createFiscalQuarterEntries(1999, 2040); 
  */
 
-global.KLF_CalendarCreator = (function() {
+/**
+ * @typedef {Object} KLF_CalendarCreatorConfig
+ * @property {string} [fiscalYearCalendarName='Fiscal Year']
+ * @property {string} [fiscalQuarterCalendarName='Fiscal Quarter']
+ */
+/**
+ * @param {KLF_CalendarCreatorConfig} [config]
+ */
+global.KLF_CalendarCreator = function(config) {
+    /** @type {KLF_CalendarCreatorConfig} */
+    var _config = config || {
+        fiscalQuarterCalendarName: '',
+        fiscalYearCalendarName: ''
+    };
+    var fiscalYearCalendarName = _config.fiscalYearCalendarName || 'Fiscal Year';
+    var fiscalQuarterCalendarName = _config.fiscalQuarterCalendarName || 'Fiscal Quarter';
+
     return {
-        fiscalQuarterCalendarName: 'Fiscal Quarter',
         /**
          * business_calendar that holds calendar data
          * @param {string} calendarName
@@ -74,7 +89,7 @@ global.KLF_CalendarCreator = (function() {
          * @returns {GlideRecord} business_calendar_span_name
          */
         getQuarterSpanName: function(quarterName, year) {
-            var calendar = this.getCalendarByName(this.fiscalQuarterCalendarName);
+            var calendar = this.getCalendarByName(fiscalQuarterCalendarName);
             var quarter = new GlideRecord('business_calendar_span_name');
             quarter.addQuery('calendar', calendar.getUniqueValue());
             quarter.addQuery('short_name', this.getFiscalQuarterSpanNameShortName(quarterName, year));
@@ -113,7 +128,7 @@ global.KLF_CalendarCreator = (function() {
          * @returns {GlideRecord} a persisted business_calendar_span
          */
         createQuarter: function(quarterName, year) {
-            var calendarSysId = this.getCalendarByName(this.fiscalQuarterCalendarName).getUniqueValue();
+            var calendarSysId = this.getCalendarByName(fiscalQuarterCalendarName).getUniqueValue();
             var spanNameSysId = this.getQuarterSpanName(quarterName, year).getUniqueValue();
             var calendarSpan = new GlideRecord('business_calendar_span');
             var dateRange = this.getQuarterDateRange(quarterName, year);
@@ -200,7 +215,15 @@ global.KLF_CalendarCreator = (function() {
          * @param {number} year
          */
         createFiscalQuarterName: function(quarter, year) {
-            var calendarSysId = this.getCalendarByName(this.fiscalQuarterCalendarName).getUniqueValue();
+            if(!quarter) {
+                throw new Error('Quarter must be provided');
+            }
+
+            if(!year) {
+                throw new Error('Year must be provided');
+            }
+
+            var calendarSysId = this.getCalendarByName(fiscalQuarterCalendarName).getUniqueValue();
             var spanName = new GlideRecord('business_calendar_span_name');
             var shortName = this.getFiscalQuarterSpanNameShortName(quarter, year);
             spanName.addQuery('short_name', shortName);
@@ -216,8 +239,6 @@ global.KLF_CalendarCreator = (function() {
             spanName.update();
             return spanName;
         },
-
-        fiscalYearCalendarName: 'Fiscal Year',
 
         /**
          * Uses the year to return a pair that represent the start and end
@@ -235,7 +256,7 @@ global.KLF_CalendarCreator = (function() {
          * @returns {GlideRecord} business_calendar_span_name
          */
         getYearSpanName: function(year) {
-            var calendar = this.getCalendarByName(this.fiscalYearCalendarName);
+            var calendar = this.getCalendarByName(fiscalYearCalendarName);
             var yearSpanName = new GlideRecord('business_calendar_span_name');
             yearSpanName.addQuery('calendar', calendar.getUniqueValue());
             yearSpanName.addQuery('short_name', year.toString());
@@ -254,7 +275,7 @@ global.KLF_CalendarCreator = (function() {
          * @returns {GlideRecord} a persisted business_calendar_span
          */
         createYear: function(year) {
-            var calendarSysId = this.getCalendarByName(this.fiscalYearCalendarName).getUniqueValue();
+            var calendarSysId = this.getCalendarByName(fiscalYearCalendarName).getUniqueValue();
             var spanNameSysId = this.getYearSpanName(year).getUniqueValue();
             var calendarSpan = new GlideRecord('business_calendar_span');
             var dateRange = this.getYearDateRange(year);
@@ -302,7 +323,7 @@ global.KLF_CalendarCreator = (function() {
          * @returns {GlideRecord}
          */
         createFiscalYearName: function(year) {
-            var calendarSysId = this.getCalendarByName(this.fiscalYearCalendarName).getUniqueValue();
+            var calendarSysId = this.getCalendarByName(fiscalYearCalendarName).getUniqueValue();
             var spanName = new GlideRecord('business_calendar_span_name');
             /**@ts-ignore */
             var shortName = year.toString();
@@ -320,20 +341,19 @@ global.KLF_CalendarCreator = (function() {
             return spanName;
         }
     };
-})();]]></script>
+
+};]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-02 14:04:03</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>77b1e09547f3821058ceeb02d16d4310</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>KLF_CalendarCreator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_77b1e09547f3821058ceeb02d16d4310</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-06-05 20:56:58</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-10-26 22:08:43</sys_updated_on>
     </sys_script_include>
 </record_update>

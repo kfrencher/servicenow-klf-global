@@ -1,0 +1,1121 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.KLF_CalendarCreatorTest</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_CalendarCreatorTest</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[// @ts-ignore
+function KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual) {
+
+    describe('getCalendarByName', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return the calendar when it exists', function() {
+            var calendarName = testUtils.getRandomAlphaNumericString();
+            var calendar = new GlideRecord('business_calendar');
+            calendar.newRecord();
+            calendar.calendar_name = calendarName;
+            testUtils.updateAndTrack(calendar);
+
+            var calendarCreator = global.KLF_CalendarCreator({});
+            var result = calendarCreator.getCalendarByName(calendarName);
+
+            expect(result).toBeDefined('Calendar should be defined');
+            expect(result.getUniqueValue()).toBe(calendar.getUniqueValue(), 'Calendar sys_id should match');
+            expect(result.getValue('calendar_name')).toBe(calendarName, 'Calendar name should match');
+        });
+
+        it('should throw an error when the calendar does not exist', function() {
+            var calendarName = testUtils.getRandomAlphaNumericString();
+            var calendarCreator = global.KLF_CalendarCreator({});
+
+            expect(function() {
+                calendarCreator.getCalendarByName(calendarName);
+            }).toThrow('Could not find calendar using name: ' + calendarName);
+        });
+    });
+
+    describe('getQuarterSpanName', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalQuarterCalendar;
+
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Quarter calendar
+            fiscalQuarterCalendar = new GlideRecord('business_calendar');
+            fiscalQuarterCalendar.newRecord();
+            fiscalQuarterCalendar.calendar_name = fiscalQuarterCalendarName;
+            testUtils.updateAndTrack(fiscalQuarterCalendar);
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return the quarter span name when it exists', function() {
+            var quarterName = 'Q1';
+            var year = 2024;
+            var shortName = year + ' ' + quarterName; // '2024 Q1'
+
+            // Create the span name
+            var spanName = new GlideRecord('business_calendar_span_name');
+            spanName.newRecord();
+            spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Quarter ' + quarterName;
+            spanName.label = 'FY ' + year + ' ' + quarterName;
+            testUtils.updateAndTrack(spanName);
+
+            var calendarCreator = global.KLF_CalendarCreator({ fiscalQuarterCalendarName: fiscalQuarterCalendarName });
+            var result = calendarCreator.getQuarterSpanName(quarterName, year);
+
+            expect(result).toBeDefined('Span name should be defined');
+            expect(result.getUniqueValue()).toBe(spanName.getUniqueValue(), 'Span name sys_id should match');
+            expect(result.getValue('short_name')).toBe(shortName, 'Short name should match');
+        });
+
+        it('should work for all quarters Q1-Q4', function() {
+            var year = 2024;
+            var quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+            var calendarCreator = global.KLF_CalendarCreator({ fiscalQuarterCalendarName: fiscalQuarterCalendarName });
+
+            for (var i = 0; i < quarters.length; i++) {
+                var quarterName = quarters[i];
+                var shortName = year + ' ' + quarterName;
+
+                // Create the span name
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Quarter ' + quarterName;
+                spanName.label = 'FY ' + year + ' ' + quarterName;
+                testUtils.updateAndTrack(spanName);
+
+                var result = calendarCreator.getQuarterSpanName(quarterName, year);
+                expect(result.getValue('short_name')).toBe(shortName, 'Short name should match for ' + quarterName);
+            }
+        });
+
+        it('should throw an error when the quarter span name does not exist', function() {
+            var quarterName = 'Q1';
+            var year = 2024;
+
+            var calendarCreator = global.KLF_CalendarCreator({ fiscalQuarterCalendarName: fiscalQuarterCalendarName });
+
+            expect(function() {
+                calendarCreator.getQuarterSpanName(quarterName, year);
+            }).toThrow();
+        });
+
+        it('should throw an error when the calendar does not exist', function() {
+            var quarterName = 'Q1';
+            var year = 2024;
+            var customCalendarName = testUtils.getRandomAlphaNumericString();
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: customCalendarName
+            });
+
+            expect(function() {
+                calendarCreator.getQuarterSpanName(quarterName, year);
+            }).toThrow('Could not find calendar using name: ' + customCalendarName);
+        });
+    });
+
+    describe('getQuarterDateRange', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should return correct date range for Q1', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+            var result = calendarCreator.getQuarterDateRange('Q1', year);
+
+            expect(result).toBeDefined('Result should be defined');
+            expect(result.length).toBe(2, 'Result should have 2 elements');
+            expect(result[0]).toBe('2023-10-01 00:00:00', 'Start date should be Oct 1 of previous year');
+            expect(result[1]).toBe('2023-12-31 23:59:59', 'End date should be Dec 31 of previous year');
+        });
+
+        it('should return correct date range for Q2', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+            var result = calendarCreator.getQuarterDateRange('Q2', year);
+
+            expect(result).toBeDefined('Result should be defined');
+            expect(result.length).toBe(2, 'Result should have 2 elements');
+            expect(result[0]).toBe('2024-01-01 00:00:00', 'Start date should be Jan 1');
+            expect(result[1]).toBe('2024-03-31 23:59:59', 'End date should be Mar 31');
+        });
+
+        it('should return correct date range for Q3', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+            var result = calendarCreator.getQuarterDateRange('Q3', year);
+
+            expect(result).toBeDefined('Result should be defined');
+            expect(result.length).toBe(2, 'Result should have 2 elements');
+            expect(result[0]).toBe('2024-04-01 00:00:00', 'Start date should be Apr 1');
+            expect(result[1]).toBe('2024-06-30 23:59:59', 'End date should be Jun 30');
+        });
+
+        it('should return correct date range for Q4', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+            var result = calendarCreator.getQuarterDateRange('Q4', year);
+
+            expect(result).toBeDefined('Result should be defined');
+            expect(result.length).toBe(2, 'Result should have 2 elements');
+            expect(result[0]).toBe('2024-07-01 00:00:00', 'Start date should be Jul 1');
+            expect(result[1]).toBe('2024-09-30 23:59:59', 'End date should be Sep 30');
+        });
+
+        it('should work correctly for different years', function() {
+            var calendarCreator = global.KLF_CalendarCreator({});
+
+            // Test year 2020
+            var result2020 = calendarCreator.getQuarterDateRange('Q1', 2020);
+            expect(result2020[0]).toBe('2019-10-01 00:00:00', 'Q1 2020 should start Oct 1 2019');
+            expect(result2020[1]).toBe('2019-12-31 23:59:59', 'Q1 2020 should end Dec 31 2019');
+
+            // Test year 2030
+            var result2030 = calendarCreator.getQuarterDateRange('Q2', 2030);
+            expect(result2030[0]).toBe('2030-01-01 00:00:00', 'Q2 2030 should start Jan 1 2030');
+            expect(result2030[1]).toBe('2030-03-31 23:59:59', 'Q2 2030 should end Mar 31 2030');
+        });
+
+        it('should throw an error for invalid quarter name', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+
+            expect(function() {
+                calendarCreator.getQuarterDateRange('Q5', year);
+            }).toThrow('No date range defined for quarter: Q5');
+        });
+
+        it('should throw an error for empty quarter name', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+
+            expect(function() {
+                calendarCreator.getQuarterDateRange('', year);
+            }).toThrow('No date range defined for quarter: ');
+        });
+
+        it('should throw an error for invalid quarter names', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({});
+            var invalidQuarters = ['Q0', 'Quarter1', 'q1', 'QUARTER1'];
+
+            for (var i = 0; i < invalidQuarters.length; i++) {
+                var invalidQuarter = invalidQuarters[i];
+                expect(function() {
+                    calendarCreator.getQuarterDateRange(invalidQuarter, year);
+                }).toThrow('No date range defined for quarter: ' + invalidQuarter);
+            }
+        });
+    });
+
+    describe('createQuarter', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalQuarterCalendar;
+
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Quarter calendar
+            fiscalQuarterCalendar = new GlideRecord('business_calendar');
+            fiscalQuarterCalendar.newRecord();
+            fiscalQuarterCalendar.calendar_name = fiscalQuarterCalendarName;
+            testUtils.updateAndTrack(fiscalQuarterCalendar);
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create a new quarter when it does not exist', function() {
+            var quarterName = 'Q1';
+            var year = 2024;
+            var shortName = year + ' ' + quarterName;
+
+            // Create the span name
+            var spanName = new GlideRecord('business_calendar_span_name');
+            spanName.newRecord();
+            spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Quarter ' + quarterName;
+            spanName.label = 'FY ' + year + ' ' + quarterName;
+            testUtils.updateAndTrack(spanName);
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            var result = calendarCreator.createQuarter(quarterName, year);
+
+            expect(result).toBeDefined('Quarter should be created');
+            expect(result.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue(), 'Calendar should match');
+            expect(result.getValue('span_name')).toBe(spanName.getUniqueValue(), 'Span name should match');
+            expect(result.getValue('start')).toBe('2023-10-01 00:00:00', 'Start date should be correct for Q1');
+            expect(result.getValue('end')).toBe('2023-12-31 23:59:59', 'End date should be correct for Q1');
+        });
+
+        it('should update an existing quarter if it already exists', function() {
+            var quarterName = 'Q2';
+            var year = 2024;
+            var shortName = year + ' ' + quarterName;
+
+            // Create the span name
+            var spanName = new GlideRecord('business_calendar_span_name');
+            spanName.newRecord();
+            spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Quarter ' + quarterName;
+            spanName.label = 'FY ' + year + ' ' + quarterName;
+            testUtils.updateAndTrack(spanName);
+
+            // Create an existing calendar span
+            var existingSpan = new GlideRecord('business_calendar_span');
+            existingSpan.newRecord();
+            existingSpan.calendar = fiscalQuarterCalendar.getUniqueValue();
+            existingSpan.start = '2024-01-01 00:00:00';
+            existingSpan.end = '2024-03-31 23:59:59';
+            existingSpan.span_name = spanName.getUniqueValue();
+            testUtils.updateAndTrack(existingSpan);
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            var result = calendarCreator.createQuarter(quarterName, year);
+
+            expect(result).toBeDefined('Quarter should be updated');
+            expect(result.getUniqueValue()).toBe(existingSpan.getUniqueValue(), 'Should update existing record');
+            expect(result.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue(), 'Calendar should match');
+            expect(result.getValue('span_name')).toBe(spanName.getUniqueValue(), 'Span name should match');
+        });
+
+        it('should create quarters for all Q1-Q4', function() {
+            var year = 2024;
+            var quarters = [
+                { name: 'Q1', start: '2023-10-01 00:00:00', end: '2023-12-31 23:59:59' },
+                { name: 'Q2', start: '2024-01-01 00:00:00', end: '2024-03-31 23:59:59' },
+                { name: 'Q3', start: '2024-04-01 00:00:00', end: '2024-06-30 23:59:59' },
+                { name: 'Q4', start: '2024-07-01 00:00:00', end: '2024-09-30 23:59:59' }
+            ];
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            for (var i = 0; i < quarters.length; i++) {
+                var quarter = quarters[i];
+                var shortName = year + ' ' + quarter.name;
+
+                // Create the span name
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Quarter ' + quarter.name;
+                spanName.label = 'FY ' + year + ' ' + quarter.name;
+                testUtils.updateAndTrack(spanName);
+
+                var result = calendarCreator.createQuarter(quarter.name, year);
+
+                expect(result).toBeDefined('Quarter ' + quarter.name + ' should be created');
+                expect(result.getValue('start')).toBe(quarter.start, 'Start date should be correct for ' + quarter.name);
+                expect(result.getValue('end')).toBe(quarter.end, 'End date should be correct for ' + quarter.name);
+            }
+        });
+
+        it('should throw an error when the calendar does not exist', function() {
+            var quarterName = 'Q1';
+            var year = 2024;
+            var nonExistentCalendar = testUtils.getRandomAlphaNumericString();
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: nonExistentCalendar,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            expect(function() {
+                calendarCreator.createQuarter(quarterName, year);
+            }).toThrow('Could not find calendar using name: ' + nonExistentCalendar);
+        });
+
+        it('should throw an error when the span name does not exist', function() {
+            var quarterName = 'Q1';
+            var year = 2024;
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            expect(function() {
+                calendarCreator.createQuarter(quarterName, year);
+            }).toThrow();
+        });
+    });
+
+    describe('createFiscalYearByQuarters', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalQuarterCalendar;
+
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Quarter calendar
+            fiscalQuarterCalendar = new GlideRecord('business_calendar');
+            fiscalQuarterCalendar.newRecord();
+            fiscalQuarterCalendar.calendar_name = fiscalQuarterCalendarName;
+            testUtils.updateAndTrack(fiscalQuarterCalendar);
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create all 4 quarters for a fiscal year', function() {
+            var year = 2024;
+            var quarters = [
+                { name: 'Q1', start: '2023-10-01 00:00:00', end: '2023-12-31 23:59:59' },
+                { name: 'Q2', start: '2024-01-01 00:00:00', end: '2024-03-31 23:59:59' },
+                { name: 'Q3', start: '2024-04-01 00:00:00', end: '2024-06-30 23:59:59' },
+                { name: 'Q4', start: '2024-07-01 00:00:00', end: '2024-09-30 23:59:59' }
+            ];
+
+            // Create all span names
+            for (var i = 0; i < quarters.length; i++) {
+                var quarter = quarters[i];
+                var shortName = year + ' ' + quarter.name;
+
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Quarter ' + quarter.name;
+                spanName.label = 'FY ' + year + ' ' + quarter.name;
+                testUtils.updateAndTrack(spanName);
+            }
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            var result = calendarCreator.createFiscalYearByQuarters(year);
+
+            expect(result).toBeDefined('Result should be defined');
+            expect(result.length).toBe(4, 'Should return 4 quarters');
+
+            // Verify each quarter
+            for (var j = 0; j < quarters.length; j++) {
+                var quarter = quarters[j];
+                var quarterRecord = result[j];
+
+                expect(quarterRecord).toBeDefined('Quarter ' + quarter.name + ' should be defined');
+                expect(quarterRecord.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue(), 'Calendar should match for ' + quarter.name);
+                expect(quarterRecord.getValue('start')).toBe(quarter.start, 'Start date should be correct for ' + quarter.name);
+                expect(quarterRecord.getValue('end')).toBe(quarter.end, 'End date should be correct for ' + quarter.name);
+            }
+        });
+
+        it('should return an array with 4 GlideRecords', function() {
+            var year = 2024;
+            var quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+            // Create all span names
+            for (var i = 0; i < quarters.length; i++) {
+                var quarterName = quarters[i];
+                var shortName = year + ' ' + quarterName;
+
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Quarter ' + quarterName;
+                spanName.label = 'FY ' + year + ' ' + quarterName;
+                testUtils.updateAndTrack(spanName);
+            }
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            var result = calendarCreator.createFiscalYearByQuarters(year);
+
+            expect(Array.isArray(result)).toBe(true, 'Result should be an array');
+            expect(result.length).toBe(4, 'Array should have 4 elements');
+
+            // Verify each element is a GlideRecord
+            for (var j = 0; j < result.length; j++) {
+                expect(result[j]).toBeDefined('Element ' + j + ' should be defined');
+                expect(result[j].getUniqueValue()).toBeDefined('Element ' + j + ' should have a sys_id');
+            }
+        });
+
+        it('should work for different years', function() {
+            var years = [2020, 2025, 2030];
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            for (var i = 0; i < years.length; i++) {
+                var year = years[i];
+                var quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+                // Create all span names for this year
+                for (var j = 0; j < quarters.length; j++) {
+                    var quarterName = quarters[j];
+                    var shortName = year + ' ' + quarterName;
+
+                    var spanName = new GlideRecord('business_calendar_span_name');
+                    spanName.newRecord();
+                    spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+                    spanName.short_name = shortName;
+                    spanName.long_name = 'Fiscal Quarter ' + quarterName;
+                    spanName.label = 'FY ' + year + ' ' + quarterName;
+                    testUtils.updateAndTrack(spanName);
+                }
+
+                var result = calendarCreator.createFiscalYearByQuarters(year);
+
+                expect(result).toBeDefined('Result should be defined for year ' + year);
+                expect(result.length).toBe(4, 'Should return 4 quarters for year ' + year);
+
+                // Verify Q1 starts in previous year
+                var q1Start = (year - 1) + '-10-01 00:00:00';
+                expect(result[0].getValue('start')).toBe(q1Start, 'Q1 should start in previous year for ' + year);
+            }
+        });
+
+        it('should update existing quarters if they already exist', function() {
+            var year = 2024;
+            var quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+            // Create all span names
+            for (var i = 0; i < quarters.length; i++) {
+                var quarterName = quarters[i];
+                var shortName = year + ' ' + quarterName;
+
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Quarter ' + quarterName;
+                spanName.label = 'FY ' + year + ' ' + quarterName;
+                testUtils.updateAndTrack(spanName);
+            }
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            // Create quarters first time
+            var firstResult = calendarCreator.createFiscalYearByQuarters(year);
+            var firstSysIds = [];
+            for (var j = 0; j < firstResult.length; j++) {
+                firstSysIds.push(firstResult[j].getUniqueValue());
+            }
+
+            // Create quarters second time (should update, not create new)
+            var secondResult = calendarCreator.createFiscalYearByQuarters(year);
+
+            expect(secondResult.length).toBe(4, 'Should still return 4 quarters');
+            for (var k = 0; k < secondResult.length; k++) {
+                expect(secondResult[k].getUniqueValue()).toBe(firstSysIds[k], 'Quarter ' + (k + 1) + ' should have same sys_id (updated, not created)');
+            }
+        });
+
+        it('should throw an error when the calendar does not exist', function() {
+            var year = 2024;
+            var nonExistentCalendar = testUtils.getRandomAlphaNumericString();
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: nonExistentCalendar,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            expect(function() {
+                calendarCreator.createFiscalYearByQuarters(year);
+            }).toThrow('Could not find calendar using name: ' + nonExistentCalendar);
+        });
+
+        it('should throw an error when span names do not exist', function() {
+            var year = 2024;
+
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            // Don't create span names - should fail when trying to create Q1
+            expect(function() {
+                calendarCreator.createFiscalYearByQuarters(year);
+            }).toThrow();
+        });
+    });
+
+    describe('createFiscalQuarterName', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalQuarterCalendar;
+
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Quarter calendar
+            fiscalQuarterCalendar = new GlideRecord('business_calendar');
+            fiscalQuarterCalendar.newRecord();
+            fiscalQuarterCalendar.calendar_name = fiscalQuarterCalendarName;
+            testUtils.updateAndTrack(fiscalQuarterCalendar);
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create a fiscal quarter name', function() {
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            var result = calendarCreator.createFiscalQuarterName('Q1', 2024);
+
+            expect(result.getValue('short_name')).toBe('2024 Q1');
+            expect(result.getValue('long_name')).toBe('Fiscal Quarter Q1');
+            expect(result.getValue('label')).toBe('FY 2024 Q1');
+            expect(result.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue());
+        });
+
+        it('should update an existing fiscal quarter name', function() {
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var existingFiscalQuarterName = new GlideRecord('business_calendar_span_name');
+            var shortName = calendarCreator.getFiscalQuarterSpanNameShortName('Q1', 2024);
+            existingFiscalQuarterName.short_name = shortName;
+            existingFiscalQuarterName.calendar = fiscalQuarterCalendar.getUniqueValue();
+            existingFiscalQuarterName.update();
+
+            var result = calendarCreator.createFiscalQuarterName('Q1', 2024);
+
+            expect(result.getUniqueValue()).toBe(existingFiscalQuarterName.getUniqueValue());
+            expect(result.getValue('short_name')).toBe('2024 Q1');
+            expect(result.getValue('long_name')).toBe('Fiscal Quarter Q1');
+            expect(result.getValue('label')).toBe('FY 2024 Q1');
+            expect(result.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue());
+        });
+
+        it('should throw an error if quarter is missing', function() {
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            expect(function() {
+                calendarCreator.createFiscalQuarterName('', 2024);
+            }).toThrow()
+        });
+
+        it('should throw an error if year is missing', function() {
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+
+            expect(function() {
+                // @ts-ignore
+                calendarCreator.createFiscalQuarterName('Q1', undefined);
+            }).toThrow()
+        });
+    });
+
+    describe('createFiscalQuarterName', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalQuarterCalendar;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Quarter calendar
+            fiscalQuarterCalendar = new GlideRecord('business_calendar');
+            fiscalQuarterCalendar.newRecord();
+            fiscalQuarterCalendar.calendar_name = fiscalQuarterCalendarName;
+            testUtils.updateAndTrack(fiscalQuarterCalendar);
+        });
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+        it('should create a new fiscal quarter span name when it does not exist', function() {
+            var quarter = 'Q1';
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.createFiscalQuarterName(quarter, year);
+            expect(result).toBeDefined('Span name should be created');
+            expect(result.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue(), 'Calendar should match');
+            expect(result.getValue('short_name')).toBe('2024 Q1', 'Short name should be year + space + quarter');
+            expect(result.getValue('long_name')).toBe('Fiscal Quarter Q1', 'Long name should be Fiscal Quarter + quarter');
+            expect(result.getValue('label')).toBe('FY 2024 Q1', 'Label should be FY + year + quarter');
+        });
+        it('should update an existing fiscal quarter span name if it already exists', function() {
+            var quarter = 'Q2';
+            var year = 2024;
+            var shortName = year + ' ' + quarter;
+            // Create an existing span name
+            var existingSpanName = new GlideRecord('business_calendar_span_name');
+            existingSpanName.newRecord();
+            existingSpanName.calendar = fiscalQuarterCalendar.getUniqueValue();
+            existingSpanName.short_name = shortName;
+            existingSpanName.long_name = 'Old Long Name';
+            existingSpanName.label = 'Old Label';
+            testUtils.updateAndTrack(existingSpanName);
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.createFiscalQuarterName(quarter, year);
+            expect(result).toBeDefined('Span name should be updated');
+            expect(result.getUniqueValue()).toBe(existingSpanName.getUniqueValue(), 'Should update existing record');
+            expect(result.getValue('short_name')).toBe('2024 Q2', 'Short name should be updated');
+            expect(result.getValue('long_name')).toBe('Fiscal Quarter Q2', 'Long name should be updated');
+            expect(result.getValue('label')).toBe('FY 2024 Q2', 'Label should be updated');
+        });
+        it('should create span names for all quarters Q1-Q4', function() {
+            var year = 2024;
+            var quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            for (var i = 0; i < quarters.length; i++) {
+                var quarter = quarters[i];
+                var result = calendarCreator.createFiscalQuarterName(quarter, year);
+                expect(result).toBeDefined('Span name should be created for ' + quarter);
+                expect(result.getValue('short_name')).toBe(year + ' ' + quarter, 'Short name should match for ' + quarter);
+                expect(result.getValue('long_name')).toBe('Fiscal Quarter ' + quarter, 'Long name should match for ' + quarter);
+                expect(result.getValue('label')).toBe('FY ' + year + ' ' + quarter, 'Label should match for ' + quarter);
+            }
+        });
+        it('should work for different years', function() {
+            var quarter = 'Q1';
+            var years = [2020, 2025, 2030];
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            for (var i = 0; i < years.length; i++) {
+                var year = years[i];
+                var result = calendarCreator.createFiscalQuarterName(quarter, year);
+                expect(result).toBeDefined('Span name should be created for year ' + year);
+                expect(result.getValue('short_name')).toBe(year + ' ' + quarter, 'Short name should match for year ' + year);
+                expect(result.getValue('label')).toBe('FY ' + year + ' ' + quarter, 'Label should match for year ' + year);
+            }
+        });
+        it('should throw an error when the calendar does not exist', function() {
+            var quarter = 'Q1';
+            var year = 2024;
+            var nonExistentCalendar = testUtils.getRandomAlphaNumericString();
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: nonExistentCalendar,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            expect(function() {
+                calendarCreator.createFiscalQuarterName(quarter, year);
+            }).toThrow('Could not find calendar using name: ' + nonExistentCalendar);
+        });
+    });
+
+    describe('getYearSpanName', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalYearCalendar;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Year calendar
+            fiscalYearCalendar = new GlideRecord('business_calendar');
+            fiscalYearCalendar.newRecord();
+            fiscalYearCalendar.calendar_name = fiscalYearCalendarName;
+            testUtils.updateAndTrack(fiscalYearCalendar);
+        });
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+        it('should return the year span name when it exists', function() {
+            var year = 2024;
+            var shortName = year.toString();
+            // Create the span name
+            var spanName = new GlideRecord('business_calendar_span_name');
+            spanName.newRecord();
+            spanName.calendar = fiscalYearCalendar.getUniqueValue();
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Year ' + year;
+            spanName.label = 'FY ' + year;
+            testUtils.updateAndTrack(spanName);
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.getYearSpanName(year);
+            expect(result).toBeDefined('Span name should be defined');
+            expect(result.getUniqueValue()).toBe(spanName.getUniqueValue(), 'Span name sys_id should match');
+            expect(result.getValue('short_name')).toBe(shortName, 'Short name should match');
+        });
+        it('should work for different years', function() {
+            var years = [2020, 2024, 2030];
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            for (var i = 0; i < years.length; i++) {
+                var year = years[i];
+                var shortName = year.toString();
+                // Create the span name
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalYearCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Year ' + year;
+                spanName.label = 'FY ' + year;
+                testUtils.updateAndTrack(spanName);
+                var result = calendarCreator.getYearSpanName(year);
+                expect(result.getValue('short_name')).toBe(shortName, 'Short name should match for year ' + year);
+            }
+        });
+        it('should throw an error when the year span name does not exist', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            expect(function() {
+                calendarCreator.getYearSpanName(year);
+            }).toThrow();
+        });
+        it('should throw an error when the calendar does not exist', function() {
+            var year = 2024;
+            var nonExistentCalendar = testUtils.getRandomAlphaNumericString();
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: nonExistentCalendar
+            });
+            expect(function() {
+                calendarCreator.getYearSpanName(year);
+            }).toThrow('Could not find calendar using name: ' + nonExistentCalendar);
+        });
+    });
+
+    describe('createYear', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalYearCalendar;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Year calendar
+            fiscalYearCalendar = new GlideRecord('business_calendar');
+            fiscalYearCalendar.newRecord();
+            fiscalYearCalendar.calendar_name = fiscalYearCalendarName;
+            testUtils.updateAndTrack(fiscalYearCalendar);
+        });
+
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create a new year when it does not exist', function() {
+            var year = 2024;
+            var shortName = year.toString();
+            // Create the span name
+            var spanName = new GlideRecord('business_calendar_span_name');
+            spanName.newRecord();
+            spanName.calendar = fiscalYearCalendar.getUniqueValue();
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Year ' + year;
+            spanName.label = 'FY ' + year;
+            testUtils.updateAndTrack(spanName);
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.createYear(year);
+            expect(result).toBeDefined('Year should be created');
+            expect(result.getValue('calendar')).toBe(fiscalYearCalendar.getUniqueValue(), 'Calendar should match');
+            expect(result.getValue('start')).toBe('2023-10-01 00:00:00', 'Start date should be Oct 1 of previous year');
+            expect(result.getValue('end')).toBe('2024-09-30 23:59:59', 'End date should be Sep 30 of current year');
+        });
+
+        it('should update an existing year if it already exists', function() {
+            var year = 2024;
+            var shortName = year.toString();
+            // Create the span name
+            var spanName = new GlideRecord('business_calendar_span_name');
+            spanName.newRecord();
+            spanName.calendar = fiscalYearCalendar.getUniqueValue();
+            spanName.short_name = shortName;
+            spanName.long_name = 'Fiscal Year ' + year;
+            spanName.label = 'FY ' + year;
+            testUtils.updateAndTrack(spanName);
+            // Create an existing calendar span
+            var existingSpan = new GlideRecord('business_calendar_span');
+            existingSpan.newRecord();
+            existingSpan.calendar = fiscalYearCalendar.getUniqueValue();
+            existingSpan.start = '2023-10-01 00:00:00';
+            existingSpan.end = '2024-09-30 23:59:59';
+            existingSpan.span_name = spanName.getUniqueValue();
+            testUtils.updateAndTrack(existingSpan);
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.createYear(year);
+            expect(result).toBeDefined('Year should be updated');
+            expect(result.getUniqueValue()).toBe(existingSpan.getUniqueValue(), 'Should update existing record');
+            expect(result.getValue('calendar')).toBe(fiscalYearCalendar.getUniqueValue(), 'Calendar should match');
+            expect(result.getValue('span_name')).toBe(spanName.getUniqueValue(), 'Span name should match');
+        });
+
+        it('should create years with correct date ranges', function() {
+            var years = [
+                { year: 2020, start: '2019-10-01 00:00:00', end: '2020-09-30 23:59:59' },
+                { year: 2024, start: '2023-10-01 00:00:00', end: '2024-09-30 23:59:59' },
+                { year: 2030, start: '2029-10-01 00:00:00', end: '2030-09-30 23:59:59' }
+            ];
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            for (var i = 0; i < years.length; i++) {
+                var yearData = years[i];
+                var shortName = yearData.year.toString();
+                // Create the span name
+                var spanName = new GlideRecord('business_calendar_span_name');
+                spanName.newRecord();
+                spanName.calendar = fiscalYearCalendar.getUniqueValue();
+                spanName.short_name = shortName;
+                spanName.long_name = 'Fiscal Year ' + yearData.year;
+                spanName.label = 'FY ' + yearData.year;
+                testUtils.updateAndTrack(spanName);
+                var result = calendarCreator.createYear(yearData.year);
+                expect(result).toBeDefined('Year ' + yearData.year + ' should be created');
+                expect(result.getValue('start')).toBe(yearData.start, 'Start date should be correct for ' + yearData.year);
+                expect(result.getValue('end')).toBe(yearData.end, 'End date should be correct for ' + yearData.year);
+            }
+        });
+
+        it('should throw an error when the calendar does not exist', function() {
+            var year = 2024;
+            var nonExistentCalendar = testUtils.getRandomAlphaNumericString();
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: nonExistentCalendar
+            });
+            expect(function() {
+                calendarCreator.createYear(year);
+            }).toThrow('Could not find calendar using name: ' + nonExistentCalendar);
+        });
+
+        it('should throw an error when the span name does not exist', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            expect(function() {
+                calendarCreator.createYear(year);
+            }).toThrow();
+        });
+    });
+
+    describe('createFiscalYearName', function() {
+        /** @type {global.KLF_TestUtils} */
+        var testUtils;
+        /** @type {string} */
+        var fiscalQuarterCalendarName;
+        /** @type {string} */
+        var fiscalYearCalendarName;
+        /** @type {GlideRecord} */
+        var fiscalYearCalendar;
+        beforeEach(function() {
+            testUtils = new global.KLF_TestUtils();
+            fiscalQuarterCalendarName = 'Test FQ Calendar ' + testUtils.getRandomAlphaNumericString(4);
+            fiscalYearCalendarName = 'Test FY Calendar ' + testUtils.getRandomAlphaNumericString(4);
+
+            // Create the Fiscal Year calendar
+            fiscalYearCalendar = new GlideRecord('business_calendar');
+            fiscalYearCalendar.newRecord();
+            fiscalYearCalendar.calendar_name = fiscalYearCalendarName;
+            testUtils.updateAndTrack(fiscalYearCalendar);
+        });
+        afterEach(function() {
+            testUtils.cleanup();
+        });
+
+        it('should create a new fiscal year span name when it does not exist', function() {
+            var year = 2024;
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.createFiscalYearName(year);
+            expect(result).toBeDefined('Span name should be created');
+            expect(result.getValue('calendar')).toBe(fiscalYearCalendar.getUniqueValue(), 'Calendar should match');
+            expect(result.getValue('short_name')).toBe('2024', 'Short name should be year as string');
+            expect(result.getValue('long_name')).toBe('Fiscal Year 2024', 'Long name should be Fiscal Year + year');
+            expect(result.getValue('label')).toBe('FY 2024', 'Label should be FY + year');
+        });
+
+        it('should update an existing fiscal year span name if it already exists', function() {
+            var year = 2024;
+            var shortName = year.toString();
+            // Create an existing span name
+            var existingSpanName = new GlideRecord('business_calendar_span_name');
+            existingSpanName.newRecord();
+            existingSpanName.calendar = fiscalYearCalendar.getUniqueValue();
+            existingSpanName.short_name = shortName;
+            existingSpanName.long_name = 'Old Long Name';
+            existingSpanName.label = 'Old Label';
+            testUtils.updateAndTrack(existingSpanName);
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            var result = calendarCreator.createFiscalYearName(year);
+            expect(result).toBeDefined('Span name should be updated');
+            expect(result.getUniqueValue()).toBe(existingSpanName.getUniqueValue(), 'Should update existing record');
+            expect(result.getValue('short_name')).toBe('2024', 'Short name should be updated');
+            expect(result.getValue('long_name')).toBe('Fiscal Year 2024', 'Long name should be updated');
+            expect(result.getValue('label')).toBe('FY 2024', 'Label should be updated');
+        });
+
+        it('should create span names for multiple years', function() {
+            var years = [2020, 2024, 2030];
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: fiscalYearCalendarName
+            });
+            for (var i = 0; i < years.length; i++) {
+                var year = years[i];
+                var result = calendarCreator.createFiscalYearName(year);
+                expect(result).toBeDefined('Span name should be created for year ' + year);
+                expect(result.getValue('short_name')).toBe(year.toString(), 'Short name should match for year ' + year);
+                expect(result.getValue('long_name')).toBe('Fiscal Year ' + year, 'Long name should match for year ' + year);
+                expect(result.getValue('label')).toBe('FY ' + year, 'Label should match for year ' + year);
+            }
+        });
+
+        it('should throw an error when the calendar does not exist', function() {
+            var year = 2024;
+            var nonExistentCalendar = testUtils.getRandomAlphaNumericString();
+            var calendarCreator = global.KLF_CalendarCreator({
+                fiscalQuarterCalendarName: fiscalQuarterCalendarName,
+                fiscalYearCalendarName: nonExistentCalendar
+            });
+            expect(function() {
+                calendarCreator.createFiscalYearName(year);
+            }).toThrow('Could not find calendar using name: ' + nonExistentCalendar);
+        });
+    });
+}]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-10-26 18:07:09</sys_created_on>
+        <sys_id>0c15368e833c36103c9299e0deaad348</sys_id>
+        <sys_mod_count>23</sys_mod_count>
+        <sys_name>KLF_CalendarCreatorTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_0c15368e833c36103c9299e0deaad348</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-10-26 22:24:34</sys_updated_on>
+    </sys_script_include>
+</record_update>

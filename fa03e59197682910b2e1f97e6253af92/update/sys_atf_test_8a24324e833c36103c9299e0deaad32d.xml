@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test">
+    <sys_atf_test action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Tests for KLF_CalendarCreatorTest object</description>
+        <enable_parameterized_testing>false</enable_parameterized_testing>
+        <fail_on_server_error>false</fail_on_server_error>
+        <name>KLF_CalendarCreatorTest</name>
+        <parameters/>
+        <remember/>
+        <sn_atf_tg_generated>false</sn_atf_tg_generated>
+        <sys_class_name>sys_atf_test</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-10-26 18:05:39</sys_created_on>
+        <sys_id>8a24324e833c36103c9299e0deaad32d</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>KLF_CalendarCreatorTest</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_atf_test_8a24324e833c36103c9299e0deaad32d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-10-26 21:20:47</sys_updated_on>
+        <test_origin>manual</test_origin>
+        <u_template>false</u_template>
+    </sys_atf_test>
+    <sys_variable_value action="delete_multiple" query="document_key=8a24324e833c36103c9299e0deaad32d"/>
+</record_update>
