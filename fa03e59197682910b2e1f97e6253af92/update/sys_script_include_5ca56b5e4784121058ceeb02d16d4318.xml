@@ -6,8 +6,11 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_TestJasmineMatchers</name>
-        <script><![CDATA[function KLF_TestJasmineMatchers(global) {
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[// @ts-nocheck
+function KLF_TestJasmineMatchers(global) {
 
     global.beforeEach(function() {
         global.jasmine.addMatchers(global.KLF_TestUtils.matchers);
@@ -2105,16 +2108,25 @@
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-18 17:09:27</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>5ca56b5e4784121058ceeb02d16d4318</sys_id>
-        <sys_mod_count>10</sys_mod_count>
+        <sys_mod_count>11</sys_mod_count>
         <sys_name>KLF_TestJasmineMatchers</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_5ca56b5e4784121058ceeb02d16d4318</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-27 23:56:22</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-10-25 14:36:37</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>5ca56b5e4784121058ceeb02d16d4318</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-08-18 17:09:27</sys_created_on>
+        <sys_id>d7d5ef5e4704121058ceeb02d16d4361</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-08-18 17:11:02</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

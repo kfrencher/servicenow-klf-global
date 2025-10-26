@@ -5,11 +5,15 @@
         <global>true</global>
         <ignore_in_now_experience>false</ignore_in_now_experience>
         <name>KLF_RecordWatcher</name>
-        <script><![CDATA[var KLF_RecordWatcher = (function (amb) {
+        <script><![CDATA[var KLF_RecordWatcher = (function (/** @type {AMBClient} */ amb) {
     var watcherChannel;
     var connected = false;
     var diagnosticLog = true;
 
+    /**
+     * @param {string} filter 
+     * @returns {string}
+     */
     function getFilterString(filter) {
         filter = filter
             .replace(/\^EQ/g, "")
@@ -18,28 +22,47 @@
         return btoa(filter).replace(/=/g, "-");
     }
 
+    /**
+     * 
+     * @param {string} table 
+     * @param {string} filter 
+     * @returns 
+     */
     function getChannelRW(table, filter) {
         var t = "/rw/default/" + table + "/" + getFilterString(filter);
         return amb.getChannel(t);
     }
 
+    /**
+     * @param {string} table 
+     * @param {string} sys_id 
+     * @param {string?} [query]
+     */
     function initWatcher(table, sys_id, query) {
         if (!table) return;
 
-        if (sys_id) var filter = "sys_id=" + sys_id;
-        else filter = query;
+        var filter = sys_id ? "sys_id=" + sys_id : query;
 
         if (!filter) return;
 
         return initChannel(table, filter);
     }
 
+    /**
+     * @param {string} table 
+     * @param {string} query 
+     */
     function initList(table, query) {
         if (!table) return;
         query = query || "sys_idISNOTEMPTY";
         return initChannel(table, query);
     }
 
+    /**
+     * @param {string[]} list 
+     * @param {any} prevChannel 
+     * @returns {any}
+     */
     function initTaskList(list, prevChannel) {
         if (prevChannel) prevChannel.unsubscribe();
         var sys_ids = list.toString();
@@ -47,9 +70,16 @@
         return initChannel("task", filter);
     }
 
+    /**
+     * 
+     * @param {string} table 
+     * @param {string} filter 
+     * @param {(data:any)=>void} [onMessage]
+     * @returns 
+     */
     function initChannel(table, filter, onMessage) {
         if (isBlockedTable(table)) {
-            log("Blocked from watching", table);
+            log("Blocked from watching" + table);
             return null;
         }
 
@@ -61,16 +91,32 @@
         return watcherChannel;
     }
 
+    /**
+     * @param {AMBMessage} message 
+     */
     function defaultOnMessage(message) {
         var r = message.data;
         var c = message.channel;
         if (diagnosticLog) log(r);
     }
 
+    /**
+     * @typedef {{
+     * data: any,
+     * channel: string
+     * }} AMBMessage
+     */
+    /**
+     * @param {string} message 
+     */
     function log(message) {
         console.log(message);
     }
 
+    /**
+     * @param {string} table 
+     * @returns 
+     */
     function isBlockedTable(table) {
         return table == "sys_amb_message" || table.startsWith("sys_rw");
     }
@@ -78,17 +124,28 @@
     return {
         initTaskList: initTaskList,
         initChannel: initChannel,
+        /**
+         * @param {string} table 
+         * @param {string} sys_id 
+         * @param {string} query 
+         */
         init: function (table, sys_id, query) {
             initWatcher(table, sys_id, query);
         },
         initList: initList,
+        /**
+         * @param {string} table 
+         * @param {string} sysId 
+         */
         initRecord: function (table, sysId) {
             initWatcher(table, sysId, null);
         },
     };
+    // @ts-ignore
 })(window.top.g_ambClient);
 
 addRenderEvent(() => {
+    // @ts-ignore
     if (window.g_form) {
         var table = g_form.getTableName();
         var sysId = g_form.getUniqueValue();
@@ -117,14 +174,14 @@ addRenderEvent(() => {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-12-12 07:46:40</sys_created_on>
         <sys_id>d3074af597c7f51024d7b066f053af97</sys_id>
-        <sys_mod_count>28</sys_mod_count>
+        <sys_mod_count>30</sys_mod_count>
         <sys_name>KLF_RecordWatcher</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ui_script_d3074af597c7f51024d7b066f053af97</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-07-26 15:07:15</sys_updated_on>
+        <sys_updated_on>2025-10-25 15:21:24</sys_updated_on>
         <ui_type>0</ui_type>
         <use_scoped_format>false</use_scoped_format>
     </sys_ui_script>
