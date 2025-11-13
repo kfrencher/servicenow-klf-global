@@ -66,7 +66,7 @@ function KLF_MigratorUtils(config, connectionConfig, groupMapping, userMapping) 
     this.targetScope = _config.targetScope;
     this.targetScopeSysId = targetScopeSysId;
     this.tableMap = _config.tableMap || {};
-};
+}
 
 // Inherit from KLF_RecordSync
 KLF_MigratorUtils.prototype = Object.create(global.KLF_RecordSync.prototype);
@@ -343,16 +343,25 @@ global.KLF_MigratorUtils = KLF_MigratorUtils;
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2025-04-30 19:30:49</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>a61315288315e2103c9299e0deaad380</sys_id>
-        <sys_mod_count>56</sys_mod_count>
+        <sys_mod_count>57</sys_mod_count>
         <sys_name>KLF_MigratorUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_a61315288315e2103c9299e0deaad380</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-05-28 18:55:31</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-11-13 00:52:26</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>a61315288315e2103c9299e0deaad380</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2025-04-30 19:30:49</sys_created_on>
+        <sys_id>5ca311608315e2103c9299e0deaad338</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-04-30 19:30:49</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

@@ -410,6 +410,7 @@ global.KLF_DataTransferUtils.prototype = {
         var hierarchy = this.getTableAncestors(table);
         var baseInScope = '';
         // @ts-ignore
+        // eslint-disable-next-line no-cond-assign
         while (baseInScope = hierarchy.pop()) {
             if (baseInScope.startsWith(scopeNamespace)) {
                 break;
@@ -465,6 +466,7 @@ global.KLF_DataTransferUtils.prototype = {
         while (journal.next()) {
             // Using saveRecord to add these records to the update set directly w/out
             // going through all the things that addToUpdateSet does
+            // 
             new global.addToUpdateSetUtils().saveRecord(journal, true, false);
         }
     },
@@ -678,16 +680,14 @@ global.KLF_DataTransferUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-08 21:43:04</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>fe19c50a97f44a1024d7b066f053afdb</sys_id>
-        <sys_mod_count>89</sys_mod_count>
+        <sys_mod_count>90</sys_mod_count>
         <sys_name>KLF_DataTransferUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_fe19c50a97f44a1024d7b066f053afdb</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-04-30 00:41:41</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2025-11-13 00:53:30</sys_updated_on>
     </sys_script_include>
 </record_update>

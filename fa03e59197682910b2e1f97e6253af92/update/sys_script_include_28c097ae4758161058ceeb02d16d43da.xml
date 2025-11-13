@@ -9,7 +9,8 @@
         <mobile_callable>false</mobile_callable>
         <name>KLF_TestChance</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[// @ts-nocheck
+        <script><![CDATA[/* eslint-disable */
+// @ts-nocheck
 var global = global || {};
 
 global.KLF_TestChance =
@@ -1350,14 +1351,14 @@ global.KLF_TestChance =
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-31 20:31:25</sys_created_on>
         <sys_id>28c097ae4758161058ceeb02d16d43da</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>20</sys_mod_count>
         <sys_name>KLF_TestChance</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_28c097ae4758161058ceeb02d16d43da</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2025-10-25 14:52:33</sys_updated_on>
+        <sys_updated_on>2025-11-13 00:53:06</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>28c097ae4758161058ceeb02d16d43da</id>
