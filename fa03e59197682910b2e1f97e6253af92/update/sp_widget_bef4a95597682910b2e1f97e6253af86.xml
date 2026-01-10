@@ -3,6 +3,25 @@
         <category>custom</category>
         <client_script><![CDATA[api.controller = function() {}; // Only here to satisfy validation client script "Validate Client Controller". It requires this script begin with a function
 
+/**
+ * @typedef {{
+ * g_form: g_form,
+ * $rootScope: angular.IRootScopeService,
+ * $scope: AngularScope,
+ * $timeout: angular.ITimeoutService,
+ * $location: angular.ILocationService,
+ * $log: angular.ILogService,
+ * $window: angular.IWindowService,
+ * spUtil: spUtil,
+ * nowAttachmentHandler: *,
+ * spAriaUtil: *,
+ * spNavStateManager: *,
+ * glideUserSession: *,
+ * i18n: *,
+ * klfModal: *
+ * }} KLF_FormContext
+ */
+
 // @ts-ignore
 api.controller =
     /**
@@ -19,8 +38,9 @@ api.controller =
      * @param {*} glideUserSession 
      * @param {*} i18n 
      * @param {*} klfModal 
+     * @param {ReturnType<typeof klfFormContext>} klfFormContext
      */
-    function controller($rootScope, $scope, $timeout, $location, $log, $window, spUtil, nowAttachmentHandler, spAriaUtil, spNavStateManager, glideUserSession, i18n, klfModal) {
+    function controller($rootScope, $scope, $timeout, $location, $log, $window, spUtil, nowAttachmentHandler, spAriaUtil, spNavStateManager, glideUserSession, i18n, klfModal, klfFormContext) {
         // KLF ADDITION
         // adding the g_user reference to allow UI Actions to be compatible
         /** @type {g_user} */
@@ -506,8 +526,10 @@ api.controller =
             // THis allows external scripts like UI Policies and Client Scripts
             // access to objects in Service Portal if the script is running in the
             // Service Portal context
-            // @ts-ignore -- CustomEvent.fire is not defined
-            CustomEvent.fire('klf.form.initialized', {
+            /**
+             * @type {KLF_FormContext}
+             */
+            var formContext = {
                 g_form: g_form,
                 $rootScope: $rootScope,
                 $scope: $scope,
@@ -522,7 +544,10 @@ api.controller =
                 glideUserSession: glideUserSession,
                 i18n: i18n,
                 klfModal: klfModal
-            });
+            };
+            // @ts-ignore -- CustomEvent.fire is not defined
+            CustomEvent.fire('klf.form.initialized', formContext);
+            klfFormContext.setContext(formContext);
         });
         // END KLF ADDITION
     };]]></client_script>
@@ -865,14 +890,14 @@ Refer to comments in the "Server script" field for details on customizations.</d
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:10:22</sys_created_on>
         <sys_id>bef4a95597682910b2e1f97e6253af86</sys_id>
-        <sys_mod_count>37</sys_mod_count>
+        <sys_mod_count>42</sys_mod_count>
         <sys_name>KLF Form</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_widget_bef4a95597682910b2e1f97e6253af86</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-04 23:52:46</sys_updated_on>
+        <sys_updated_on>2026-01-10 21:08:15</sys_updated_on>
         <template><![CDATA[<div ng-if="::!data.isValid && !data.emptyStateTemplate" class="panel panel-default">
   <div class="panel-body wrapper-lg text-center">
     <span ng-if="!data.tableUnsupported">${Record not found}</span>

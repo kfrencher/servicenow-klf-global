@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_angular_provider">
+    <sp_angular_provider action="INSERT_OR_UPDATE">
+        <name>klfFormContext</name>
+        <script><![CDATA[/**
+ * @type {() =>{
+ * 	 setContext: (context: KLF_FormContext) => void,
+ * 	 getContext: () => Promise<KLF_FormContext>
+ * }}
+ */
+function klfFormContext() {
+	this.context = null;
+	this.resolveGetContext = null;
+
+	return {
+		/**
+		 * Called from KLF Form widget. This should only be called from the form widget.
+		 * It sets the context when the form is initialized. The context can be used by
+		 * other widgets that need access to some of the form objects.
+		 */
+		setContext: function(context) {
+			/** @type {KLF_FormContext} */
+			this.context = context;
+			if(this.resolveGetContext) {
+				this.resolveGetContext(context);
+			}
+		},
+
+		/**
+		 * This can be called by other widgets to retrieve context.
+		 * This will return a promise that is resolved with the form context data.
+		 * @returns {Promise<KLF_FormContext>}
+		 */
+		getContext: function() {
+			var me = this;
+			return new Promise(function(resolve) {
+				if(me.context) {
+					resolve(me.context);
+				} else {
+					me.resolveGetContext = resolve;
+				}
+			});
+		}
+	};
+}]]></script>
+        <sys_class_name>sp_angular_provider</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-10 01:54:54</sys_created_on>
+        <sys_id>cf2feedeff52321020d2333663e97267</sys_id>
+        <sys_mod_count>14</sys_mod_count>
+        <sys_name>klfFormContext</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sp_angular_provider_cf2feedeff52321020d2333663e97267</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 21:13:11</sys_updated_on>
+        <type>service</type>
+    </sp_angular_provider>
+</record_update>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_ng_pro_sp_ng_pro">
+    <m2m_sp_ng_pro_sp_ng_pro action="INSERT_OR_UPDATE">
+        <required_by display_value="uiActionExecutor">59923196ff5efa1020d2333663e9726d</required_by>
+        <requires display_value="klfFormContext">cf2feedeff52321020d2333663e97267</requires>
+        <sys_class_name>m2m_sp_ng_pro_sp_ng_pro</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-10 20:56:21</sys_created_on>
+        <sys_id>2394bea6831ab2103c9299e0deaad358</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>uiActionExecutor.klfFormContext</sys_name>
+        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>m2m_sp_ng_pro_sp_ng_pro_2394bea6831ab2103c9299e0deaad358</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:56:58</sys_updated_on>
+    </m2m_sp_ng_pro_sp_ng_pro>
+    <sys_claim action="INSERT_OR_UPDATE">
+        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
+        <claim_timestamp>19ba9b2b14e0000001</claim_timestamp>
+        <metadata_update_name>m2m_sp_ng_pro_sp_ng_pro_2394bea6831ab2103c9299e0deaad358</metadata_update_name>
+        <previous_claim_app_version>1.1.0</previous_claim_app_version>
+        <previous_claim_name>KLF Global</previous_claim_name>
+        <previous_claim_scope>fa03e59197682910b2e1f97e6253af92</previous_claim_scope>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-10 20:56:58</sys_created_on>
+        <sys_id>3cc4bee6831ab2103c9299e0deaad385</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:56:58</sys_updated_on>
+    </sys_claim>
+</record_update>

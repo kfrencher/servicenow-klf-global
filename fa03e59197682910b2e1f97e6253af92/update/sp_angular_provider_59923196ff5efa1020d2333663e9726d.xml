@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_angular_provider">
+    <sp_angular_provider action="INSERT_OR_UPDATE">
+        <name>uiActionExecutor</name>
+        <script><![CDATA[/**
+ * The uiActionExecutor allows direct execution of a UI Action from ServicePortal without the user
+ * clicking a button
+ * 
+ * spUIActionFactory is defined in glide-service-portal-x.x.x.jar
+ * Look for factory.spUIActionFactory.js and directive.spModel.js
+ * @param {*} spUIActionFactory
+ * @param {ReturnType<typeof klfFormContext>} klfFormContext
+ * @returns {{
+ *   execute: (actionSysId: string) => Promise<any>,
+ *   executeWithoutContext: (g_form: g_form, actionSysId: string, attachmentGUID?: string) => Promise<any>
+ * }}
+ */
+function uiActionExecutor(spUIActionFactory, klfFormContext) {
+    var g_form = null;
+    var formModel = null;
+    if (klfFormContext) {
+        klfFormContext.getContext().then(function(context) {
+            g_form = context.g_form;
+            formModel = context.$scope.data.f;
+        });
+    }
+
+    /**
+     * @param {g_form} g_form GlideForm object
+     * @param {string} [attachmentGUID] The attachmentGUID associated with the form model. Typically $scope.data.f._attachmentGUID
+     * Returns a data object in the format required by spUIActionFactory.executeUIAction
+     */
+    function getFormData(g_form, attachmentGUID) {
+        var formData = {};
+        var fieldNames = g_form.getFieldNames();
+        fieldNames.forEach(function(name) {
+            formData[name] = g_form.getField(name);
+        });
+
+        if (attachmentGUID) {
+            formData._attachmentGUID = attachmentGUID;
+        }
+
+        return formData;
+    }
+
+    /**
+     * @param {string} actionSysId The sys_ui_action.sys_id to call
+     * @returns {Promise}
+     */
+    function execute(actionSysId) {
+        if (!klfFormContext) {
+            throw 'Cannot use execute without context';
+        }
+        if (!g_form) {
+            throw 'g_form is null';
+        }
+
+        if (!formModel) {
+            throw 'formModel is null';
+        }
+
+        return executeWithoutContext(g_form, actionSysId, formModel._attachmentGUID);
+    }
+
+    /**
+     * @param {g_form} g_form GlideForm object
+     * @param {string} actionSysId The sys_ui_action.sys_id to call
+     * @param {string} [attachmentGUID] The attachmentGUID associated with the form model. Typically $scope.data.f._attachmentGUID
+     * @returns {Promise}
+     */
+    function executeWithoutContext(g_form, actionSysId, attachmentGUID) {
+        return spUIActionFactory.executeUIAction(actionSysId, g_form.getTableName(), g_form.getSysId(), getFormData(g_form, attachmentGUID));
+    }
+
+    return {
+        execute: execute,
+        executeWithoutContext: executeWithoutContext
+    };
+
+}
+
+/**
+ * @private
+ * This is just here to show what is really happening. A REST call is made to invoke the
+ * UI Action
+ */
+// function async _execute(actionSysId, tableName, recordSysId, formData) {
+//     // create the request
+//     var req = {
+//         method: "POST",
+//         url: "/api/now/sp/uiaction/" + actionSysId,
+//         headers: {
+//             'Accept': 'application/json',
+//             'x-portal': $rootScope.portal_id
+//         },
+//         data: {
+//             table: tableName,
+//             recordID: recordSysId,
+//             data: formData
+//         }
+//     };
+//     try {
+//         var response = await $http(req);
+//         var r = response.data.result;
+//         if (r && r.$$uiNotification) {
+//             $rootScope.$broadcast("$$uiNotification", r.$$uiNotification);
+//         }
+//         return r;
+//     } catch (e) {
+//         console.error("Error " + e.status + " " + e.statusText);
+//     }
+// }]]></script>
+        <sys_class_name>sp_angular_provider</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-09 21:29:38</sys_created_on>
+        <sys_id>59923196ff5efa1020d2333663e9726d</sys_id>
+        <sys_mod_count>22</sys_mod_count>
+        <sys_name>uiActionExecutor</sys_name>
+        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sp_angular_provider_59923196ff5efa1020d2333663e9726d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 21:28:20</sys_updated_on>
+        <type>service</type>
+    </sp_angular_provider>
+    <sys_claim action="INSERT_OR_UPDATE">
+        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
+        <claim_timestamp>19ba9b1c98b0000001</claim_timestamp>
+        <metadata_update_name>sp_angular_provider_59923196ff5efa1020d2333663e9726d</metadata_update_name>
+        <previous_claim_app_version>1.1.0</previous_claim_app_version>
+        <previous_claim_name>KLF Global</previous_claim_name>
+        <previous_claim_scope>fa03e59197682910b2e1f97e6253af92</previous_claim_scope>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-10 20:55:59</sys_created_on>
+        <sys_id>d68476e6831ab2103c9299e0deaad389</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:55:59</sys_updated_on>
+    </sys_claim>
+</record_update>
