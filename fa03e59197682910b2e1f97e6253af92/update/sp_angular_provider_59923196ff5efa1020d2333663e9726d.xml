@@ -15,15 +15,6 @@
  * }}
  */
 function uiActionExecutor(spUIActionFactory, klfFormContext) {
-    var g_form = null;
-    var formModel = null;
-    if (klfFormContext) {
-        klfFormContext.getContext().then(function(context) {
-            g_form = context.g_form;
-            formModel = context.$scope.data.f;
-        });
-    }
-
     /**
      * @param {g_form} g_form GlideForm object
      * @param {string} [attachmentGUID] The attachmentGUID associated with the form model. Typically $scope.data.f._attachmentGUID
@@ -51,15 +42,20 @@ function uiActionExecutor(spUIActionFactory, klfFormContext) {
         if (!klfFormContext) {
             throw 'Cannot use execute without context';
         }
-        if (!g_form) {
-            throw 'g_form is null';
-        }
 
-        if (!formModel) {
-            throw 'formModel is null';
-        }
+        return klfFormContext.getContext().then(function(context) {
+            var g_form = context.g_form;
+            var formModel = context.$scope.data.f;
+            if (!g_form) {
+                throw 'g_form is null';
+            }
 
-        return executeWithoutContext(g_form, actionSysId, formModel._attachmentGUID);
+            if (!formModel) {
+                throw 'formModel is null';
+            }
+
+            return executeWithoutContext(g_form, actionSysId, formModel._attachmentGUID);
+        });
     }
 
     /**
@@ -114,14 +110,14 @@ function uiActionExecutor(spUIActionFactory, klfFormContext) {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-01-09 21:29:38</sys_created_on>
         <sys_id>59923196ff5efa1020d2333663e9726d</sys_id>
-        <sys_mod_count>22</sys_mod_count>
+        <sys_mod_count>23</sys_mod_count>
         <sys_name>uiActionExecutor</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_angular_provider_59923196ff5efa1020d2333663e9726d</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-01-10 21:28:20</sys_updated_on>
+        <sys_updated_on>2026-01-13 13:19:45</sys_updated_on>
         <type>service</type>
     </sp_angular_provider>
     <sys_claim action="INSERT_OR_UPDATE">
