@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_Password2Inspector</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Finds password2 fields and checks if they are KMF encoded or 3DES encoded</description>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_Password2Inspector</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/**
+ * @typedef {{
+ * name: string,
+ * table: string
+ * }} KLF_Password2Field
+ */
+
+var KLF_Password2Inspector = (function () {
+	return {
+		/**
+		 * @param {string} tableName
+		 * @returns {KLF_Password2Field[]}
+		 */
+		findPassword2FieldsByTable: function (tableName) {
+			var fields = /** @type {KLF_Password2Field[]} */ ([]);
+
+			var tableGr = new GlideRecord('sys_dictionary');
+			tableGr.addQuery('name', tableName);
+			tableGr.addQuery('internal_type', 'password2');
+			tableGr.query();
+
+			while(tableGr.next()) {
+				fields.push({
+					name: tableGr.getValue('element'),
+					table: tableGr.getValue('name')
+				});
+			}
+
+			return fields;
+		},
+
+		/**
+		 * @returns {string[]}
+		 */
+		findTablesWithPassword2Fields: function() {
+			var tables = /** @type {string[]} */ ([]);
+
+			var tableGa = new GlideAggregate('sys_dictionary');
+			tableGa.groupBy('name');
+			tableGa.addQuery('sys_class_name', 'sys_dictionary');
+			tableGa.addQuery('internal_type', 'password2');
+			tableGa.addAggregate('COUNT');
+			tableGa.addHaving('COUNT', '>', 0);
+			tableGa.query();
+
+			while(tableGa.next()) {
+				tables.push(tableGa.getValue('name'));
+			}
+
+			return tables;
+		},
+
+		/**
+		 * Looks up the associated password2 fields for the list of tables
+		 * @param {string[]} tables
+		 * @returns {{[tableName:string]:string[]}}
+		 */
+		getTableToPassword2FieldMap: function(tables) {
+			var me = this;
+			return tables.reduce(function(tableToFields, table){ 
+				var fields = me.findPassword2FieldsByTable(table);
+				tableToFields[table] = fields.map(function(field) {
+					return field.name;
+				});
+				return tableToFields;
+			}, /** @type {{[tableName:string]:string[]}} */ ({}));
+		},
+
+		/**
+		 * @param {string} tableName
+		 * @param {string[]} fields
+		 * @returns {boolean}
+		 */
+		_doesTableHavePassword2Data: function(tableName, fields) {
+			if(fields.length === 0) {
+				return false;
+			}
+
+			var glideRecord = new GlideRecord(tableName);
+			var _fields = Array.from(fields);
+			var firstField = /** @type {string} */ (_fields.pop());
+			var query = glideRecord.addQuery(firstField, '!=', '');
+			_fields.reduce(function(q, field) {
+				return q.addOrCondition(field, '!=', '');
+			}, query);
+
+			glideRecord.setLimit(1);
+			glideRecord.query();
+			return glideRecord.hasNext();	
+		},
+
+		/**
+		 * @param {{[tableName:string]:string[]}} tableToFields
+		 * @returns {{[tableName:string]:boolean}}
+		 */
+		checkTablesForPassword2Data: function(tableToFields) {
+			var me = this;
+			var result = /** @type {{[tableName:string]:boolean}} */ ({});
+			Object.keys(tableToFields).forEach(function(tableName) {
+				var fields = tableToFields[tableName];
+				result[tableName] = me._doesTableHavePassword2Data(tableName, fields);
+			});
+			return result;
+		},
+
+		/**
+		 * Returns a map of table names to boolean indicating if that table has any records with password2 data
+		 * @param {boolean} positiveOnly If true, only tables with password2 data will be returned
+		 * @returns {{[tableName:string]:boolean}}
+		 */
+		checkInstanceForPassword2Data: function(positiveOnly) {
+			var tables = this.findTablesWithPassword2Fields();
+			var tableToFields = this.getTableToPassword2FieldMap(tables);
+			var result = this.checkTablesForPassword2Data(tableToFields);
+
+			if(positiveOnly) {
+				return Object.keys(result).reduce(function(filtered, tableName) {
+					if(result[tableName]) {
+						filtered[tableName] = true;
+					}
+					return filtered;
+				}, /** @type {{[tableName:string]:boolean}} */ ({}));
+			} else {
+				return result;
+			}
+		},
+
+		/**
+		 * Returns a list of sys_ids of records in the specified table that have password2 data in the specified fields
+		 * @param {string} tableName
+		 * @param {number} [limit]
+		 * @returns {string[]}
+		 */
+		findRecordsWithPassword2Data: function(tableName, limit) {
+			var fields = this.findPassword2FieldsByTable(tableName).map(function(field) {
+				return field.name;
+			});
+
+			var recordIds = /** @type {string[]} */ ([]);
+			if(fields.length === 0) {
+				return recordIds;
+			}
+
+			var glideRecord = new GlideRecord(tableName);
+			var _fields = Array.from(fields);
+			var firstField = /** @type {string} */ (_fields.pop());
+			var query = glideRecord.addQuery(firstField, '!=', '');
+			_fields.reduce(function(q, field) {
+				return q.addOrCondition(field, '!=', '');
+			}, query);
+
+			if(limit && limit > 0) {
+				glideRecord.setLimit(limit);
+			}
+			glideRecord.query();
+			while(glideRecord.next()) {
+				recordIds.push(glideRecord.getUniqueValue());
+			}
+
+			return recordIds;
+		}
+
+	};
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-02-02 13:52:50</sys_created_on>
+        <sys_id>5b4d2f71837632103c9299e0deaad31f</sys_id>
+        <sys_mod_count>20</sys_mod_count>
+        <sys_name>KLF_Password2Inspector</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_5b4d2f71837632103c9299e0deaad31f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-02-03 00:37:00</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>5b4d2f71837632103c9299e0deaad31f</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-02-02 13:52:49</sys_created_on>
+        <sys_id>6330b7b5837632103c9299e0deaad333</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-02-02 13:52:49</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
