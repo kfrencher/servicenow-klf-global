@@ -460,13 +460,13 @@ function KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual
 
             // Verify each quarter
             for (var j = 0; j < quarters.length; j++) {
-                var quarter = quarters[j];
+                var quarter2 = quarters[j];
                 var quarterRecord = result[j];
 
-                expect(quarterRecord).toBeDefined('Quarter ' + quarter.name + ' should be defined');
-                expect(quarterRecord.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue(), 'Calendar should match for ' + quarter.name);
-                expect(quarterRecord.getValue('start')).toBe(quarter.start, 'Start date should be correct for ' + quarter.name);
-                expect(quarterRecord.getValue('end')).toBe(quarter.end, 'End date should be correct for ' + quarter.name);
+                expect(quarterRecord).toBeDefined('Quarter ' + quarter2.name + ' should be defined');
+                expect(quarterRecord.getValue('calendar')).toBe(fiscalQuarterCalendar.getUniqueValue(), 'Calendar should match for ' + quarter2.name);
+                expect(quarterRecord.getValue('start')).toBe(quarter2.start, 'Start date should be correct for ' + quarter2.name);
+                expect(quarterRecord.getValue('end')).toBe(quarter2.end, 'End date should be correct for ' + quarter2.name);
             }
         });
 
@@ -678,7 +678,7 @@ function KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual
 
             expect(function() {
                 calendarCreator.createFiscalQuarterName('', 2024);
-            }).toThrow()
+            }).toThrow();
         });
 
         it('should throw an error if year is missing', function() {
@@ -690,7 +690,7 @@ function KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual
             expect(function() {
                 // @ts-ignore
                 calendarCreator.createFiscalQuarterName('Q1', undefined);
-            }).toThrow()
+            }).toThrow();
         });
     });
 
@@ -1109,13 +1109,13 @@ function KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2025-10-26 18:07:09</sys_created_on>
         <sys_id>0c15368e833c36103c9299e0deaad348</sys_id>
-        <sys_mod_count>23</sys_mod_count>
+        <sys_mod_count>24</sys_mod_count>
         <sys_name>KLF_CalendarCreatorTest</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_0c15368e833c36103c9299e0deaad348</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2025-10-26 22:24:34</sys_updated_on>
+        <sys_updated_on>2026-01-10 20:47:50</sys_updated_on>
     </sys_script_include>
 </record_update>

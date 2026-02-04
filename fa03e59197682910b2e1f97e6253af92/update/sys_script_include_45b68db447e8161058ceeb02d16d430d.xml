@@ -6,8 +6,15 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_Scoper</name>
-        <script><![CDATA[var global = global || {};
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/**
+ * @todo This object is broken right now. Remove the ts-nocheck and fix the issues.
+ * I created it as a way to scope global objects. I stopped working on it because because
+ * I thought the method in KLF_ScoperUtils was a better approach.
+ */
+var global = global || {};
 /**
  * Object used to copy application elements from one scope to another.
  * This is useful when you want to duplicate a scoped application to a new scope.
@@ -247,6 +254,7 @@ global.KLF_Scoper.prototype = {
      * @param {string} tableName 
      */
     copyUiView: function(viewName, tableName) {
+        // @ts-ignore
         var viewCopier = new global.KLF_Scoper.ViewCopier(viewName, tableName, this.targetScope, this.targetScopeSysId);
         viewCopier.copy();
     },
@@ -490,16 +498,14 @@ global.KLF_Scoper.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-09-07 10:14:35</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>45b68db447e8161058ceeb02d16d430d</sys_id>
-        <sys_mod_count>45</sys_mod_count>
+        <sys_mod_count>46</sys_mod_count>
         <sys_name>KLF_Scoper</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_45b68db447e8161058ceeb02d16d430d</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-13 13:10:46</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:47:50</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -6,8 +6,13 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_ScoperUtils_DataMigrator</name>
-        <script><![CDATA[var global = global || {};
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/**
+ * @todo This object is broken right now. Remove the ts-nocheck and fix the issues.
+ */
+var global = global || {};
 
 /**
  * Object that can be used to transfer data from one scope to another.
@@ -105,6 +110,15 @@ global.KLF_ScoperUtils_DataMigrator.prototype = {
     },
 
     /**
+     * Unloads a record from the update set
+     * @param {GlideRecord} gr
+     * @param {Document} document
+     */
+    unloadRecord: function(gr, document) {
+        throw 'unloadRecord method not implemented';
+    },
+
+    /**
      * Adds the record's related audit entries to the update set
      * @param {GlideRecord} parent
      * @param {Document} document
@@ -173,16 +187,14 @@ global.KLF_ScoperUtils_DataMigrator.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2024-09-15 15:40:04</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>faeddb9387e4d290e2041f8d3fbb358b</sys_id>
-        <sys_mod_count>4</sys_mod_count>
+        <sys_mod_count>5</sys_mod_count>
         <sys_name>KLF_ScoperUtils_DataMigrator</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_faeddb9387e4d290e2041f8d3fbb358b</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-09-16 12:25:12</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:47:52</sys_updated_on>
     </sys_script_include>
 </record_update>

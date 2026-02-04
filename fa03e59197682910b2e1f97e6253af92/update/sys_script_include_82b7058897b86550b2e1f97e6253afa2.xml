@@ -6,7 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_TestUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * This script include provides utility functions for unit testing.
  * 
@@ -29,7 +31,7 @@ var global = global || {};
 
 
 /**
- * @typedef {{recordTracker?: global.KLF_TestUtils.RecordTracker,commonGroupName?:string,commonUsername?:string,adminUsername?:string}} KLF_TestUtilsConfig
+ * @typedef {{recordTracker?: global.KLF_TestUtils.RecordTracker,adminUsername?:string}} KLF_TestUtilsConfig
  */
 
 /**
@@ -41,8 +43,6 @@ var global = global || {};
 global.KLF_TestUtils = function(config) {
     var _config = config || /** @type {KLF_TestUtilsConfig} */ ({});
     this.recordTracker = _config.recordTracker || new global.KLF_TestUtils.RecordTracker();
-    this.commonGroupName = _config.commonGroupName || gs.getProperty('KLF_TestUtils.common_group_name', 'KLF_TestGroup');
-    this.commonUsername = _config.commonUsername || gs.getProperty('KLF_TestUtils.common_username', 'KLF_TestUser');
     this.adminUsername = _config.adminUsername || gs.getProperty('KLF_TestUtils.admin_username', 'KLF_TestAdminUser');
 };
 
@@ -323,16 +323,12 @@ global.KLF_TestUtils.prototype = {
     },
 
     /**
-     * Returns common user sys_user record or null if it does not exist
+     * Always returns null to indicate that there is no common user by default.
+     * It was found that user deletion during ATF tests has a significant performance impact.
      * @returns {?GlideRecord} The sys_user record of the common user or null if it does not exist
      */
     getCommonUser: function() {
-        var user = new GlideRecord('sys_user');
-        if (user.get('user_name', this.commonUsername)) {
-            return user;
-        } else {
-            return null;
-        }
+        return null;
     },
 
     /**
@@ -668,16 +664,14 @@ global.KLF_TestUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-30 00:05:57</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>82b7058897b86550b2e1f97e6253afa2</sys_id>
-        <sys_mod_count>85</sys_mod_count>
+        <sys_mod_count>86</sys_mod_count>
         <sys_name>KLF_TestUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_82b7058897b86550b2e1f97e6253afa2</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2024-10-31 12:44:04</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:47:50</sys_updated_on>
     </sys_script_include>
 </record_update>
