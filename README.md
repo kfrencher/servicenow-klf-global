@@ -184,6 +184,15 @@ This script include provides a way to transfer data between instances using the 
 that is repeatable so the script can be written up front and then run whenever data needs to be transferred. This way the data transfer is automated
 and there is no need to manually export and import data.
 
+Records are synced along with their associated data. The associated data includes attachments, journal entries, audit history, currency data, and price data. This is to ensure that the records in the target instance are as close to the records in the source instance as possible.
+
+By default, the only records that are transferred are records where the sys_id does not exist in the target instance. This behavior can be changed by specifying the **forceSync** parameter when calling the sync methods.
+
+The primary methods in this script include:
+- syncTable: This is used to sync a single table. You can provide an encoded query to specify which records to sync. This method will also handle the syncing of any referenced records that are needed to maintain referential integrity in the target instance.
+- syncAllDataInScope: This is used to sync all the data in a scope. This method will find all the tables in the scope and sync all the data in those tables. This is useful for when you want to sync a scoped application between instances.
+- syncRecord: This is used to sync a single record. This method will also handle the syncing of any referenced records that are needed to maintain referential integrity in the target instance.
+
 > NOTE: To use any of the sync methods you must install this application on the target
 instance and the source instance. This scoped application contains the REST API that is used to import records into
 the target instance. The open API spec for the REST API is located at 
@@ -293,7 +302,7 @@ Example Usage:
 
 This is used with `KLF_RecordSync`. When transferring data between ServiceNow instances users referenced in the source data set may not exist 
 in the target instance. This utility contains functions to help manage the user data when transferring
-data between instances.
+data between instancesKLF Data.
 
 #### KLF_RecordSync_GroupUtils
 
@@ -302,9 +311,9 @@ in the target instance. This utility contains functions to help manage the group
 data between instances.
  
 With this utility you can:
-- Create a mapping of the groups in the local system to the groups in the remote system
-- Sync the groups in the local system with the remote system
-- Update the group sys_ids in notifications that are transferred to the remote system
+- ```createGroupMapping```: Create a mapping of the groups in the local system to the groups in the remote system
+- ```syncGroups```: Sync the groups in the local system with the remote system
+- ```updateRemoteNotifications```: Update the group sys_ids in notifications that are transferred to the remote system
 
 ## KLF_ScoperUtils
 Object used to copy application elements from one scope to another.
