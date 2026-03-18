@@ -19,10 +19,21 @@ These are script includes that execute in the `global` scope. They are used acro
 This widget was cloned from the OOB Form widget
 
 It has been modified to support the following:
-- Support for client-side UI actions\
+- Added the default mechanism to skip mandatory validation when submitting a form. This is to be consistent with the platform form behavior where the following action names will be skipped for mandatory validation:
+  - sysverb_back
+  - sysverb_cancel
+  - sysverb_delete
+  - sysverb_query
+  - Also added ${action_name}_novalidate as a mechanism to skip mandatory validation. This is to provide a way for custom UI actions to skip mandatory validation without having to use one of the OOB action names.
+- Added the following CustomEvents that are emitted so client scripts can hook into the form submission process:
+  - klf.form.initialized
+  - klf.form.destroy
+  - klf.form.load
+- Defaults the form view to a view called "ServicePortal". This is to allow for a view that is optimized for ServicePortal without affecting the platform form view. If a view called "ServicePortal" does not exist, it will default to the system default view.
+- Support for client-side UI actions. Refer to ```KLF_SPUtils.getSPClientUIActions``` and **KLF Form** server script for more information
 Example:
   ```javascript
-  // This function is defined in the Script field of UI Action
+  // This is an example of a client-side UI action that can be used in ServicePortal. This UI action will be displayed in the ServicePortal form view and when clicked it will execute the code in this function.
   function submitServicePortal() {
   	// This is actually executing in the "KLF Form" widget scope
   	// This invokes the triggerAction function to submit the form
@@ -62,8 +73,25 @@ Example:
   	return '/sp?id=form&table=incident&sys_id=-1';
   });
   ```
-- Support for showing all audit entries in the ticket conversation widget
-  - TODO: Add screenshot showing more than STATUS audits being displayed
+- Support for showing all audit entries in the ticket conversation widget. By default, the ticket conversation widget only shows comments and work notes. With this enhancement, all audit entries that are displayed in the platform UI will also be displayed in the ServicePortal widget.
+> ![Enhanced Activity Formatter](docs/activity_log.png)
+
+## KLF_SPUtils
+
+This script is used to implement some of the functionality in the **KLF Form** widget. It contains utility functions for ServicePortal that can be used across multiple widgets. The main functions of the functions in this script include:
+
+- applyGlideRecordTemplate - Applies a sys_template to a ServicePortal form to easily populate fields
+- getActivityEntries - Enhances the Ticket Conversations widget by providing a complete list of activities.
+By default, the widget only shows comments and work notes. This function provides the same list of activities
+that are displayed in platform UI.
+- getSPClientUIActions - This is used to display client actions in ServicePortal. Retrieves all the client actions for a table.
+By default, ServicePortal will only display server side UI actions. This function retrieves client side UI actions that are
+configured to be displayed on a ServicePortal view.
+- setRedirectURL - Used in the form widget in ServicePortal to provide a redirect URL. This is to provide some standardization on
+how routing is performed in ServicePortal after a UI Action is executed.
+
+## KLF Data Table
+- TODO: Add description of changes. I believe this is mostly adding support for having data table acting as a related list to a parent form. This is hiding the list if empty and using the sys_id of the parent widget as a filter for the data in the table.
 
 ## KLF_AtfAddStepsHelper
 
@@ -354,21 +382,6 @@ while (metadataGr.next()) {
     scoper.copyMetadataBySysId(metadataGr.getUniqueValue());
 }
 ```
-
-## KLF_SPUtils
-
-This script implements some enhancements to the Service Portal.
-
-- applyGlideRecordTemplate - Applies a sys_template to a ServicePortal form to easily populate fields
-- getActivityEntries - Enhances the Ticket Conversations widget by providing a complete list of activities.
-By default, the widget only shows comments and work notes. This function provides the same list of activities
-that are displayed in platform UI.
-- getSPClientUIActions - This is used to display client actions in ServicePortal. Retrieves all the client actions for a table.
-By default, ServicePortal will only display server side UI actions. This function retrieves client side UI actions that are
-configured to be displayed on a ServicePortal view.
-- setRedirectURL - Used in the form widget in ServicePortal to provide a redirect URL. This is to provide some standardization on
-how routing is performed in ServicePortal after a UI Action is executed.
-
 ## KLF_TestUtils
 
 This script include provides utility functions for unit testing.
