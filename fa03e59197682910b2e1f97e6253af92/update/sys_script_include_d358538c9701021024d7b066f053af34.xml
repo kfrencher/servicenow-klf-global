@@ -734,13 +734,6 @@ global.KLF_RecordSync.prototype = {
         // something downstream tries to write
         glideRecord.setAbortAction(true);
 
-        // This will map the groups in the record to the groups in the target instance
-        // if a group mapping is provided in the constructor
-        this.mapGroups(glideRecord);
-
-        // This will map the users in the record to the users in the target instance
-        this.mapUsers(glideRecord);
-
         // @ts-ignore
         var _document = document || global.GlideXMLUtil.newDocument('unload');
         if (!document) {
@@ -752,16 +745,31 @@ global.KLF_RecordSync.prototype = {
         // If this is an extended table then I need the true record and not the base record
         // If I detect this isn't the extended record I query for the extended record
         if (glideRecord.getTableName() != glideRecord.getRecordClassName()) {
+            // This will map the groups in the record to the groups in the target instance
+            // if a group mapping is provided in the constructor
+            this.mapGroups(glideRecord);
+
+            // This will map the users in the record to the users in the target instance
+            this.mapUsers(glideRecord);
+
             var extended = new GlideRecord(glideRecord.getRecordClassName());
             extended.get(glideRecord.getUniqueValue());
             // @ts-ignore
             new global.GlideUnloader().unloadGlideRecord(_document, extended, 'INSERT_OR_UPDATE');
         } else {
+            // This will map the groups in the record to the groups in the target instance
+            // if a group mapping is provided in the constructor
+            this.mapGroups(glideRecord);
+
+            // This will map the users in the record to the users in the target instance
+            this.mapUsers(glideRecord);
+
             // @ts-ignore
             new global.GlideUnloader().unloadGlideRecord(_document, glideRecord, 'INSERT_OR_UPDATE');
         }
 
         return _document;
+
     },
 
     /**
@@ -1059,13 +1067,13 @@ global.KLF_RecordSync.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>219</sys_mod_count>
+        <sys_mod_count>220</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-09-09 05:50:41</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-04-14 11:47:00</sys_updated_on>
     </sys_script_include>
 </record_update>
