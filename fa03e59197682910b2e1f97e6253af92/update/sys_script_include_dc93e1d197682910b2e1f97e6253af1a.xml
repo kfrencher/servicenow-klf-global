@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_SPUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * This script implements some enhancements to the Service Portal.
  * 
@@ -155,7 +156,7 @@ KLF_SPUtils.prototype = {
             var changes = changedFieldNames.map(function(fieldName) {
                 return {
                     fieldName: fieldName,
-                    fieldLabel: current[fieldName].getlabel(),
+                    fieldLabel: current[fieldName].getLabel(),
                     currentValue: current.getValue(fieldName),
                     currentDisplayValue: current.getDisplayValue(fieldName),
                     previousValue: previous.getValue(fieldName),
@@ -164,7 +165,7 @@ KLF_SPUtils.prototype = {
             });
             var changeRecord = {
                 sys_updated_on: current.getValue('sys_updated_on'),
-                sys_updated_by: current.getValue('sys_updated_by'),
+                sys_updated_by: current.getDisplayValue('sys_updated_by'),
                 changes: changes
             };
             history.push(changeRecord);
@@ -197,7 +198,7 @@ KLF_SPUtils.prototype = {
         return history.map(function(changeRecord) {
             function getUser( /** @type {string}**/ username) {
                 var user = new GlideRecord('sys_user');
-                if (user.get('user name', username)) {
+                if (user.get('user_name', username)) {
                     return user;
                 } else {
                     return null;
@@ -207,7 +208,7 @@ KLF_SPUtils.prototype = {
             var changelines = changes.filter(function(change) {
                 return activityFields.indexOf(change.fieldName) >= 0;
             }).map(function(change) {
-                return change.fieldLabel + ': ' + '<span style="display: inline-block; width : lOpx"/>' + change.currentDisplayValue + ' was ' +
+                return '<span style="display: inline-block; margin-right: 10px;">' + change.fieldLabel + ':</span>' + change.currentDisplayValue + ' was ' +
                     change.previousDisplayValue;
             });
             var summary = changelines.join(' <br/>');
@@ -222,7 +223,7 @@ KLF_SPUtils.prototype = {
                 element: 'field_ changes',
                 field_label: 'Field Changes',
                 value: summary,
-                name: user ? user.getDisplayValue() : '',
+                name: user ? user.getDisplayValue() : changeRecord.sys_updated_by,
                 user_sys_id: user ? user.getUniqueValue() : '',
                 sys_created_on: changeRecord.sys_updated_on,
                 sys_created_on_adjusted: createdAdjusted
@@ -366,13 +367,13 @@ global.KLF_SPUtils = KLF_SPUtils;]]></script>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>30</sys_mod_count>
         <sys_name>KLF_SPUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dc93e1d197682910b2e1f97e6253af1a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-04 23:47:25</sys_updated_on>
+        <sys_updated_on>2026-03-18 11:27:39</sys_updated_on>
     </sys_script_include>
 </record_update>

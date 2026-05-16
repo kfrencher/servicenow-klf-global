@@ -75,6 +75,30 @@ global.KLF_RecordSync = function(connectionConfig, groupMapping, userMapping, be
 };
 
 /**
+ * Creates a user mapping for the target instance
+ * @param {KLF_RecordSyncConnectionConfig} connectionConfig
+ * @param {string} scope
+ * @returns {KLF_RecordSync_UserMapping}
+ */
+global.KLF_RecordSync.createUserMapping = function(connectionConfig, scope) {
+    var userUtils = new global.KLF_RecordSync_UserUtils(connectionConfig);
+    var users = userUtils.getUniqueUsersInScope(scope);
+    return userUtils.createUserMapping(users, scope);
+};
+
+/**
+ * Creates a group mapping for the target instance
+ * @param {KLF_RecordSyncConnectionConfig} connectionConfig
+ * @param {string} scope
+ * @returns {KLF_RecordSync_GroupMapping}
+ */
+global.KLF_RecordSync.createGroupMapping = function(connectionConfig, scope) {
+    var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
+    var groups = groupUtils.getUniqueGroupsInScope(scope);
+    return groupUtils.createGroupMapping(groups, scope);
+};
+
+/**
  * The manifest is an object that represents the data that is being transfered in a transaction. The keys
  * in the manifest are the table name and the values are an object where the keys are the sys_ids of the records
  * being transferred. It's a bit unconventional, but the reason the sys_ids are stored as keys in an object is because
@@ -985,28 +1009,6 @@ global.KLF_RecordSync.prototype = {
     }
 
     /**
-     * Creates a user mapping for the target instance
-     * @returns {KLF_RecordSync_UserMapping}
-     */
-    function createUserMapping() {
-        var connectionConfig = getConnectionConfig();
-        var userUtils = new global.KLF_RecordSync_UserUtils(connectionConfig);
-        var users = userUtils.getUniqueUsersInScope(scope);
-        return userUtils.createUserMapping(users, scope);
-    }
-
-    /**
-     * Creates a group mapping for the target instance
-     * @returns {KLF_RecordSync_GroupMapping}
-     */
-    function createGroupMapping() {
-        var connectionConfig = getConnectionConfig();
-        var groupUtils = new global.KLF_RecordSync_GroupUtils(connectionConfig);
-        var groups = groupUtils.getUniqueGroupsInScope(scope);
-        return groupUtils.createGroupMapping(groups, scope);
-    }
-
-    /**
      * Checks the target instance for notifications that need to be updated
      */
     function checkNotifications() {
@@ -1034,7 +1036,7 @@ global.KLF_RecordSync.prototype = {
         var connectionConfig = getConnectionConfig();
         var userMapping = new global.KLF_RecordSync_UserUtils(connectionConfig).getUserMapping(scope);
         var groupMapping = new global.KLF_RecordSync_GroupUtils(connectionConfig).getGroupMapping(scope);
-        var recordSync = new global.KLF_RecordSync(connectionConfig, userMapping, groupMapping);
+        var recordSync = new global.KLF_RecordSync(connectionConfig, groupMapping, userMapping);
 
         // Example of syncing all the data in a scope
         // This will find all tables in the x_53417_demo scope and sync all the data in those tables
@@ -1052,10 +1054,10 @@ global.KLF_RecordSync.prototype = {
     checkNotifications();
 
     // Creates the user mapping. This is necessary to map the users in the source instance to the users in the target instance
-    createUserMapping();
+    global.KLF_RecordSync.createUserMapping(getConnectionConfig(), 'x_53417_demo');
 
     // Creates the group mapping. This is necessary to map the groups in the source instance to the groups in the target instance
-    createGroupMapping();
+    global.KLF_RecordSync.createGroupMapping(getConnectionConfig(), 'x_53417_demo');
 
     // Transfers the data from the source instance to the target instance
     transferData();
@@ -1067,13 +1069,13 @@ global.KLF_RecordSync.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-03-15 13:15:46</sys_created_on>
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
-        <sys_mod_count>220</sys_mod_count>
+        <sys_mod_count>221</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-04-14 11:47:00</sys_updated_on>
+        <sys_updated_on>2026-05-16 16:59:52</sys_updated_on>
     </sys_script_include>
 </record_update>

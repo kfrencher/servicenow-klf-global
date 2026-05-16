@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordExporterService</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RecordExporterService</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/**
+ * Configuration object for the KLF_RecordSync class
+ * @typedef KLF_RecordExportServiceConnectionConfig
+ * @property {string} instanceUrl
+ * @property {string} username
+ * @property {string} password
+ */
+
+//@ts-ignore
+var global = global || {};
+
+global.KLF_RecordExporterService = (function () {
+	const LOG_PREFIX = 'KLF_RecordExporterService - ';
+	const ENDPOINT = {
+		EXPORT_TABLE: '/api/53417/v1/klf_export/table'
+	};
+
+	return class {
+		
+		/**
+		 * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
+		 */
+		constructor(connectionConfig) {
+			this.connectionConfig = connectionConfig;
+		}
+		
+		/**
+		 * @param {string} message 
+		 */
+		logInfo(message) {
+			gs.info(`${LOG_PREFIX}${message}`);
+		}
+
+		/**
+		 * @param {string} message 
+		 */
+		logError(message) {
+			gs.error(`${LOG_PREFIX}${message}`);
+		}
+
+		/**
+		 * @param {string} endpointPath
+		 * @param {string} payload
+		 * @returns {{success:boolean, responseBody:string}}
+		 */
+		_sendToRemoteInstance(endpointPath, payload) {
+			const request = this._createRestMessage(endpointPath);
+			request.setHttpMethod('POST');
+			request.setRequestHeader('Content-Type', 'application/json');
+			request.setRequestBody(payload);
+			const response = request.execute();
+			if (response.getStatusCode() != 200) {
+				this.logError('Request failed');
+				this.logError('Received status code: ' + response.getStatusCode());
+				this.logError('Received body: ' + response.getBody());
+				return {
+					success: false,
+					responseBody: response.getBody()
+				};
+			}
+
+			const responseBody = response.getBody();
+
+			return {
+				success: true,
+				responseBody: responseBody
+			};
+
+		}
+
+		/**
+		 * Returns a sn_ws.RESTMessageV2 object that is configured to make a request to the target instance
+		 * @param {string} endpointPath
+		 * @returns {sn_ws.RESTMessageV2}
+		 */
+		_createRestMessage(endpointPath) {
+			const request = new sn_ws.RESTMessageV2();
+			request.setRequestHeader("Accept", "application/json");
+			const authHeader = 'Basic ' + GlideStringUtil.base64Encode(this.connectionConfig.username + ':' + this.connectionConfig.password);
+			request.setRequestHeader('Authorization', authHeader);
+			// Do not use setBasicAuth. This does not work with mutual auth for some reason
+			// request.setBasicAuth(this.connectionConfig.username, this.connectionConfig.password);
+			request.setEndpoint(this.connectionConfig.instanceUrl + endpointPath);
+			return request;
+		}
+
+		/**
+		 * Exports records from a specified table based on a query string, optionally excluding certain tables and mapping user and group fields.
+		 * @param {{
+		 * tableName: string,
+		 * encodedQueryString?: string,
+		 * excludedTables?: string[],
+		 * window?: {start:number, end:number},
+		 * scopeName?: string
+		 * }} options
+		 * @returns {KLF_ExportTableResponse} 
+		 */
+		exportTable(options) {
+			const response = this._sendToRemoteInstance(ENDPOINT.EXPORT_TABLE, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Request to endpoint failed');
+			}
+
+			return {
+				window: null,
+				latestUpdatedOn: null,
+				pageSize: 0,
+				totalRecords: 0,
+				records: []
+			};
+		}
+	};
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-13 15:39:53</sys_created_on>
+        <sys_id>96878b4e8330c7103c9299e0deaad3e4</sys_id>
+        <sys_mod_count>17</sys_mod_count>
+        <sys_name>KLF_RecordExporterService</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_96878b4e8330c7103c9299e0deaad3e4</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-15 13:02:43</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>96878b4e8330c7103c9299e0deaad3e4</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-13 15:39:53</sys_created_on>
+        <sys_id>83b74f8a8330c7103c9299e0deaad39f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-13 15:39:53</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>

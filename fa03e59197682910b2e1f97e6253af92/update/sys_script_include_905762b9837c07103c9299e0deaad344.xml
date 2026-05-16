@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordImporter</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RecordImporter</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/**
+ * @todo Change this to be a class
+ * @todo Add validation to the staging table fields to make sure the table has the correct columns
+ */
+
+/**
+ * @typedef {object} ImportSetTable
+ * @property {(label: string, maxLength: number) => void} addColumn Adds a string-type column to the import set table.
+ * @property {(label: string, maxLength: number) => void} addJSONColumn Adds a JSON-type column to the import set table.
+ * @property {(label: string, maxLength: number) => void} addXMLColumn Adds an XML-type column to the import set table.
+ * @property {(rowData: Record<string, unknown>) => void} insert Inserts one row (key = column name, value = column value).
+ * @property {() => number} getMaximumRows Returns 20 for "Test load 20 records", otherwise -1.
+ */
+
+/**
+ * @typedef {object} KLF_RecordImporterOptions
+ * @property {string} tableName The name of the table to import records from.
+ * @property {ImportSetTable} importSetTable An object that provides methods for adding columns and inserting rows into the import set staging table.
+ * @property {string} [scopeName] The namespace of the scope to import records from
+ * @property {string} [encodedQueryString] An optional encoded query string to filter the records being imported.
+ * @property {string[]} [excludedTables] An optional array of table names to exclude from the import.
+ * @property {number} [batchSize] An optional batch size for importing records in batches. Defaults to 10.
+ * @property {boolean} [forceSync] An optional flag to force synchronous import, which will ignore any existing checkpoints and re-import all records matching the encoded query string.
+ */
+
+//@ts-ignore
+var global = global || {};
+
+/**
+ * @class KLF_RecordImporter
+ * Contains utility functions for importing records exported by `RecordExporter`.
+ */
+global.KLF_RecordImporter = (function() {
+    const LOG_PREFIX = '[KLF_RecordImporter] - ';
+    const DEFAULT_BATCH_SIZE = 10;
+    const LAST_IMPORTED_RECORDS_PROPERTY = 'klf_record_importer.last_imported_records';
+
+
+    class _RecordImporter {
+        /**
+         * @param {string} message 
+         */
+        logInfo(message) {
+            _RecordImporter.logInfo(message);
+        }
+
+        /**
+         * @param {string} message 
+         */
+        logError(message) {
+            _RecordImporter.logError(message);
+        }
+
+        /**
+         * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig
+         */
+        constructor(connectionConfig) {
+            if (!connectionConfig) {
+                throw new Error('You must provide a connection config with instanceUrl, username, and password to use KLF_RecordImporter');
+            }
+
+            if (!connectionConfig.instanceUrl) {
+                throw new Error('Connection config is missing instanceUrl');
+            }
+
+            if (!connectionConfig.username) {
+                throw new Error('Connection config is missing username');
+            }
+
+            if (!connectionConfig.password) {
+                throw new Error('Connection config is missing password');
+            }
+
+            this.connectionConfig = connectionConfig;
+        }
+
+        /**
+         * This function can be used to resume an import if it was interrupted.
+         * It would read the last imported record's sys_updated_on value from a
+         * system property and continue importing from there.
+         * @param {KLF_RecordImporterOptions} options
+         * @returns {number} Number of records imported.
+         */
+        resumeStagingTableImport(options) {
+            options = options || /** @type {KLF_RecordImporterOptions} */ ({});
+
+            const tableName = options.tableName;
+            if (!tableName) {
+                throw new Error('Table name is required');
+            }
+
+            const lastImportedRecord = this.getImportedCheckpoint(tableName);
+            if (!lastImportedRecord) {
+                return this._importTableToStagingTable(options);
+            }
+
+            const encodedQueryString = options.encodedQueryString ?
+                `${options.encodedQueryString}^sys_updated_on>${lastImportedRecord}` :
+                `sys_updated_on>${lastImportedRecord}`;
+
+            /** @type {number} */
+            const importedCount = this._importTableToStagingTable({
+                tableName: tableName,
+                importSetTable: options.importSetTable,
+                encodedQueryString: encodedQueryString,
+                excludedTables: options.excludedTables,
+                batchSize: options.batchSize
+            });
+
+            return importedCount;
+        }
+
+        /**
+         * Sets a system property to track the sys_updated_on value of the last imported record for a given table. This can be used to resume imports from where they left off in case of interruptions.
+         * @param {string} tableName The name of the table for which to set the last imported record.
+         * @param {string} sysUpdatedOn The sys_updated_on value of the last imported record, in ISO 8601 format (e.g., "2024-01-01T12:00:00Z").
+         * @returns {void}
+         */
+        setImportedCheckpoint(tableName, sysUpdatedOn) {
+            if (!tableName) {
+                throw new Error('Table name is required');
+            }
+
+            if (!sysUpdatedOn) {
+                return;
+            }
+
+            /** @type {Record<string, string>} */
+            const lastImportedRecords = this.getImportCheckpoints();
+            lastImportedRecords[tableName] = sysUpdatedOn;
+            gs.setProperty(LAST_IMPORTED_RECORDS_PROPERTY, JSON.stringify(lastImportedRecords, null, 4));
+        }
+
+        /**
+         * Returns the encoded checkpoint map of table names to sys_updated_on values.
+         * @returns {Record<string, string>}
+         */
+        getImportCheckpoints() {
+            const lastImportedRecordsProperty = gs.getProperty(LAST_IMPORTED_RECORDS_PROPERTY, '');
+            if (lastImportedRecordsProperty) {
+                try {
+                    /** @type {Record<string, string>} */
+                    const parsedLastImportedRecords = JSON.parse(lastImportedRecordsProperty);
+                    return parsedLastImportedRecords && typeof parsedLastImportedRecords === 'object' ?
+                        parsedLastImportedRecords : {};
+                } catch (error) {
+                    this.logError(`Unable to parse checkpoint property ${LAST_IMPORTED_RECORDS_PROPERTY}: ${error}`);
+                }
+            }
+
+            return {};
+        }
+
+        /**
+         * Retrieves the sys_updated_on value of the last imported record for a given table. This can be used to resume imports from where they left off in case of interruptions.
+         * @param {string} tableName The name of the table for which to get the last imported record.
+         * @returns {string|null} The sys_updated_on value of the last imported record for the specified table, or null if not set.
+         */
+        getImportedCheckpoint(tableName) {
+            if (!tableName) {
+                return null;
+            }
+
+            /** @type {Record<string, string>} */
+            const lastImportedRecords = this.getImportCheckpoints();
+            if (lastImportedRecords[tableName]) {
+                return lastImportedRecords[tableName];
+            }
+
+            return gs.getProperty(`klf_recordimporter.last_imported_${tableName}`);
+        }
+
+        /**
+         * Imports records from all tables in a given scope, excluding any tables listed in the excluded table list.
+         * This method can be used to perform an initial bulk import of all records in a scope
+         * @param {Omit<KLF_RecordImporterOptions, 'tableName'>} options
+         * @returns {number} Total number of records imported.
+         */
+        importScopedApplicationToStagingTable(options) {
+            if (!options) {
+                throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - options is required');
+            }
+
+            if (!options.scopeName) {
+                throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - options.scopeName is required');
+            }
+
+            const scopeNamespace = options.scopeName;
+
+            const tables = new global.KLF_DataTransferUtils().getBaseTablesInScope(scopeNamespace, options.excludedTables);
+            this.logInfo(`Found tables in scope ${scopeNamespace}: \n ${tables.join('\n')}`);
+
+			if(tables.length === 0) {
+				throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - not tables found for scope: ' + scopeNamespace);
+			}
+
+            let totalImported = 0;
+            for (let i = 0; i < tables.length; i++) {
+                const tableName = tables[i];
+                this.logInfo(`Importing table ${tableName} (${i + 1} of ${tables.length})`);
+                totalImported += this.importTableToStagingTable({
+                    ...options,
+                    tableName: tableName,
+                });
+            }
+
+            return totalImported;
+        }
+
+        /**
+         * Imports records from a table in batches and stores progress so the job can resume after interruption.
+         *
+         * This method exports records via `RecordExporter.exportTable`, imports each XML payload via
+         * `importRecord`, and updates a per-table system property with the `sys_updated_on` value of the
+         * last imported record in each batch.
+         *
+         * @param {KLF_RecordImporterOptions} options
+         * @returns {number} Number of records imported.
+         */
+        importTableToStagingTable(options) {
+            if (options.forceSync === true) {
+                return this._importTableToStagingTable(options);
+            } else {
+                return this.resumeStagingTableImport(options);
+            }
+        }
+
+        /**
+         * Imports records from a table in batches and stores progress so the job can resume after interruption.
+         *
+         * This method exports records via `RecordExporter.exportTable`, imports each XML payload via
+         * `importRecord`, and updates a per-table system property with the `sys_updated_on` value of the
+         * last imported record in each batch.
+         *
+         * @param {KLF_RecordImporterOptions} options
+         * @returns {number} Number of records imported.
+         */
+        _importTableToStagingTable(options) {
+            options = options || /** @type {KLF_RecordImporterOptions} */ ({});
+            const tableName = options.tableName;
+            const encodedQueryString = options.encodedQueryString;
+            const excludedTables = options.excludedTables;
+            const batchSize = options.batchSize;
+            const importSetTable = options.importSetTable;
+            const scopeNamespace = options.scopeName;
+
+            if (!tableName) {
+                throw new Error('Table name is required');
+            }
+
+            if (!importSetTable) {
+                throw new Error('ImportSetTable is required');
+            }
+
+            const limit = importSetTable.getMaximumRows();
+            const hasLimit = limit > 0;
+            if (limit > 0) {
+                this.logInfo(`Importing with a maximum limit of ${limit} records`);
+            }
+
+            if (excludedTables && excludedTables.indexOf(tableName) > -1) {
+                return 0;
+            }
+
+            const normalizedBatchSize = Math.max(1, Math.floor(batchSize || DEFAULT_BATCH_SIZE));
+            const tableExporter = new global.KLF_RecordExporterService(this.connectionConfig);
+            let stagedCount = 0;
+            let batchStart = 0;
+            let hasMoreRecords = true;
+
+            while (hasMoreRecords) {
+                const response = tableExporter.exportTable({
+                    tableName: tableName,
+                    scopeName: scopeNamespace,
+                    encodedQueryString: encodedQueryString,
+                    excludedTables: excludedTables,
+                    window: {
+                        start: batchStart,
+                        end: batchStart + normalizedBatchSize
+                    }
+                });
+                const { records: exportedRecords = [], latestUpdatedOn: latestUpdatedOn = null } = response;
+
+                this.logInfo(`Loading batch [${batchStart} - ${batchStart + normalizedBatchSize}] for table ${tableName} exported ${exportedRecords.length} records.`);
+
+                if (exportedRecords.length === 0) {
+                    hasMoreRecords = false;
+                    continue;
+                }
+
+                for (let index = 0; index < exportedRecords.length; index++) {
+                    const record = exportedRecords[index];
+                    importSetTable.insert({
+                        record_xml: record.xml,
+                        record_sys_updated_on: record.sysUpdatedOn,
+                        record_sys_id: record.sysId,
+                        record_table_name: record.tableName
+                    });
+                    stagedCount++;
+                }
+
+                if (latestUpdatedOn) {
+                    this.setImportedCheckpoint(tableName, latestUpdatedOn);
+                }
+
+                if (hasLimit && stagedCount >= limit) {
+                    hasMoreRecords = false;
+                }
+
+                if (exportedRecords.length < normalizedBatchSize) {
+                    hasMoreRecords = false;
+                }
+
+                batchStart += normalizedBatchSize;
+            }
+
+            return stagedCount;
+
+        }
+    }
+
+    /**
+     * @param {GlideRecord} source
+     */
+    _RecordImporter.importRecord = function(source) {
+        const xml = source.getValue('u_record_xml');
+
+        // @ts-ignore
+        var updateManager = new global.GlideUpdateManager2();
+        updateManager.loadXML(xml);
+    };
+
+    /**
+     * @param {string} message 
+     */
+    _RecordImporter.logInfo = function(message) {
+        gs.info(`${LOG_PREFIX}${message}`);
+    };
+
+    /**
+     * @param {string} message 
+     */
+    _RecordImporter.logError = function(message) {
+        gs.error(`${LOG_PREFIX}${message}`);
+    };
+
+    /**
+     * Adds necessary columns to the import set table for storing the exported record data.
+     * @param {ImportSetTable} importSetTable 
+     */
+    _RecordImporter.buildImportSetTable = function(importSetTable) {
+        importSetTable.addColumn('record_xml', 5000);
+        importSetTable.addColumn('record_table_name', 255);
+        importSetTable.addColumn('record_sys_id', 32);
+        importSetTable.addColumn('record_sys_updated_on', 40);
+    };
+
+    /**
+     * Called from the import set transform map before the transform runs
+     * @param {GlideRecord} importSet
+     */
+    _RecordImporter.onImportStart = function(importSet) {
+        this.ignoreExistingRecordsInImportSet(importSet.getUniqueValue(), importSet.getValue('table_name'));
+    };
+
+    /**
+     * Checks the staging and target tables for existing records and marks records in the staging table as ignored if they already exist in the target table.
+     * @param {string} importSetSysId 
+     * @param {string} stagingTableName
+     */
+    _RecordImporter.ignoreExistingRecordsInImportSet = function(importSetSysId, stagingTableName) {
+        this.logInfo(`Ignoring records for import set: ${importSetSysId} and Staging table name: ${stagingTableName}`);
+        // Get all the tables referenced in the import set
+        const tableNameAgg = new GlideAggregate(stagingTableName);
+        tableNameAgg.groupBy('u_record_table_name');
+        tableNameAgg.addQuery('sys_import_set', importSetSysId);
+        tableNameAgg.query();
+        while (tableNameAgg.next()) {
+            const tableName = tableNameAgg.getValue('u_record_table_name');
+            if (!tableName) {
+                this.logError('KLF_RecordImporter.ignoreExistingRecordsInImportSet - Missing table name');
+                continue;
+            }
+            this.logInfo(`Checking for existing records in target table ${tableName} to ignore during import.`);
+            this.ignoreExistingRecordsInTable(stagingTableName, tableName, importSetSysId);
+        }
+
+    };
+
+    /**
+     * Looks for existing records in the target table that match the records being imported and marks them as ignored in the import set.
+     * @param {string} stagingTableName 
+     * @param {string} tableName 
+     * @param {string} importSetSysId 
+     */
+    _RecordImporter.ignoreExistingRecordsInTable = function(stagingTableName, tableName, importSetSysId) {
+        if (!tableName) {
+            this.logError('ignoreExistingRecordsInTable - No tableName found');
+            return;
+        }
+
+        if (!importSetSysId) {
+            this.logError('ignoreExistingRecordsInTable - No importSetSysId found');
+            return;
+        }
+
+        // I'm joining the staging table and targete table on sys_id = record_sys_id to find any records
+        // that are being imported that already exist in the target table, and marking those records as
+        // ignored in the staging table so existing records don't get updated and also we avoid unnecessary
+        // processing.
+        const importRecord = new GlideRecord(stagingTableName);
+        importRecord.addQuery('u_record_table_name', tableName);
+        importRecord.addQuery('sys_import_set', importSetSysId);
+        importRecord.addJoinQuery(tableName, 'u_record_sys_id', 'sys_id');
+        importRecord.query();
+        importRecord.setValue('sys_import_state', 'ignore');
+        importRecord.updateMultiple();
+    };
+
+    return _RecordImporter;
+
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-12 18:44:30</sys_created_on>
+        <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
+        <sys_mod_count>51</sys_mod_count>
+        <sys_name>KLF_RecordImporter</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-15 13:46:01</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>905762b9837c07103c9299e0deaad344</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-12 18:44:30</sys_created_on>
+        <sys_id>6968223d837c07103c9299e0deaad3c5</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-12 18:44:30</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.KLF_RecordExporter</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>KLF_RecordExporter</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[//@ts-ignore
+var global = global || {};
+
+/**
+ * @typedef {Object} KLF_ExportRecord
+ * @property {string} xml - The XML representation of the record and its related records.
+ * @property {string} tableName - The name of the table the record belongs to.
+ * @property {string} sysUpdatedOn - The sys_updated_on value of the record.
+ * @property {string} sysId - The sys_id of the record.
+ */
+
+/**
+ * @typedef {{
+ * window: {start:number, end:number}|null,
+ * latestUpdatedOn: string|null,
+ * pageSize: number,
+ * totalRecords: number,
+ * records: KLF_ExportRecord[]
+ * }} KLF_ExportTableResponse
+ */
+
+/**
+ * @class global.KLF_RecordExporter
+ * contains utility functions for exporting records
+ */
+global.KLF_RecordExporter = (function() {
+
+    /**
+     * @param {string} message
+     */
+    function IllegalArgumentError(message) {
+        this.name = 'IllegalArgumentError';
+        this.message = message || '';
+    }
+    IllegalArgumentError.prototype = Object.create(Error.prototype);
+    IllegalArgumentError.prototype.constructor = IllegalArgumentError;
+
+    const emptyConnectionConfig = {
+        instanceUrl: '',
+        username: '',
+        password: ''
+    };
+
+    return class {
+
+        /**
+         * @param {string} scope 
+         * @returns {KLF_RecordSync_UserMapping?}
+         */
+        getUserMapping(scope) {
+            return new global.KLF_RecordSync_UserUtils(emptyConnectionConfig).getUserMapping(scope);
+        }
+
+        /**
+         * @param {string} scope 
+         * @returns {KLF_RecordSync_GroupMapping?}
+         */
+        getGroupMapping(scope) {
+            return new global.KLF_RecordSync_GroupUtils(emptyConnectionConfig).getGroupMapping(scope);
+        }
+
+        /**
+         * Takes a GlideRecord and exports it as an XML string, including related records.
+         * @param {GlideRecord} glideRecord 
+         * @param {KLF_RecordSync_UserMapping?} [userMapping] Optional mapping of user sys_ids to usernames for related fields.
+         * @param {KLF_RecordSync_GroupMapping?} [groupMapping] Optional mapping of group sys_ids to group names for related fields.
+         * @returns {string}
+         */
+        exportRecord(glideRecord, userMapping, groupMapping) {
+            var recordSync = new global.KLF_RecordSync(emptyConnectionConfig, groupMapping, userMapping);
+            const record = recordSync.unloadRecordWithRelatedRecords(glideRecord);
+            return recordSync.documentToString(record.document, true);
+        }
+
+        /**
+         * Exports records from a specified table based on a query string, optionally excluding certain tables and mapping user and group fields.
+         * @param {{
+         * tableName: string,
+         * encodedQueryString?: string,
+         * excludedTables?: string[],
+         * window?: {start:number, end:number},
+         * scopeName?: string
+         * }} options
+         * @returns {KLF_ExportTableResponse} 
+         */
+        exportTable(options) {
+            let latestUpdatedOn = null;
+            /** @type {KLF_ExportRecord[]} */
+            const exportedRecords = [];
+
+            options = options || /** @type {any} */ ({});
+            const tableName = options.tableName;
+            const encodedQueryString = options.encodedQueryString;
+            const excludedTables = options.excludedTables;
+            const window = options.window;
+            const scopeName = options.scopeName;
+            const userMapping = scopeName ? this.getUserMapping(scopeName) : null;
+            const groupMapping = scopeName ? this.getGroupMapping(scopeName) : null;
+
+            if (!tableName) {
+                throw new IllegalArgumentError('Table name is required');
+            }
+
+            var glideRecord = new GlideRecord(tableName);
+            if (!glideRecord.isValid()) {
+                return {
+                    window: window || null,
+                    pageSize: 0,
+                    totalRecords: 0,
+                    latestUpdatedOn: null,
+                    records: []
+                };
+            }
+
+            glideRecord.orderBy('sys_updated_on');
+
+            if (encodedQueryString) {
+                glideRecord.addEncodedQuery(encodedQueryString);
+            }
+
+            if (excludedTables && excludedTables.length > 0 && glideRecord.isValidField('sys_class_name')) {
+                glideRecord.addQuery('sys_class_name', 'NOT IN', excludedTables);
+            }
+
+            let pageSize = -1;
+            if (window && typeof window.start === 'number' && typeof window.end === 'number' &&
+                window.start >= 0 && window.end > window.start) {
+                glideRecord.chooseWindow(window.start, window.end);
+                pageSize = window.end - window.start;
+            }
+
+            glideRecord.query();
+            while (glideRecord.next()) {
+                exportedRecords.push({
+                    xml: this.exportRecord(glideRecord, userMapping, groupMapping),
+                    tableName: glideRecord.getTableName(),
+                    sysUpdatedOn: glideRecord.getValue('sys_updated_on'),
+                    sysId: glideRecord.getValue('sys_id')
+                });
+                latestUpdatedOn = glideRecord.getValue('sys_updated_on');
+            }
+
+            return {
+                window: window || null,
+                pageSize: pageSize,
+                totalRecords: glideRecord.getRowCount(),
+                latestUpdatedOn: latestUpdatedOn,
+                records: exportedRecords
+            };
+        }
+    };
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-12 18:47:51</sys_created_on>
+        <sys_id>a9d822b9837c07103c9299e0deaad331</sys_id>
+        <sys_mod_count>8</sys_mod_count>
+        <sys_name>KLF_RecordExporter</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_script_include_a9d822b9837c07103c9299e0deaad331</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-15 13:07:44</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>a9d822b9837c07103c9299e0deaad331</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-12 18:47:51</sys_created_on>
+        <sys_id>76296e7d837c07103c9299e0deaad3dd</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-12 18:47:51</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
