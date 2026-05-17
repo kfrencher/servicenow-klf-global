@@ -23,7 +23,9 @@ var global = global || {};
 global.KLF_RecordExporterService = (function () {
 	const LOG_PREFIX = 'KLF_RecordExporterService - ';
 	const ENDPOINT = {
-		EXPORT_TABLE: '/api/53417/v1/klf_export/table'
+		EXPORT_TABLE: '/api/global/v1/klf_export/table',
+		TABLE_GROUPS: '/api/global/v1/klf_export/table_groups',
+		SCOPE_GROUPS: '/api/global/v1/klf_export/scope_groups'
 	};
 
 	return class {
@@ -126,20 +128,72 @@ global.KLF_RecordExporterService = (function () {
 				records: []
 			};
 		}
+
+    /**
+     * Finds all the unique groups that are referenced in a scope by using the group fields
+     * that are returned from {@link GroupUtils.getGroupFields}
+     * @param {string} scope
+     * @returns {KLF_RecordSync_RemoteGroup[]} The unique group sys_ids
+     */
+    getUniqueGroupsInScope(scope) {
+			const options = {
+				scope: scope
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.SCOPE_GROUPS, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Request to endpoint failed');
+			}
+
+			return [];
+		}
+
+    /**
+     * Finds all the unique groups that are referenced in a table by using the group fields
+     * that are returned from {@link GroupUtils.getGroupFields}
+     * @param {string} tableName
+     * @param {string} [filter] GlideRecord encoded query
+     * @returns {KLF_RecordSync_RemoteGroup[]} The unique group sys_ids
+     */
+		getUniqueGroupsInTable(tableName, filter) {
+			const options = {
+				tableName: tableName,
+				encodedQueryString: filter
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.TABLE_GROUPS, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Request to endpoint failed');
+			}
+
+			return [];
+		}
 	};
 })();]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-13 15:39:53</sys_created_on>
         <sys_id>96878b4e8330c7103c9299e0deaad3e4</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>23</sys_mod_count>
         <sys_name>KLF_RecordExporterService</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_96878b4e8330c7103c9299e0deaad3e4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-16 19:04:19</sys_updated_on>
+        <sys_updated_on>2026-05-17 00:04:26</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>96878b4e8330c7103c9299e0deaad3e4</id>

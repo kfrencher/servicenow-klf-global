@@ -405,18 +405,10 @@ global.KLF_RecordSync_GroupUtils.prototype = {
     },
 
     /**
-     * Uses the sys_ids of the groups in the local system to find the sys_ids of the groups that exist in the remote system. This returns
-     * a mapping of the local group sys_id to the remote group sys_id. If a group does not exist in the remote system, the remote group sys_id will be null
-     * 
-     * By default the results are cached. If you want to bypass the cache, set useCache to false. When using the cache a mappingName is required. This is used
-     * when you retrieve the group mapping using {@link global.KLF_RecordSync_GroupUtils.getGroupMapping}
-     * @param {string[]} groupSysIds
-     * @param {boolean} [useCache=true] If true, the cache will be used to store the group mappings. true by default
-     * @param {string} [mappingName] A mapping name to store the group mapping under. This is not needed if useCache is false. Typically this would be the application scope, for example: x_example_app
-     * @returns {KLF_RecordSync_GroupMapping} The sys_ids of the groups that do not exist in the remote system
+     * @param {string[]} groupSysIds 
+     * @returns {KLF_RecordSync_RemoteGroup[]}
      */
-    createGroupMapping: function(groupSysIds, mappingName, useCache) {
-        var _useCache = useCache === undefined ? true : useCache;
+    getRemoteGroupsBySysIds: function(groupSysIds) {
         var groupRecords = new GlideRecord('sys_user_group');
         groupRecords.addQuery('sys_id', 'IN', groupSysIds);
         groupRecords.query();
@@ -443,6 +435,23 @@ global.KLF_RecordSync_GroupUtils.prototype = {
                 source: ''
             });
         });
+        return groups;
+    },
+
+    /**
+     * Uses the sys_ids of the groups in the local system to find the sys_ids of the groups that exist in the remote system. This returns
+     * a mapping of the local group sys_id to the remote group sys_id. If a group does not exist in the remote system, the remote group sys_id will be null
+     * 
+     * By default the results are cached. If you want to bypass the cache, set useCache to false. When using the cache a mappingName is required. This is used
+     * when you retrieve the group mapping using {@link global.KLF_RecordSync_GroupUtils.getGroupMapping}
+     * @param {string[]} groupSysIds
+     * @param {boolean} [useCache=true] If true, the cache will be used to store the group mappings. true by default
+     * @param {string} [mappingName] A mapping name to store the group mapping under. This is not needed if useCache is false. Typically this would be the application scope, for example: x_example_app
+     * @returns {KLF_RecordSync_GroupMapping} The sys_ids of the groups that do not exist in the remote system
+     */
+    createGroupMapping: function(groupSysIds, mappingName, useCache) {
+        var _useCache = useCache === undefined ? true : useCache;
+        var groups = this.getRemoteGroupsBySysIds(groupSysIds);
 
         // Make a  request to sys_user_group
         var request = this.createRestMessage();
@@ -624,13 +633,13 @@ global.KLF_RecordSync_GroupUtils.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-06-01 16:45:24</sys_created_on>
         <sys_id>2654359d97a6021024d7b066f053af84</sys_id>
-        <sys_mod_count>109</sys_mod_count>
+        <sys_mod_count>110</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_2654359d97a6021024d7b066f053af84</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-15 12:58:37</sys_updated_on>
+        <sys_updated_on>2026-05-16 19:59:42</sys_updated_on>
     </sys_script_include>
 </record_update>
