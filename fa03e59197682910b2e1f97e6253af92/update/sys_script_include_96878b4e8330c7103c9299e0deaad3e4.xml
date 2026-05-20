@@ -28,8 +28,10 @@ global.KLF_RecordExporterService = (function () {
 		SCOPE_GROUPS: '/api/global/v1/klf_export/scope_groups',
 		TABLE_USERS: '/api/global/v1/klf_export/table_users',
 		SCOPE_USERS: '/api/global/v1/klf_export/scope_users',
-		GROUP_MAPPING: '/api/global/v1/klf_export/group_mapping',
-		USER_MAPPING: '/api/global/v1/klf_export/user_mapping'
+		SET_GROUP_MAPPING: '/api/global/v1/klf_export/set_group_mapping',
+		SET_USER_MAPPING: '/api/global/v1/klf_export/set_user_mapping',
+		GET_GROUP_MAPPING: '/api/global/v1/klf_export/get_group_mapping',
+		GET_USER_MAPPING: '/api/global/v1/klf_export/get_user_mapping'
 	};
 
 	return class {
@@ -239,6 +241,52 @@ global.KLF_RecordExporterService = (function () {
 
 		/**
 		 * @param {string} scopeName
+		 * @returns {KLF_RecordSync_GroupMapping | null}
+		 */
+		getGroupMapping(scopeName) {
+			const options = {
+				scopeName: scopeName
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.GET_GROUP_MAPPING, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse group mapping response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Failed to get group mapping');
+			}
+
+			return null;
+		}
+
+		/**
+		 * @param {string} scopeName
+		 * @returns {KLF_RecordSync_UserMapping | null}
+		 */
+		getUserMapping(scopeName) {
+			const options = {
+				scopeName: scopeName
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.GET_USER_MAPPING, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse user mapping response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Failed to get user mapping');
+			}
+
+			return null;
+		}
+
+		/**
+		 * @param {string} scopeName
 		 * @param {KLF_RecordSync_GroupMapping} groupMapping 
 		 */
 		setGroupMapping(scopeName, groupMapping) {
@@ -247,7 +295,7 @@ global.KLF_RecordExporterService = (function () {
 				groupMapping: groupMapping
 			};
 
-			const response = this._sendToRemoteInstance(ENDPOINT.GROUP_MAPPING, JSON.stringify(options, null, 4));
+			const response = this._sendToRemoteInstance(ENDPOINT.SET_GROUP_MAPPING, JSON.stringify(options, null, 4));
 			if (!response.success) {
 				this.logError('Failed to set group mapping');
 			} else {
@@ -265,7 +313,7 @@ global.KLF_RecordExporterService = (function () {
 				userMapping: userMapping
 			};
 
-			const response = this._sendToRemoteInstance(ENDPOINT.USER_MAPPING, JSON.stringify(options, null, 4));
+			const response = this._sendToRemoteInstance(ENDPOINT.SET_USER_MAPPING, JSON.stringify(options, null, 4));
 			if (!response.success) {
 				this.logError('Failed to set user mapping');
 			} else {
@@ -278,14 +326,14 @@ global.KLF_RecordExporterService = (function () {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-13 15:39:53</sys_created_on>
         <sys_id>96878b4e8330c7103c9299e0deaad3e4</sys_id>
-        <sys_mod_count>29</sys_mod_count>
+        <sys_mod_count>31</sys_mod_count>
         <sys_name>KLF_RecordExporterService</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_96878b4e8330c7103c9299e0deaad3e4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-19 21:44:37</sys_updated_on>
+        <sys_updated_on>2026-05-20 13:42:07</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>96878b4e8330c7103c9299e0deaad3e4</id>

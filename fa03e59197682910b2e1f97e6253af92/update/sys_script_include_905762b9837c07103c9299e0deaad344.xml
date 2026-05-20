@@ -83,6 +83,8 @@ global.KLF_RecordImporter = (function() {
             }
 
             this.connectionConfig = connectionConfig;
+            this.exportService = new global.KLF_RecordExporterService(connectionConfig);
+
         }
 
         /**
@@ -317,12 +319,12 @@ global.KLF_RecordImporter = (function() {
                 throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - not tables found for scope: ' + scopeNamespace);
             }
 
-			const importSetTable = options.importSetTable;
-			const limit = importSetTable.getMaximumRows();
-			const hasLimit = limit > 0;
-			if (limit > 0) {
-				this.logInfo(`Importing with a maximum limit of ${limit} records`);
-			}
+            const importSetTable = options.importSetTable;
+            const limit = importSetTable.getMaximumRows();
+            const hasLimit = limit > 0;
+            if (limit > 0) {
+                this.logInfo(`Importing with a maximum limit of ${limit} records`);
+            }
 
             let totalImported = 0;
             for (let i = 0; i < tables.length; i++) {
@@ -333,9 +335,9 @@ global.KLF_RecordImporter = (function() {
                     tableName: tableName,
                 });
 
-				if(hasLimit && totalImported > limit) {
-					break;
-				}
+                if (hasLimit && totalImported > limit) {
+                    break;
+                }
             }
 
             return totalImported;
@@ -397,13 +399,13 @@ global.KLF_RecordImporter = (function() {
             }
 
             const normalizedBatchSize = Math.max(1, Math.floor(batchSize || DEFAULT_BATCH_SIZE));
-            const tableExporter = new global.KLF_RecordExporterService(this.connectionConfig);
+            const exportService = this.exportService;
             let stagedCount = 0;
             let batchStart = 0;
             let hasMoreRecords = true;
 
             while (hasMoreRecords) {
-                const response = tableExporter.exportTable({
+                const response = exportService.exportTable({
                     tableName: tableName,
                     scopeName: scopeNamespace,
                     encodedQueryString: encodedQueryString,
@@ -451,6 +453,97 @@ global.KLF_RecordImporter = (function() {
             return stagedCount;
 
         }
+
+        /**
+         * Ensures that a user mapping exists for the given scope. If a mapping 
+         * does not already exist, it generates one from the provided remote users and saves it.
+         * @param {string} scopeName 
+         * @param {() => KLF_RecordSync_RemoteUser[]} getRemoteUsersFunction 
+         */
+        initUserMapping(scopeName, getRemoteUsersFunction) {
+            let userMapping = this.exportService.getUserMapping(scopeName);
+            if (!userMapping) {
+                const remoteUsers = getRemoteUsersFunction();
+                userMapping = this.generateUserMapping(scopeName, remoteUsers);
+                this.setUserMapping(scopeName, userMapping);
+            }
+        }
+
+        /**
+         * @param {string} scopeName
+         * @param {KLF_RecordSync_RemoteUser[]} remoteUsers
+         * @param {boolean} [forceRegenerate=false]
+         * @returns {KLF_RecordSync_UserMapping}
+         */
+        generateUserMapping(scopeName, remoteUsers, forceRegenerate) {
+            const key = scopeName + '.mapping.user';
+            if (!forceRegenerate) {
+                const existingMapping = this.exportService.getUserMapping(scopeName);
+                if (existingMapping) {
+                    return existingMapping;
+                }
+            }
+            const mapping = _RecordImporter.createUserMappingFromRemote(remoteUsers);
+            gs.getUser().savePreference(key, JSON.stringify(mapping, null, 4));
+            return mapping;
+        }
+
+        /**
+         * @param {string} scopeName 
+         * @param {KLF_RecordSync_UserMapping} userMapping 
+         */
+        setUserMapping(scopeName, userMapping) {
+            if (!scopeName) {
+                throw new Error('Scope name is required to set user mapping');
+            }
+            if (!userMapping || !userMapping.mapping) {
+                throw new Error('Invalid user mapping object');
+            }
+
+            this.exportService.setUserMapping(scopeName + '.mapping.user', userMapping);
+        }
+
+        /**
+         * Ensures that a group mapping exists for the given scope. If a mapping 
+         * does not already exist, it generates one from the provided remote groups and saves it.
+         * @param {string} scopeName 
+         * @param {() => KLF_RecordSync_RemoteGroup[]} getRemoteGroupsFunction 
+         */
+        initGroupMapping(scopeName, getRemoteGroupsFunction) {
+            let groupMapping = this.exportService.getGroupMapping(scopeName);
+            if (!groupMapping) {
+                const remoteGroups = getRemoteGroupsFunction();
+                groupMapping = this.generateGroupMapping(scopeName, remoteGroups);
+                this.setGroupMapping(scopeName, groupMapping);
+            }
+        }
+
+        /**
+         * @param {string} scopeName
+         * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups
+         * @returns {KLF_RecordSync_GroupMapping}
+         */
+        generateGroupMapping(scopeName, remoteGroups) {
+            const key = scopeName + '.mapping.group';
+            const mapping = _RecordImporter.createGroupMappingFromRemote(remoteGroups);
+            gs.getUser().savePreference(key, JSON.stringify(mapping, null, 4));
+            return mapping;
+        }
+
+        /**
+         * @param {string} scopeName 
+         * @param {KLF_RecordSync_GroupMapping} groupMapping 
+         */
+        setGroupMapping(scopeName, groupMapping) {
+            if (!scopeName) {
+                throw new Error('Scope name is required to set group mapping');
+            }
+            if (!groupMapping || !groupMapping.mapping) {
+                throw new Error('Invalid group mapping object');
+            }
+
+            this.exportService.setGroupMapping(scopeName + '.mapping.group', groupMapping);
+        }
     }
 
     /**
@@ -492,14 +585,8 @@ global.KLF_RecordImporter = (function() {
     /**
      * Called from the import set transform map before the transform runs
      * @param {GlideRecord} importSet
-     * @param {() => void} generateMappings A callback function that can be used to generate user and group mappings before the transform runs
      */
-    _RecordImporter.onImportStart = function(importSet, generateMappings) {
-        if (!generateMappings || typeof generateMappings !== 'function') {
-            throw Error('KLF_RecordImporter.onImportStart - generateMappings callback function is required');
-        }
-        
-        generateMappings();
+    _RecordImporter.onImportStart = function(importSet) {
         this.ignoreExistingRecordsInImportSet(importSet.getUniqueValue(), importSet.getValue('table_name'));
     };
 
@@ -598,42 +685,6 @@ global.KLF_RecordImporter = (function() {
     };
 
     /**
-     * @param {string} scopeName
-     * @param {KLF_RecordSync_RemoteUser[]} remoteUsers
-     * @param {boolean} [forceRegenerate=false]
-     * @returns {KLF_RecordSync_UserMapping}
-     */
-    _RecordImporter.generateUserMapping = function(scopeName, remoteUsers, forceRegenerate) {
-        const key = scopeName + '.mapping.user';
-        if (!forceRegenerate) {
-            const existingMapping = gs.getProperty(key);
-            if (existingMapping) {
-                return JSON.parse(existingMapping);
-            }
-        }
-        const mapping = this.createUserMappingFromRemote(remoteUsers);
-        gs.setProperty(key, JSON.stringify(mapping, null, 4));
-        return mapping;
-    };
-
-    /**
-     * @param {string} scopeName 
-     * @param {KLF_RecordSync_UserMapping} userMapping 
-     * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
-     */
-    _RecordImporter.setUserMapping = function(scopeName, userMapping, connectionConfig) {
-        if (!scopeName) {
-            throw new Error('Scope name is required to set user mapping');
-        }
-        if (!userMapping || !userMapping.mapping) {
-            throw new Error('Invalid user mapping object');
-        }
-
-        const exportService = new global.KLF_RecordExporterService(connectionConfig);
-        exportService.setUserMapping(scopeName + '.mapping.user', userMapping);
-    };  
-
-    /**
      * Uses the {@link KLF_RecordSync_RemoteUser[]} passed in from the remote system to create a {@link KLF_RecordSync_UserMapping} object
      * that maps the remote user sys_id to the local user sys_id
      * @param {KLF_RecordSync_RemoteUser[]} remoteUsers 
@@ -716,42 +767,6 @@ global.KLF_RecordImporter = (function() {
             mapping: localToRemoteMapping
         };
     };
-
-    /**
-     * @param {string} scopeName
-     * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups
-     * @param {boolean} [forceRegenerate=false]
-     * @returns {KLF_RecordSync_GroupMapping}
-     */
-    _RecordImporter.generateGroupMapping = function(scopeName, remoteGroups, forceRegenerate) {
-        const key = scopeName + '.mapping.group';
-        if (!forceRegenerate) {
-            const existingMapping = gs.getProperty(key);
-            if (existingMapping) {
-                return JSON.parse(existingMapping);
-            }
-        }
-        const mapping = this.createGroupMappingFromRemote(remoteGroups);
-        gs.setProperty(key, JSON.stringify(mapping, null, 4));
-        return mapping;
-    };
-
-    /**
-     * @param {string} scopeName 
-     * @param {KLF_RecordSync_GroupMapping} groupMapping 
-     * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
-     */
-    _RecordImporter.setGroupMapping = function(scopeName, groupMapping, connectionConfig) {
-        if (!scopeName) {
-            throw new Error('Scope name is required to set group mapping');
-        }
-        if (!groupMapping || !groupMapping.mapping) {
-            throw new Error('Invalid group mapping object');
-        }
-
-        const exportService = new global.KLF_RecordExporterService(connectionConfig);
-        exportService.setGroupMapping(scopeName + '.mapping.group', groupMapping);
-    };  
 
     /**
      * Uses the {@link KLF_RecordSync_RemoteGroup[]} passed in from the remote system to create a {@link KLF_RecordSync_GroupMapping} object
@@ -844,14 +859,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>69</sys_mod_count>
+        <sys_mod_count>78</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-19 21:31:09</sys_updated_on>
+        <sys_updated_on>2026-05-20 14:49:14</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>

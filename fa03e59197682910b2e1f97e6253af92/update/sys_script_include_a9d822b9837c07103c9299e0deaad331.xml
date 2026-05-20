@@ -60,7 +60,7 @@ global.KLF_RecordExporter = (function() {
         getUserMapping(propertyName) {
             const mapping = this._getMapping(propertyName);
             // @ts-ignore
-            if (!mapping.hasMissingUsers) {
+            if (!mapping.hasOwnProperty('hasMissingUsers')) {
                 throw new Error(`Property ${propertyName} is not a User Mapping`);
             }
             return /** @type {KLF_RecordSync_UserMapping} */ (mapping);
@@ -73,7 +73,7 @@ global.KLF_RecordExporter = (function() {
         getGroupMapping(propertyName) {
             const mapping = this._getMapping(propertyName);
             // @ts-ignore
-            if (!mapping.hasMissingGroups) {
+            if (!mapping.hasOwnProperty('hasMissingGroups')) {
                 throw new Error(`Property ${propertyName} is not a Group Mapping`);
             }
             return /** @type {KLF_RecordSync_GroupMapping} */ (mapping);
@@ -92,17 +92,21 @@ global.KLF_RecordExporter = (function() {
                 throw Error('User mapping property ' + propertyName + ' is not set');
             }
 
-            const mapping = JSON.parse(propertyValue);
+            try {
+                const mapping = JSON.parse(propertyValue);
 
-            if (mapping.hasMissingUsers) {
-                return /** @type {KLF_RecordSync_UserMapping} **/ (mapping);
+                if (mapping.hasOwnProperty('hasMissingUsers')) {
+                    return /** @type {KLF_RecordSync_UserMapping} **/ (mapping);
+                }
+
+                if (mapping.hasOwnProperty('hasMissingGroups')) {
+                    return /** @type {KLF_RecordSync_GroupMapping} **/ (mapping);
+                }
+
+                throw Error('Mapping property ' + propertyName + ' is not a valid user or group mapping');
+            } catch (e) {
+                throw Error('Failed to parse mapping property ' + propertyName);
             }
-
-            if (mapping.hasMissingGroups) {
-                return /** @type {KLF_RecordSync_GroupMapping} **/ (mapping);
-            }
-
-            throw Error('Mapping property ' + propertyName + ' is not a valid user or group mapping');
         }
 
         /**
@@ -200,14 +204,14 @@ global.KLF_RecordExporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:47:51</sys_created_on>
         <sys_id>a9d822b9837c07103c9299e0deaad331</sys_id>
-        <sys_mod_count>21</sys_mod_count>
+        <sys_mod_count>22</sys_mod_count>
         <sys_name>KLF_RecordExporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_a9d822b9837c07103c9299e0deaad331</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-19 21:36:18</sys_updated_on>
+        <sys_updated_on>2026-05-20 12:50:19</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a9d822b9837c07103c9299e0deaad331</id>
