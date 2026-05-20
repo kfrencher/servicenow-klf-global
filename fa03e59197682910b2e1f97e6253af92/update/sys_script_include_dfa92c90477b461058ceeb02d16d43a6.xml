@@ -404,18 +404,11 @@ global.KLF_RecordSync_UserUtils.prototype = {
     },
 
     /**
-     * Uses the sys_ids of the users in the local system to find the sys_ids of the users that exist in the remote system. This returns
-     * a mapping of the local user sys_id to the remote user sys_id. If a user does not exist in the remote system, the remote user sys_id will be null
-     * 
-     * By default the results are cached. If you want to bypass the cache, set useCache to false. When using the cache a mappingName is required. This is used
-     * when you retrieve the user mapping using {@link global.KLF_RecordSync_UserUtils.getUserMapping}
-     * @param {string[]} userSysIds
-     * @param {boolean} [useCache=true] If true, the cache will be used to store the user mappings. true by default
-     * @param {string} [mappingName] A mapping name to store the user mapping under. This is not needed if useCache is false. Typically this would be the application scope, for example: x_example_app
-     * @returns {KLF_RecordSync_UserMapping} The sys_ids of the users that do not exist in the remote system
+     * @param {string[]} userSysIds 
+     * @returns {KLF_RecordSync_RemoteUser[]}
      */
-    createUserMapping: function(userSysIds, mappingName, useCache) {
-        var _useCache = useCache === undefined ? true : useCache;
+    getRemoteUsersBySysIds: function(userSysIds) {
+
         var userRecords = new GlideRecord('sys_user');
         userRecords.addQuery('sys_id', 'IN', userSysIds);
         userRecords.query();
@@ -442,6 +435,23 @@ global.KLF_RecordSync_UserUtils.prototype = {
                 source: ''
             });
         });
+        return users;
+    },
+
+    /**
+     * Uses the sys_ids of the users in the local system to find the sys_ids of the users that exist in the remote system. This returns
+     * a mapping of the local user sys_id to the remote user sys_id. If a user does not exist in the remote system, the remote user sys_id will be null
+     * 
+     * By default the results are cached. If you want to bypass the cache, set useCache to false. When using the cache a mappingName is required. This is used
+     * when you retrieve the user mapping using {@link global.KLF_RecordSync_UserUtils.getUserMapping}
+     * @param {string[]} userSysIds
+     * @param {boolean} [useCache=true] If true, the cache will be used to store the user mappings. true by default
+     * @param {string} [mappingName] A mapping name to store the user mapping under. This is not needed if useCache is false. Typically this would be the application scope, for example: x_example_app
+     * @returns {KLF_RecordSync_UserMapping} The sys_ids of the users that do not exist in the remote system
+     */
+    createUserMapping: function(userSysIds, mappingName, useCache) {
+        var _useCache = useCache === undefined ? true : useCache;
+        var users = this.getRemoteUsersBySysIds(userSysIds);
 
         // Make a  request to sys_user
         var request = this.createRestMessage();
@@ -547,16 +557,25 @@ global.KLF_RecordSync_UserUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-07-30 12:03:43</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>dfa92c90477b461058ceeb02d16d43a6</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>20</sys_mod_count>
         <sys_name>KLF_RecordSync_UserUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dfa92c90477b461058ceeb02d16d43a6</sys_update_name>
-        <sys_updated_by>kenneth.frencher</sys_updated_by>
-        <sys_updated_on>2025-04-29 21:13:29</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-19 13:28:21</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>dfa92c90477b461058ceeb02d16d43a6</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-09-26 23:27:48</sys_created_on>
+        <sys_id>6572bd4347b4121058ceeb02d16d4382</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-09-26 23:27:48</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

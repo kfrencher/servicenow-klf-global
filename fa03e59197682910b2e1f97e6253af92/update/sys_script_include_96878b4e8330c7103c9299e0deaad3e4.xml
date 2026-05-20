@@ -25,18 +25,22 @@ global.KLF_RecordExporterService = (function () {
 	const ENDPOINT = {
 		EXPORT_TABLE: '/api/global/v1/klf_export/table',
 		TABLE_GROUPS: '/api/global/v1/klf_export/table_groups',
-		SCOPE_GROUPS: '/api/global/v1/klf_export/scope_groups'
+		SCOPE_GROUPS: '/api/global/v1/klf_export/scope_groups',
+		TABLE_USERS: '/api/global/v1/klf_export/table_users',
+		SCOPE_USERS: '/api/global/v1/klf_export/scope_users',
+		GROUP_MAPPING: '/api/global/v1/klf_export/group_mapping',
+		USER_MAPPING: '/api/global/v1/klf_export/user_mapping'
 	};
 
 	return class {
-		
+
 		/**
 		 * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
 		 */
 		constructor(connectionConfig) {
 			this.connectionConfig = connectionConfig;
 		}
-		
+
 		/**
 		 * @param {string} message 
 		 */
@@ -129,13 +133,13 @@ global.KLF_RecordExporterService = (function () {
 			};
 		}
 
-    /**
-     * Finds all the unique groups that are referenced in a scope by using the group fields
-     * that are returned from {@link GroupUtils.getGroupFields}
-     * @param {string} scope
-     * @returns {KLF_RecordSync_RemoteGroup[]} The unique group sys_ids
-     */
-    getUniqueGroupsInScope(scope) {
+		/**
+		 * Finds all the unique groups that are referenced in a scope by using the group fields
+		 * that are returned from {@link GroupUtils.getGroupFields}
+		 * @param {string} scope
+		 * @returns {KLF_RecordSync_RemoteGroup[]} The unique group sys_ids
+		 */
+		getUniqueGroupsInScope(scope) {
 			const options = {
 				scope: scope
 			};
@@ -154,13 +158,13 @@ global.KLF_RecordExporterService = (function () {
 			return [];
 		}
 
-    /**
-     * Finds all the unique groups that are referenced in a table by using the group fields
-     * that are returned from {@link GroupUtils.getGroupFields}
-     * @param {string} tableName
-     * @param {string} [filter] GlideRecord encoded query
-     * @returns {KLF_RecordSync_RemoteGroup[]} The unique group sys_ids
-     */
+		/**
+		 * Finds all the unique groups that are referenced in a table by using the group fields
+		 * that are returned from {@link GroupUtils.getGroupFields}
+		 * @param {string} tableName
+		 * @param {string} [filter] GlideRecord encoded query
+		 * @returns {KLF_RecordSync_RemoteGroup[]} The unique group sys_ids
+		 */
 		getUniqueGroupsInTable(tableName, filter) {
 			const options = {
 				tableName: tableName,
@@ -180,20 +184,108 @@ global.KLF_RecordExporterService = (function () {
 
 			return [];
 		}
+
+		/**
+		 * Finds all the unique users that are referenced in a scope by using the user fields
+		 * that are returned from {@link UserUtils.getUserFields}
+		 * @param {string} scope
+		 * @returns {KLF_RecordSync_RemoteUser[]} The unique user sys_ids
+		 */
+		getUniqueUsersInScope(scope) {
+			const options = {
+				scope: scope
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.SCOPE_USERS, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Request to endpoint failed');
+			}
+
+			return [];
+		}
+
+		/**
+		 * Finds all the unique users that are referenced in a table by using the user fields
+		 * that are returned from {@link UserUtils.getUserFields}
+		 * @param {string} tableName
+		 * @param {string} [filter] GlideRecord encoded query
+		 * @returns {KLF_RecordSync_RemoteUser[]} The unique user sys_ids
+		 */
+		getUniqueUsersInTable(tableName, filter) {
+			const options = {
+				tableName: tableName,
+				encodedQueryString: filter
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.TABLE_USERS, JSON.stringify(options, null, 4));
+			if (response.success) {
+				try {
+					return JSON.parse(response.responseBody).result;
+				} catch (e) {
+					this.logError('Failed to parse response: ' + response.responseBody);
+				}
+			} else {
+				this.logError('Request to endpoint failed');
+			}
+
+			return [];
+		}
+
+		/**
+		 * @param {string} scopeName
+		 * @param {KLF_RecordSync_GroupMapping} groupMapping 
+		 */
+		setGroupMapping(scopeName, groupMapping) {
+			const options = {
+				scopeName: scopeName,
+				groupMapping: groupMapping
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.GROUP_MAPPING, JSON.stringify(options, null, 4));
+			if (!response.success) {
+				this.logError('Failed to set group mapping');
+			} else {
+				this.logInfo('Successfully set group mapping');
+			}
+		}
+
+		/**
+		 * @param {string} scopeName
+		 * @param {KLF_RecordSync_UserMapping} userMapping 
+		 */
+		setUserMapping(scopeName, userMapping) {
+			const options = {
+				scopeName: scopeName,
+				userMapping: userMapping
+			};
+
+			const response = this._sendToRemoteInstance(ENDPOINT.USER_MAPPING, JSON.stringify(options, null, 4));
+			if (!response.success) {
+				this.logError('Failed to set user mapping');
+			} else {
+				this.logInfo('Successfully set user mapping');
+			}
+		}
 	};
 })();]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-13 15:39:53</sys_created_on>
         <sys_id>96878b4e8330c7103c9299e0deaad3e4</sys_id>
-        <sys_mod_count>23</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_name>KLF_RecordExporterService</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_96878b4e8330c7103c9299e0deaad3e4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-17 00:04:26</sys_updated_on>
+        <sys_updated_on>2026-05-19 21:44:37</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>96878b4e8330c7103c9299e0deaad3e4</id>

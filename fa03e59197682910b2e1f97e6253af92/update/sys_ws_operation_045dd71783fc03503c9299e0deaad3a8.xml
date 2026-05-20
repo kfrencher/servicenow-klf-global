@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ws_operation">
+    <sys_ws_operation action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <consumes>application/json,application/xml,text/xml</consumes>
+        <consumes_customized>false</consumes_customized>
+        <default_operation_uri>/api/global/klf_export/scope_users</default_operation_uri>
+        <enforce_acl/>
+        <http_method>POST</http_method>
+        <name>Scope Users</name>
+        <operation_script><![CDATA[(function process(/*RESTAPIRequest*/ request, /*RESTAPIResponse*/ response) {
+
+	const emptyConnectionConfig = {
+		instanceUrl: '',
+		username: '',
+		password: ''
+	};
+
+	const {scope} = request.body.data;
+
+	const userUtils = new global.KLF_RecordSync_UserUtils(emptyConnectionConfig);
+	const userSysIds = userUtils.getUniqueUsersInScope(scope);
+
+	if(userSysIds.length > 0) {
+		return userUtils.getRemoteUsersBySysIds(userSysIds);
+	} else {
+		return [];
+	}
+	
+
+})(request, response);]]></operation_script>
+        <operation_uri>/api/global/v1/klf_export/scope_users</operation_uri>
+        <produces>application/json,application/xml,text/xml</produces>
+        <produces_customized>false</produces_customized>
+        <relative_path>/scope_users</relative_path>
+        <request_example/>
+        <requires_acl_authorization>true</requires_acl_authorization>
+        <requires_authentication>true</requires_authentication>
+        <requires_snc_internal_role>true</requires_snc_internal_role>
+        <short_description/>
+        <sys_class_name>sys_ws_operation</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-17 14:27:21</sys_created_on>
+        <sys_id>045dd71783fc03503c9299e0deaad3a8</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Scope Users</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_ws_operation_045dd71783fc03503c9299e0deaad3a8</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-17 14:27:21</sys_updated_on>
+        <web_service_definition display_value="KLF Export">e40c27068374c7103c9299e0deaad37c</web_service_definition>
+        <web_service_version display_value="v1">829c67468374c7103c9299e0deaad32f</web_service_version>
+    </sys_ws_operation>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>045dd71783fc03503c9299e0deaad3a8</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-17 14:27:21</sys_created_on>
+        <sys_id>1f7d971783fc03503c9299e0deaad39a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-17 14:27:21</sys_updated_on>
+        <table>sys_ws_operation</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>

@@ -86,6 +86,118 @@ global.KLF_RecordImporter = (function() {
         }
 
         /**
+         * Returns list of tables in the parent hierarchy including the table
+         * @param {string} table
+         * @returns {string[]}
+         */
+        getTableAncestors(table) {
+            return new global.ArrayUtil().convertArray(new global.TableUtils(table).getTables())
+                .map(function(table) {
+                    return String(table);
+                });
+        }
+
+
+        /**
+         * Returns the name of a table that is in the application scope that this table extends.
+         * If the table does not extend a table it returns the table name
+         * @param {string} scopeNamespace 
+         * @param {string} table 
+         * @returns 
+         */
+        getBaseTableInScope(scopeNamespace, table) {
+            // hierarchy is arranged from extended table to base table. The absolute base table will be last in the list.
+            // This plucks the last table in the list until it finds one that matches the scopeNamespace
+            var hierarchy = this.getTableAncestors(table);
+            var baseInScope = '';
+            // @ts-ignore
+            // eslint-disable-next-line no-cond-assign
+            while (baseInScope = hierarchy.pop()) {
+                if (baseInScope.startsWith(scopeNamespace)) {
+                    break;
+                }
+            }
+            return baseInScope || table;
+        }
+
+        /**
+         * Return a list of all the tables in the scoped application
+         *
+         * Exclude tables is a list of tables that will be removed from the list. Tables in the
+         * exclude list will exclude the excluded table and any table that extends the excluded table
+         * @param {string} scopeNamespace
+         * @param {string[]} [excludedTables]
+         */
+        getTablesInScope(scopeNamespace, excludedTables) {
+            var _excludedTables = excludedTables || [];
+            var me = this;
+
+            var tables = [];
+            var tableDefinition = new GlideRecord("sys_db_object");
+            // Scope.Scope = scopeNamespace
+            // OR
+            // Scope.Name = scopeNamespace AND Scope.Scope = global
+            tableDefinition.addEncodedQuery([
+                'sys_scope.scope=' + scopeNamespace,
+                '^scriptable_table=false',
+                '^NQ', // This means New Query. It's a way of running two distinct filters
+                'sys_scope.name=' + scopeNamespace,
+                '^sys_scope.scope=global',
+                '^scriptable_table=false'
+            ].join(''));
+            tableDefinition.addQuery("scriptable_table", false);
+            tableDefinition.query();
+            while (tableDefinition.next()) {
+                var tableName = tableDefinition.name.toString();
+                // Make sure this table actually exists
+                if (new GlideRecord(tableName).isValid()) {
+                    tables.push(tableName);
+                }
+            }
+            return tables.filter(function(table) {
+                var hierarchy = me.getTableAncestors(table);
+                // Check the hierarchy to make sure none of the excluded tables are in the hierarchy
+                return _excludedTables.every(function(excludedTable) {
+                    return hierarchy.indexOf(excludedTable) == -1;
+                });
+            });
+        }
+
+
+        /**
+         * This returns only the base tables in the scope. The difference between this and
+         * {@link KLF_RecordImporter.getTablesInScope} is that this method will filter out any
+         * table extensions and only include the base tables and any tables that aren't extended.
+         * 
+         * Exclude tables is a list of tables that will be removed from the list. Tables in the
+         * exclude list will exclude the excluded table and any table that extends the excluded table
+         * @param {string} scopeNamespace
+         * @param {string[]} [excludedTables]
+         */
+        getBaseTablesInScope(scopeNamespace, excludedTables) {
+            if (!scopeNamespace) {
+                return [];
+            }
+
+            var _excludedTables = excludedTables || [];
+            var me = this;
+
+            // holds the unique list of base tables. the key is the base table name
+            // the value is not used
+            var baseTableMap = this.getTablesInScope(scopeNamespace).reduce(function(baseTables, table) {
+                baseTables[me.getBaseTableInScope(scopeNamespace, table)] = null;
+                return baseTables;
+            }, {});
+            return Object.keys(baseTableMap).filter(function(table) {
+                var hierarchy = me.getTableAncestors(table);
+                // Check the hierarchy to make sure none of the excluded tables are in the hierarchy
+                return _excludedTables.every(function(excludedTable) {
+                    return hierarchy.indexOf(excludedTable) == -1;
+                });
+            });
+        }
+
+        /**
          * This function can be used to resume an import if it was interrupted.
          * It would read the last imported record's sys_updated_on value from a
          * system property and continue importing from there.
@@ -198,11 +310,18 @@ global.KLF_RecordImporter = (function() {
 
             const scopeNamespace = options.scopeName;
 
-            const tables = new global.KLF_DataTransferUtils().getBaseTablesInScope(scopeNamespace, options.excludedTables);
+            const tables = this.getBaseTablesInScope(scopeNamespace, options.excludedTables);
             this.logInfo(`Found tables in scope ${scopeNamespace}: \n ${tables.join('\n')}`);
 
-			if(tables.length === 0) {
-				throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - not tables found for scope: ' + scopeNamespace);
+            if (tables.length === 0) {
+                throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - not tables found for scope: ' + scopeNamespace);
+            }
+
+			const importSetTable = options.importSetTable;
+			const limit = importSetTable.getMaximumRows();
+			const hasLimit = limit > 0;
+			if (limit > 0) {
+				this.logInfo(`Importing with a maximum limit of ${limit} records`);
 			}
 
             let totalImported = 0;
@@ -213,6 +332,10 @@ global.KLF_RecordImporter = (function() {
                     ...options,
                     tableName: tableName,
                 });
+
+				if(hasLimit && totalImported > limit) {
+					break;
+				}
             }
 
             return totalImported;
@@ -369,9 +492,55 @@ global.KLF_RecordImporter = (function() {
     /**
      * Called from the import set transform map before the transform runs
      * @param {GlideRecord} importSet
+     * @param {() => void} generateMappings A callback function that can be used to generate user and group mappings before the transform runs
      */
-    _RecordImporter.onImportStart = function(importSet) {
+    _RecordImporter.onImportStart = function(importSet, generateMappings) {
+        if (!generateMappings || typeof generateMappings !== 'function') {
+            throw Error('KLF_RecordImporter.onImportStart - generateMappings callback function is required');
+        }
+        
+        generateMappings();
         this.ignoreExistingRecordsInImportSet(importSet.getUniqueValue(), importSet.getValue('table_name'));
+    };
+
+    /**
+     * Called from the import set transform map before the transform runs
+     * @param {GlideRecord} importSet
+     */
+    _RecordImporter.onImportComplete = function(importSet) {
+        const importSetSysId = importSet.getUniqueValue();
+        const stagingTableName = importSet.getValue('table_name');
+
+        this.logInfo(`Setting target info for import set: ${importSetSysId} and staging table: ${stagingTableName}`);
+
+        // Get all unique target tables referenced in this import set
+        const tableNameAgg = new GlideAggregate(stagingTableName);
+        tableNameAgg.groupBy('u_record_table_name');
+        tableNameAgg.addQuery('sys_import_set', importSetSysId);
+        tableNameAgg.query();
+
+        while (tableNameAgg.next()) {
+            const tableName = tableNameAgg.getValue('u_record_table_name');
+            if (!tableName) {
+                this.logError('KLF_RecordImporter.onImportComplete - Missing table name');
+                continue;
+            }
+
+            this.logInfo(`Setting target info for records in table ${tableName}`);
+
+            // Join the staging table to the target table on u_record_sys_id = sys_id to find
+            // records that now exist in the target table after the import
+            const stagingRecord = new GlideRecord(stagingTableName);
+            stagingRecord.addQuery('u_record_table_name', tableName);
+            stagingRecord.addQuery('sys_import_set', importSetSysId);
+            stagingRecord.addJoinQuery(tableName, 'u_record_sys_id', 'sys_id');
+            stagingRecord.query();
+            while (stagingRecord.next()) {
+                stagingRecord.setValue('sys_target_table', tableName);
+                stagingRecord.setValue('sys_target_sys_id', stagingRecord.getValue('u_record_sys_id'));
+                stagingRecord.update();
+            }
+        }
     };
 
     /**
@@ -428,12 +597,244 @@ global.KLF_RecordImporter = (function() {
         importRecord.updateMultiple();
     };
 
-    _RecordImporter.getUserMapping = function(scope) {
-        return global.KLF_RecordSync_UserUtils.createMappingFromRemote(remoteUsers);
+    /**
+     * @param {string} scopeName
+     * @param {KLF_RecordSync_RemoteUser[]} remoteUsers
+     * @param {boolean} [forceRegenerate=false]
+     * @returns {KLF_RecordSync_UserMapping}
+     */
+    _RecordImporter.generateUserMapping = function(scopeName, remoteUsers, forceRegenerate) {
+        const key = scopeName + '.mapping.user';
+        if (!forceRegenerate) {
+            const existingMapping = gs.getProperty(key);
+            if (existingMapping) {
+                return JSON.parse(existingMapping);
+            }
+        }
+        const mapping = this.createUserMappingFromRemote(remoteUsers);
+        gs.setProperty(key, JSON.stringify(mapping, null, 4));
+        return mapping;
     };
 
-    _RecordImporter.getGroupMapping = function(scope) {
-        return new global.KLF_RecordSync_GroupUtils(emptyConnectionConfig).getGroupMapping(scope);
+    /**
+     * @param {string} scopeName 
+     * @param {KLF_RecordSync_UserMapping} userMapping 
+     * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
+     */
+    _RecordImporter.setUserMapping = function(scopeName, userMapping, connectionConfig) {
+        if (!scopeName) {
+            throw new Error('Scope name is required to set user mapping');
+        }
+        if (!userMapping || !userMapping.mapping) {
+            throw new Error('Invalid user mapping object');
+        }
+
+        const exportService = new global.KLF_RecordExporterService(connectionConfig);
+        exportService.setUserMapping(scopeName + '.mapping.user', userMapping);
+    };  
+
+    /**
+     * Uses the {@link KLF_RecordSync_RemoteUser[]} passed in from the remote system to create a {@link KLF_RecordSync_UserMapping} object
+     * that maps the remote user sys_id to the local user sys_id
+     * @param {KLF_RecordSync_RemoteUser[]} remoteUsers 
+     * @returns {KLF_RecordSync_UserMapping}
+     */
+    _RecordImporter.createUserMappingFromRemote = function(remoteUsers) {
+        /**
+         * Creates a mapping of the passed in fieldName to the sys_id of the remote user
+         * This is to make it easy to lookup the sys_id of the remote user by the provided
+         * field name without searching through the remoteUsers array each time
+         * @param {keyof KLF_RecordSync_RemoteUser} fieldName 
+         * @param {KLF_RecordSync_RemoteUser[]} remoteUsers 
+         * @returns {{[name:string]:string}}
+         */
+        function createIndex(remoteUsers, fieldName) {
+            return remoteUsers.reduce(function(index, remoteUser) {
+                var key = remoteUser[fieldName];
+                if (key) {
+                    index[key] = remoteUser.sysId;
+                }
+                return index;
+            }, /** @type {{[indexName:string]:string}} */ ({}));
+        }
+
+        /** 
+         * I am transforming the remoteUsers into an object that contains of the
+         * names, sys_ids, and sources of the remote users so I can easily use those
+         * values in a GlideRecord query
+         * @type {{usernames:string[],sysIds:string[],sources:string[]}} 
+         **/
+        var usernamesSysIdsSources = remoteUsers.reduce(function(namesSysIdsSources, remoteUser) {
+            // There should always be a sys_id. The name and source are optional
+            namesSysIdsSources.sysIds.push(remoteUser.sysId);
+            if (remoteUser.username) {
+                namesSysIdsSources.usernames.push(remoteUser.username);
+            }
+            if (remoteUser.source) {
+                namesSysIdsSources.sources.push(remoteUser.source);
+            }
+            return namesSysIdsSources;
+        }, {
+            usernames: /** @type {string[]} **/ ([]),
+            sysIds: /** @type {string[]} **/ ([]),
+            sources: /** @type {string[]} **/ ([]),
+        });
+
+        var usernameToSysId = createIndex(remoteUsers, 'username');
+        var sourceToSysId = createIndex(remoteUsers, 'source');
+        var sysIdToSysId = createIndex(remoteUsers, 'sysId');
+
+        var userGr = new GlideRecord('sys_user');
+        userGr.addQuery('sys_id', 'IN', usernamesSysIdsSources.sysIds)
+            .addOrCondition('source', 'IN', usernamesSysIdsSources.sources)
+            .addOrCondition('user_name', 'IN', usernamesSysIdsSources.usernames);
+        userGr.query();
+        /** @type {{[localUserSysId:string]:string}} */
+        var localToRemoteMapping = {};
+        while (userGr.next()) {
+            // This is in order of priority. 
+            // If the sys_id is found, then that is used. 
+            // If the name is found, then that is used. 
+            // If the source is found, then that is used
+            if (sysIdToSysId[userGr.getUniqueValue()]) {
+                localToRemoteMapping[sysIdToSysId[userGr.getUniqueValue()]] = userGr.getUniqueValue();
+            } else if (usernameToSysId[userGr.getValue('user_name')]) {
+                localToRemoteMapping[usernameToSysId[userGr.getValue('user_name')]] = userGr.getUniqueValue();
+            } else if (sourceToSysId[userGr.getValue('source')]) {
+                localToRemoteMapping[sourceToSysId[userGr.getValue('source')]] = userGr.getUniqueValue();
+            }
+        }
+
+        var mappedUsers = Object.keys(localToRemoteMapping);
+        var allUsers = Object.keys(sysIdToSysId);
+        var missingUsers = new global.ArrayUtil().diff(allUsers, mappedUsers);
+
+        return {
+            success: true,
+            hasMissingUsers: missingUsers.length > 0,
+            missingUsers: missingUsers,
+            mapping: localToRemoteMapping
+        };
+    };
+
+    /**
+     * @param {string} scopeName
+     * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups
+     * @param {boolean} [forceRegenerate=false]
+     * @returns {KLF_RecordSync_GroupMapping}
+     */
+    _RecordImporter.generateGroupMapping = function(scopeName, remoteGroups, forceRegenerate) {
+        const key = scopeName + '.mapping.group';
+        if (!forceRegenerate) {
+            const existingMapping = gs.getProperty(key);
+            if (existingMapping) {
+                return JSON.parse(existingMapping);
+            }
+        }
+        const mapping = this.createGroupMappingFromRemote(remoteGroups);
+        gs.setProperty(key, JSON.stringify(mapping, null, 4));
+        return mapping;
+    };
+
+    /**
+     * @param {string} scopeName 
+     * @param {KLF_RecordSync_GroupMapping} groupMapping 
+     * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
+     */
+    _RecordImporter.setGroupMapping = function(scopeName, groupMapping, connectionConfig) {
+        if (!scopeName) {
+            throw new Error('Scope name is required to set group mapping');
+        }
+        if (!groupMapping || !groupMapping.mapping) {
+            throw new Error('Invalid group mapping object');
+        }
+
+        const exportService = new global.KLF_RecordExporterService(connectionConfig);
+        exportService.setGroupMapping(scopeName + '.mapping.group', groupMapping);
+    };  
+
+    /**
+     * Uses the {@link KLF_RecordSync_RemoteGroup[]} passed in from the remote system to create a {@link KLF_RecordSync_GroupMapping} object
+     * that maps the remote group sys_id to the local group sys_id
+     * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups 
+     * @returns {KLF_RecordSync_GroupMapping}
+     */
+    _RecordImporter.createGroupMappingFromRemote = function(remoteGroups) {
+        /**
+         * Creates a mapping of the passed in fieldName to the sys_id of the remote group
+         * This is to make it easy to lookup the sys_id of the remote group by the provided
+         * field name without searching through the remoteGroups array each time
+         * @param {keyof KLF_RecordSync_RemoteGroup} fieldName 
+         * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups 
+         * @returns {{[name:string]:string}}
+         */
+        function createIndex(remoteGroups, fieldName) {
+            return remoteGroups.reduce(function(index, remoteGroup) {
+                var key = remoteGroup[fieldName];
+                if (key) {
+                    index[key] = remoteGroup.sysId;
+                }
+                return index;
+            }, /** @type {{[indexName:string]:string}} */ ({}));
+        }
+
+        /** 
+         * I am transforming the remoteGroups into an object that contains of the
+         * names, sys_ids, and sources of the remote groups so I can easily use those
+         * values in a GlideRecord query
+         * @type {{names:string[],sysIds:string[],sources:string[]}} 
+         **/
+        var namesSysIdsSources = remoteGroups.reduce(function(namesSysIdsSources, remoteGroup) {
+            // There should always be a sys_id. The name and source are optional
+            namesSysIdsSources.sysIds.push(remoteGroup.sysId);
+            if (remoteGroup.name) {
+                namesSysIdsSources.names.push(remoteGroup.name);
+            }
+            if (remoteGroup.source) {
+                namesSysIdsSources.sources.push(remoteGroup.source);
+            }
+            return namesSysIdsSources;
+        }, {
+            names: /** @type {string[]} **/ ([]),
+            sysIds: /** @type {string[]} **/ ([]),
+            sources: /** @type {string[]} **/ ([]),
+        });
+
+        var nameToSysId = createIndex(remoteGroups, 'name');
+        var sourceToSysId = createIndex(remoteGroups, 'source');
+        var sysIdToSysId = createIndex(remoteGroups, 'sysId');
+
+        var groupGr = new GlideRecord('sys_user_group');
+        groupGr.addQuery('sys_id', 'IN', namesSysIdsSources.sysIds)
+            .addOrCondition('source', 'IN', namesSysIdsSources.sources)
+            .addOrCondition('name', 'IN', namesSysIdsSources.names);
+        groupGr.query();
+        /** @type {{[localGroupSysId:string]:string}} */
+        var localToRemoteMapping = {};
+        while (groupGr.next()) {
+            // This is in order of priority. 
+            // If the sys_id is found, then that is used. 
+            // If the name is found, then that is used. 
+            // If the source is found, then that is used
+            if (sysIdToSysId[groupGr.getUniqueValue()]) {
+                localToRemoteMapping[sysIdToSysId[groupGr.getUniqueValue()]] = groupGr.getUniqueValue();
+            } else if (nameToSysId[groupGr.getValue('name')]) {
+                localToRemoteMapping[nameToSysId[groupGr.getValue('name')]] = groupGr.getUniqueValue();
+            } else if (sourceToSysId[groupGr.getValue('source')]) {
+                localToRemoteMapping[sourceToSysId[groupGr.getValue('source')]] = groupGr.getUniqueValue();
+            }
+        }
+
+        var mappedGroups = Object.keys(localToRemoteMapping);
+        var allGroups = Object.keys(sysIdToSysId);
+        var missingGroups = new global.ArrayUtil().diff(allGroups, mappedGroups);
+
+        return {
+            success: true,
+            hasMissingGroups: missingGroups.length > 0,
+            missingGroups: missingGroups,
+            mapping: localToRemoteMapping
+        };
     };
 
     return _RecordImporter;
@@ -443,14 +844,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>54</sys_mod_count>
+        <sys_mod_count>69</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-16 20:02:00</sys_updated_on>
+        <sys_updated_on>2026-05-19 21:31:09</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
