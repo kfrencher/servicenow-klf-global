@@ -17,6 +17,24 @@
  * @property {string} password
  */
 
+/**
+ * @typedef {{
+ * tableName: string,
+ * rowCount: number
+ * }} KLF_TableInfo[]
+ */
+
+/**
+ * @typedef {{
+ * tableName: string,
+ * encodedQueryString?: string,
+ * excludedTables?: string[],
+ * window?: {start:number, end:number},
+ * scopeName?: string,
+ * skipMapping?: boolean
+ * }} KLF_ExportTableOptions
+ */
+
 //@ts-ignore
 var global = global || {};
 
@@ -32,7 +50,8 @@ global.KLF_RecordExporterService = (function() {
         SET_GROUP_MAPPING: '/api/global/v1/klf_export/set_group_mapping',
         SET_USER_MAPPING: '/api/global/v1/klf_export/set_user_mapping',
         GET_GROUP_MAPPING: '/api/global/v1/klf_export/get_group_mapping',
-        GET_USER_MAPPING: '/api/global/v1/klf_export/get_user_mapping'
+        GET_USER_MAPPING: '/api/global/v1/klf_export/get_user_mapping',
+        GET_TABLE_INFO: '/api/global/v1/klf_export/get_table_info'
     };
 
     return class {
@@ -105,15 +124,27 @@ global.KLF_RecordExporterService = (function() {
         }
 
         /**
+         * @param {KLF_ExportTableOptions[]} options 
+         * @returns {KLF_TableInfo[]}
+         */
+        getTableInfo(options) {
+            const response = this._sendToRemoteInstance(ENDPOINT.GET_TABLE_INFO, JSON.stringify(options, null, 4));
+            if (response.success) {
+                try {
+                    return JSON.parse(response.responseBody).result;
+                } catch (e) {
+                    this.logError('Failed to parse response: ' + response.responseBody);
+                }
+            } else {
+                this.logError('getTableInfo request to endpoint failed');
+            }
+
+            return [];
+        }
+
+        /**
          * Exports records from a specified table based on a query string, optionally excluding certain tables and mapping user and group fields.
-         * @param {{
-         * tableName: string,
-         * encodedQueryString?: string,
-         * excludedTables?: string[],
-         * window?: {start:number, end:number},
-         * scopeName?: string,
-         * skipMapping?: boolean
-         * }} options
+         * @param {KLF_ExportTableOptions} options
          * @returns {KLF_ExportTableResponse} 
          */
         exportTable(options) {
@@ -340,14 +371,14 @@ global.KLF_RecordExporterService = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-13 15:39:53</sys_created_on>
         <sys_id>96878b4e8330c7103c9299e0deaad3e4</sys_id>
-        <sys_mod_count>45</sys_mod_count>
+        <sys_mod_count>55</sys_mod_count>
         <sys_name>KLF_RecordExporterService</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_96878b4e8330c7103c9299e0deaad3e4</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-23 14:13:41</sys_updated_on>
+        <sys_updated_on>2026-05-23 20:40:07</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>96878b4e8330c7103c9299e0deaad3e4</id>

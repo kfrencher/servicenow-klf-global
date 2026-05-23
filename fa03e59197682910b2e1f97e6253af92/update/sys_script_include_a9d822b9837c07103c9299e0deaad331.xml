@@ -123,6 +123,48 @@ global.KLF_RecordExporter = (function() {
         }
 
         /**
+         * @param {KLF_RecordImporterOptions[]} options 
+         * @returns {KLF_TableInfo[]}
+         */
+        getTableInfo(options) {
+            return options.map(option => {
+                if (!option.tableName) {
+                    throw new IllegalArgumentError('Table name is required for each option');
+                }
+                const glideRecord = this.createQueryForExport(option);
+                glideRecord.query();
+                return {
+                    tableName: option.tableName,
+                    rowCount: glideRecord.getRowCount()
+                };
+            });
+        }
+
+        /**
+         * Creates a GlideRecord query for exporting records based on the provided options.
+         * @param {*} options 
+         * @returns {GlideRecord}
+         */
+        createQueryForExport(options) {
+            const tableName = options.tableName;
+            const encodedQueryString = options.encodedQueryString;
+            const excludedTables = options.excludedTables;
+
+            var glideRecord = new GlideRecord(tableName);
+            glideRecord.orderBy('sys_updated_on');
+
+            if (encodedQueryString) {
+                glideRecord.addEncodedQuery(encodedQueryString);
+            }
+
+            if (excludedTables && excludedTables.length > 0 && glideRecord.isValidField('sys_class_name')) {
+                glideRecord.addQuery('sys_class_name', 'NOT IN', excludedTables);
+            }
+
+            return glideRecord;
+        }
+
+        /**
          * Exports records from a specified table based on a query string, optionally excluding certain tables and mapping user and group fields.
          * @param {{
          * tableName: string,
@@ -153,6 +195,7 @@ global.KLF_RecordExporter = (function() {
                 throw new IllegalArgumentError('Table name is required');
             }
 
+
             var glideRecord = new GlideRecord(tableName);
             if (!glideRecord.isValid()) {
                 return {
@@ -164,15 +207,7 @@ global.KLF_RecordExporter = (function() {
                 };
             }
 
-            glideRecord.orderBy('sys_updated_on');
-
-            if (encodedQueryString) {
-                glideRecord.addEncodedQuery(encodedQueryString);
-            }
-
-            if (excludedTables && excludedTables.length > 0 && glideRecord.isValidField('sys_class_name')) {
-                glideRecord.addQuery('sys_class_name', 'NOT IN', excludedTables);
-            }
+            glideRecord = this.createQueryForExport(options);
 
             let pageSize = -1;
             if (window && typeof window.start === 'number' && typeof window.end === 'number' &&
@@ -206,14 +241,14 @@ global.KLF_RecordExporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:47:51</sys_created_on>
         <sys_id>a9d822b9837c07103c9299e0deaad331</sys_id>
-        <sys_mod_count>25</sys_mod_count>
+        <sys_mod_count>26</sys_mod_count>
         <sys_name>KLF_RecordExporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_a9d822b9837c07103c9299e0deaad331</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-23 14:05:18</sys_updated_on>
+        <sys_updated_on>2026-05-23 20:16:24</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a9d822b9837c07103c9299e0deaad331</id>
