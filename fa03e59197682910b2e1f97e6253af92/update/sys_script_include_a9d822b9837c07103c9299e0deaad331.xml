@@ -129,7 +129,8 @@ global.KLF_RecordExporter = (function() {
          * encodedQueryString?: string,
          * excludedTables?: string[],
          * window?: {start:number, end:number},
-         * scopeName?: string
+         * scopeName?: string,
+         * skipMapping?: boolean
          * }} options
          * @returns {KLF_ExportTableResponse} 
          */
@@ -144,8 +145,9 @@ global.KLF_RecordExporter = (function() {
             const excludedTables = options.excludedTables;
             const window = options.window;
             const scopeName = options.scopeName;
-            const userMapping = scopeName ? this.getUserMapping(scopeName + '.mapping.user') : null;
-            const groupMapping = scopeName ? this.getGroupMapping(scopeName + '.mapping.group') : null;
+            const skipMapping = options.skipMapping;
+            const userMapping = scopeName && !skipMapping ? this.getUserMapping(scopeName + '.mapping.user') : null;
+            const groupMapping = scopeName && !skipMapping ? this.getGroupMapping(scopeName + '.mapping.group') : null;
 
             if (!tableName) {
                 throw new IllegalArgumentError('Table name is required');
@@ -204,14 +206,14 @@ global.KLF_RecordExporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:47:51</sys_created_on>
         <sys_id>a9d822b9837c07103c9299e0deaad331</sys_id>
-        <sys_mod_count>24</sys_mod_count>
+        <sys_mod_count>25</sys_mod_count>
         <sys_name>KLF_RecordExporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_a9d822b9837c07103c9299e0deaad331</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-21 11:59:41</sys_updated_on>
+        <sys_updated_on>2026-05-23 14:05:18</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a9d822b9837c07103c9299e0deaad331</id>

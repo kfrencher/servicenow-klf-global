@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_documentation element="" label="KLF_RecordImporter_State" language="en" table="u_klf_recordimporter_state">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element/>
+            <help/>
+            <hint/>
+            <label>KLF_RecordImporter_State</label>
+            <language>en</language>
+            <name>u_klf_recordimporter_state</name>
+            <plural>KLF_RecordImporter_States</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-05-23 13:34:26</sys_created_on>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>KLF_RecordImporter_State</sys_name>
+            <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+            <sys_update_name>sys_documentation_u_klf_recordimporter_state__en</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-05-23 13:34:26</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

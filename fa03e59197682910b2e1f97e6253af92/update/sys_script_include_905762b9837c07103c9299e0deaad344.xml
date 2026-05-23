@@ -34,6 +34,13 @@
  * @property {boolean} [forceSync] An optional flag to force synchronous import, which will ignore any existing checkpoints and re-import all records matching the encoded query string.
  */
 
+/**
+ * @typedef {object} ImportLog
+ * @property {(message: string) => void} info
+ * @property {(message: string) => void} warn
+ * @property {(message: string) => void} error
+ */
+
 //@ts-ignore
 var global = global || {};
 
@@ -42,10 +49,10 @@ var global = global || {};
  * Contains utility functions for importing records exported by `RecordExporter`.
  */
 global.KLF_RecordImporter = (function () {
-	const LOG_PREFIX = '[KLF_RecordImporter] - ';
+    const CHECKPOINT_TABLE_NAME = 'u_klf_recordimporter_state';
+	const LOG_SOURCE = 'KLF_RecordImporter';
+	const LOG_PREFIX = `[${LOG_SOURCE}] - `;
 	const DEFAULT_BATCH_SIZE = 10;
-	const LAST_IMPORTED_RECORDS_PROPERTY = 'klf_record_importer.last_imported_records';
-
 
 	class _RecordImporter {
 		/**
@@ -64,8 +71,14 @@ global.KLF_RecordImporter = (function () {
 
 		/**
 		 * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig
+		 * @param {string} scopeName
 		 */
-		constructor(connectionConfig) {
+		constructor(connectionConfig, scopeName) {
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            if(!checkpointGr.isValid()) {
+                throw new Error(`Checkpoint table ${CHECKPOINT_TABLE_NAME} does not exist or is not accessible`);
+            }
+
 			if (!connectionConfig) {
 				throw new Error('You must provide a connection config with instanceUrl, username, and password to use KLF_RecordImporter');
 			}
@@ -84,8 +97,34 @@ global.KLF_RecordImporter = (function () {
 
 			this.connectionConfig = connectionConfig;
 			this.exportService = new global.KLF_RecordExporterService(connectionConfig);
-
+            this.scopeName = scopeName;
+            this.checkpointKey = `${scopeName}.table_import_checkpoints`;
+            this._initCheckpointProperty();
 		}
+
+
+        /**
+         * Creates a system property directly in they sys_properties table
+         * and marks it as ignore_cache so it does not invalidate the cache every time it is updated
+         */
+        _initCheckpointProperty() {
+            const propertyGr = new GlideRecord('sys_properties');
+            propertyGr.addQuery('name', this.checkpointKey);
+            propertyGr.query();
+            if (!propertyGr.next()) {
+                propertyGr.initialize();
+                propertyGr.setValue('name', this.checkpointKey);
+                propertyGr.setValue('type', 'string');
+                propertyGr.setValue('value', '{}');
+                propertyGr.setValue('ignore_cache', true);
+                propertyGr.insert();
+            }
+
+            if (!propertyGr.ignore_cache) {
+                propertyGr.setValue('ignore_cache', true);
+                propertyGr.update();
+            }
+        }
 
 		getExportService() {
 			if (!this.exportService) {
@@ -110,11 +149,10 @@ global.KLF_RecordImporter = (function () {
 		/**
 		 * Returns the name of a table that is in the application scope that this table extends.
 		 * If the table does not extend a table it returns the table name
-		 * @param {string} scopeNamespace 
 		 * @param {string} table 
 		 * @returns 
 		 */
-		getBaseTableInScope(scopeNamespace, table) {
+		getBaseTableInScope(table) {
 			// hierarchy is arranged from extended table to base table. The absolute base table will be last in the list.
 			// This plucks the last table in the list until it finds one that matches the scopeNamespace
 			var hierarchy = this.getTableAncestors(table);
@@ -122,7 +160,7 @@ global.KLF_RecordImporter = (function () {
 			// @ts-ignore
 			// eslint-disable-next-line no-cond-assign
 			while (baseInScope = hierarchy.pop()) {
-				if (baseInScope.startsWith(scopeNamespace)) {
+				if (baseInScope.startsWith(this.scopeName)) {
 					break;
 				}
 			}
@@ -134,10 +172,9 @@ global.KLF_RecordImporter = (function () {
 		 *
 		 * Exclude tables is a list of tables that will be removed from the list. Tables in the
 		 * exclude list will exclude the excluded table and any table that extends the excluded table
-		 * @param {string} scopeNamespace
 		 * @param {string[]} [excludedTables]
 		 */
-		getTablesInScope(scopeNamespace, excludedTables) {
+		getTablesInScope(excludedTables) {
 			var _excludedTables = excludedTables || [];
 			var me = this;
 
@@ -147,10 +184,10 @@ global.KLF_RecordImporter = (function () {
 			// OR
 			// Scope.Name = scopeNamespace AND Scope.Scope = global
 			tableDefinition.addEncodedQuery([
-				'sys_scope.scope=' + scopeNamespace,
+				'sys_scope.scope=' + this.scopeName,
 				'^scriptable_table=false',
 				'^NQ', // This means New Query. It's a way of running two distinct filters
-				'sys_scope.name=' + scopeNamespace,
+				'sys_scope.name=' + this.scopeName,
 				'^sys_scope.scope=global',
 				'^scriptable_table=false'
 			].join(''));
@@ -180,21 +217,17 @@ global.KLF_RecordImporter = (function () {
 		 * 
 		 * Exclude tables is a list of tables that will be removed from the list. Tables in the
 		 * exclude list will exclude the excluded table and any table that extends the excluded table
-		 * @param {string} scopeNamespace
 		 * @param {string[]} [excludedTables]
 		 */
-		getBaseTablesInScope(scopeNamespace, excludedTables) {
-			if (!scopeNamespace) {
-				return [];
-			}
+		getBaseTablesInScope(excludedTables) {
 
 			var _excludedTables = excludedTables || [];
 			var me = this;
 
 			// holds the unique list of base tables. the key is the base table name
 			// the value is not used
-			var baseTableMap = this.getTablesInScope(scopeNamespace).reduce(function (baseTables, table) {
-				baseTables[me.getBaseTableInScope(scopeNamespace, table)] = null;
+			var baseTableMap = this.getTablesInScope().reduce(function (baseTables, table) {
+				baseTables[me.getBaseTableInScope(table)] = null;
 				return baseTables;
 			}, {});
 			return Object.keys(baseTableMap).filter(function (table) {
@@ -221,14 +254,14 @@ global.KLF_RecordImporter = (function () {
 				throw new Error('Table name is required');
 			}
 
-			const lastImportedRecord = this.getImportedCheckpoint(tableName);
-			if (!lastImportedRecord) {
+			const checkpoint = this.getImportedCheckpoint(tableName);
+			if (!checkpoint) {
 				return this._importTableToStagingTable(options);
 			}
 
 			const encodedQueryString = options.encodedQueryString ?
-				`${options.encodedQueryString}^sys_updated_on>${lastImportedRecord}` :
-				`sys_updated_on>${lastImportedRecord}`;
+				`${options.encodedQueryString}^sys_updated_on>${checkpoint}` :
+				`sys_updated_on>${checkpoint}`;
 
 			/** @type {number} */
 			const importedCount = this._importTableToStagingTable({
@@ -258,9 +291,15 @@ global.KLF_RecordImporter = (function () {
 			}
 
 			/** @type {Record<string, string>} */
-			const lastImportedRecords = this.getImportCheckpoints();
-			lastImportedRecords[tableName] = sysUpdatedOn;
-			gs.setProperty(LAST_IMPORTED_RECORDS_PROPERTY, JSON.stringify(lastImportedRecords, null, 4));
+			const checkpoints = this.getImportCheckpoints();
+			checkpoints[tableName] = sysUpdatedOn;
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            if (!checkpointGr.get('u_name', this.checkpointKey)) {
+                checkpointGr.initialize();
+                checkpointGr.setValue('u_name', this.checkpointKey);
+            }
+            checkpointGr.setValue('u_value', JSON.stringify(checkpoints, null, 4));
+            checkpointGr.update();
 		}
 
 		/**
@@ -268,15 +307,16 @@ global.KLF_RecordImporter = (function () {
 		 * @returns {Record<string, string>}
 		 */
 		getImportCheckpoints() {
-			const lastImportedRecordsProperty = gs.getProperty(LAST_IMPORTED_RECORDS_PROPERTY, '');
-			if (lastImportedRecordsProperty) {
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            const checkpointJson = checkpointGr.get('u_name', this.checkpointKey) ? checkpointGr.getValue('u_value') : null;
+			if (checkpointJson) {
 				try {
 					/** @type {Record<string, string>} */
-					const parsedLastImportedRecords = JSON.parse(lastImportedRecordsProperty);
-					return parsedLastImportedRecords && typeof parsedLastImportedRecords === 'object' ?
-						parsedLastImportedRecords : {};
+					const checkpoint = JSON.parse(checkpointJson);
+					return checkpoint && typeof checkpoint === 'object' ?
+						checkpoint : {};
 				} catch (error) {
-					this.logError(`Unable to parse checkpoint property ${LAST_IMPORTED_RECORDS_PROPERTY}: ${error}`);
+					this.logError(`Unable to parse checkpoint ${this.checkpointKey}: ${error}`);
 				}
 			}
 
@@ -294,12 +334,12 @@ global.KLF_RecordImporter = (function () {
 			}
 
 			/** @type {Record<string, string>} */
-			const lastImportedRecords = this.getImportCheckpoints();
-			if (lastImportedRecords[tableName]) {
-				return lastImportedRecords[tableName];
+			const checkpoints = this.getImportCheckpoints();
+			if (checkpoints[tableName]) {
+				return checkpoints[tableName];
 			}
 
-			return gs.getProperty(`klf_recordimporter.last_imported_${tableName}`);
+			return null;
 		}
 
 		/**
@@ -313,13 +353,9 @@ global.KLF_RecordImporter = (function () {
 				throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - options is required');
 			}
 
-			if (!options.scopeName) {
-				throw new Error('KLF_RecordImporter.importScopedApplicationToStagingTable - options.scopeName is required');
-			}
+			const scopeNamespace = this.scopeName;
 
-			const scopeNamespace = options.scopeName;
-
-			const tables = this.getBaseTablesInScope(scopeNamespace, options.excludedTables);
+			const tables = this.getBaseTablesInScope(options.excludedTables);
 			this.logInfo(`Found tables in scope ${scopeNamespace}: \n ${tables.join('\n')}`);
 
 			if (tables.length === 0) {
@@ -385,7 +421,7 @@ global.KLF_RecordImporter = (function () {
 			const excludedTables = options.excludedTables;
 			const batchSize = options.batchSize;
 			const importSetTable = options.importSetTable;
-			const scopeNamespace = options.scopeName;
+			const scopeNamespace = this.scopeName;
 
 			if (!tableName) {
 				throw new Error('Table name is required');
@@ -465,25 +501,25 @@ global.KLF_RecordImporter = (function () {
 		/**
 		 * Ensures that a user mapping exists for the given scope. If a mapping 
 		 * does not already exist, it generates one from the provided remote users and saves it.
-		 * @param {string} scopeName 
-		 * @param {(exportService: InstanceType<typeof global.KLF_RecordExporterService>) => KLF_RecordSync_RemoteUser[]} getRemoteUsersFunction 
+		 * @param {(exportService: InstanceType<typeof global.KLF_RecordExporterService>, scopeName: string) => KLF_RecordSync_RemoteUser[]} getRemoteUsersFunction 
 		 */
-		initUserMapping(scopeName, getRemoteUsersFunction) {
+		initUserMapping(getRemoteUsersFunction) {
+            const scopeName = this.scopeName;
 			let userMapping = this.exportService.getUserMapping(scopeName);
 			if (!userMapping) {
-				const remoteUsers = getRemoteUsersFunction(this.exportService);
-				userMapping = this.generateUserMapping(scopeName, remoteUsers);
-				this.setUserMapping(scopeName, userMapping);
+				const remoteUsers = getRemoteUsersFunction(this.exportService, scopeName);
+				userMapping = this.generateUserMapping(remoteUsers);
+				this.setUserMapping(userMapping);
 			}
 		}
 
 		/**
-		 * @param {string} scopeName
 		 * @param {KLF_RecordSync_RemoteUser[]} remoteUsers
 		 * @param {boolean} [forceRegenerate=false]
 		 * @returns {KLF_RecordSync_UserMapping}
 		 */
-		generateUserMapping(scopeName, remoteUsers, forceRegenerate) {
+		generateUserMapping(remoteUsers, forceRegenerate) {
+            const scopeName = this.scopeName;
 			gs.info('Generating user mapping for scope ' + scopeName);
 			const key = scopeName + '.mapping.user';
 			if (!forceRegenerate) {
@@ -499,10 +535,10 @@ global.KLF_RecordImporter = (function () {
 		}
 
 		/**
-		 * @param {string} scopeName 
 		 * @param {KLF_RecordSync_UserMapping} userMapping 
 		 */
-		setUserMapping(scopeName, userMapping) {
+		setUserMapping(userMapping) {
+            const scopeName = this.scopeName;
 			if (!scopeName) {
 				throw new Error('Scope name is required to set user mapping');
 			}
@@ -516,24 +552,24 @@ global.KLF_RecordImporter = (function () {
 		/**
 		 * Ensures that a group mapping exists for the given scope. If a mapping 
 		 * does not already exist, it generates one from the provided remote groups and saves it.
-		 * @param {string} scopeName 
-		 * @param {(exportService: InstanceType<typeof global.KLF_RecordExporterService>) => KLF_RecordSync_RemoteGroup[]} getRemoteGroupsFunction 
+		 * @param {(exportService: InstanceType<typeof global.KLF_RecordExporterService>, scopeName: string) => KLF_RecordSync_RemoteGroup[]} getRemoteGroupsFunction 
 		 */
-		initGroupMapping(scopeName, getRemoteGroupsFunction) {
+		initGroupMapping(getRemoteGroupsFunction) {
+            const scopeName = this.scopeName;
 			let groupMapping = this.exportService.getGroupMapping(scopeName);
 			if (!groupMapping) {
-				const remoteGroups = getRemoteGroupsFunction(this.exportService);
-				groupMapping = this.generateGroupMapping(scopeName, remoteGroups);
-				this.setGroupMapping(scopeName, groupMapping);
+				const remoteGroups = getRemoteGroupsFunction(this.exportService, scopeName);
+				groupMapping = this.generateGroupMapping(remoteGroups);
+				this.setGroupMapping(groupMapping);
 			}
 		}
 
 		/**
-		 * @param {string} scopeName
 		 * @param {KLF_RecordSync_RemoteGroup[]} remoteGroups
 		 * @returns {KLF_RecordSync_GroupMapping}
 		 */
-		generateGroupMapping(scopeName, remoteGroups) {
+		generateGroupMapping(remoteGroups) {
+			const scopeName = this.scopeName;
 			const key = scopeName + '.mapping.group';
 			const mapping = _RecordImporter.createGroupMappingFromRemote(remoteGroups);
 			gs.getUser().savePreference(key, JSON.stringify(mapping, null, 4));
@@ -541,10 +577,10 @@ global.KLF_RecordImporter = (function () {
 		}
 
 		/**
-		 * @param {string} scopeName 
 		 * @param {KLF_RecordSync_GroupMapping} groupMapping 
 		 */
-		setGroupMapping(scopeName, groupMapping) {
+		setGroupMapping(groupMapping) {
+            const scopeName = this.scopeName;
 			if (!scopeName) {
 				throw new Error('Scope name is required to set group mapping');
 			}
@@ -571,14 +607,14 @@ global.KLF_RecordImporter = (function () {
 	 * @param {string} message 
 	 */
 	_RecordImporter.logInfo = function (message) {
-		gs.info(`${LOG_PREFIX}${message}`);
+		gs.log(`${LOG_PREFIX}${message}`, LOG_SOURCE);
 	};
 
 	/**
 	 * @param {string} message 
 	 */
 	_RecordImporter.logError = function (message) {
-		gs.error(`${LOG_PREFIX}${message}`);
+		gs.error(`${LOG_PREFIX}${message}`, LOG_SOURCE);
 	};
 
 	/**
@@ -877,14 +913,14 @@ global.KLF_RecordImporter = (function () {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>93</sys_mod_count>
+        <sys_mod_count>111</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-22 22:49:01</sys_updated_on>
+        <sys_updated_on>2026-05-23 13:54:45</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
