@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?><database>
     <element db_object_id="fdcace19838dcf503c9299e0deaad320" label="KLF_RecordImporter_State" max_length="40" name="u_klf_recordimporter_state" type="collection">
+        <element label="Checkpoint" max_length="10000" name="u_checkpoint" type="string"/>
+        <element label="Data Manifest" max_length="1000" name="u_data_manifest" type="string"/>
+        <element label="Loaded Data" max_length="5000" name="u_loaded_data" type="string"/>
+        <element label="Loaded Data JSON" max_length="5000" name="u_loaded_data_json" type="string"/>
         <element label="Name" max_length="255" name="u_name" type="string"/>
-        <element label="Value" max_length="5000" name="u_value" type="string"/>
+        <element choice="1" label="State" max_length="40" name="u_state" type="string">
+            <choice>
+                <element inactive_on_update="false" label="Complete" value="complete"/>
+                <element inactive_on_update="false" label="Loading" value="loading"/>
+            </choice>
+        </element>
     </element>
 </database>

@@ -111,6 +111,11 @@ global.KLF_RecordImporter = (function() {
         return existingSysIds;
     }
 
+    const STATE = {
+        LOADING: 'loading',
+        COMPLETE: 'complete'
+    };
+
     class _RecordImporter {
         /**
          * @param {string} message 
@@ -124,6 +129,22 @@ global.KLF_RecordImporter = (function() {
          */
         logError(message) {
             _RecordImporter.logError(message);
+        }
+
+        start() {
+            this.logInfo('STARTING DATA IMPORT');
+            const checkpointRecord = this.getCheckpointRecord();
+            checkpointRecord.setValue('u_loaded_data', '');
+            checkpointRecord.setValue('u_loaded_data_json', '');
+            checkpointRecord.setValue('u_state', STATE.LOADING);
+            checkpointRecord.update();
+        }
+
+        complete() {
+            this.logInfo('DATA IMPORT COMPLETE');
+            const checkpointRecord = this.getCheckpointRecord();
+            checkpointRecord.setValue('u_state', STATE.COMPLETE);
+            checkpointRecord.update();
         }
 
         /**
@@ -156,7 +177,7 @@ global.KLF_RecordImporter = (function() {
             this.exportService = new global.KLF_RecordExporterService(connectionConfig);
             this.scopeName = scopeName;
             this.checkpointKey = `${scopeName}.table_import_checkpoints`;
-            this._initCheckpointProperty();
+            this._initCheckpointRecord();
         }
 
 
@@ -164,22 +185,12 @@ global.KLF_RecordImporter = (function() {
          * Creates a system property directly in they sys_properties table
          * and marks it as ignore_cache so it does not invalidate the cache every time it is updated
          */
-        _initCheckpointProperty() {
-            const propertyGr = new GlideRecord('sys_properties');
-            propertyGr.addQuery('name', this.checkpointKey);
-            propertyGr.query();
-            if (!propertyGr.next()) {
-                propertyGr.initialize();
-                propertyGr.setValue('name', this.checkpointKey);
-                propertyGr.setValue('type', 'string');
-                propertyGr.setValue('value', '{}');
-                propertyGr.setValue('ignore_cache', true);
-                propertyGr.insert();
-            }
-
-            if (!propertyGr.ignore_cache) {
-                propertyGr.setValue('ignore_cache', true);
-                propertyGr.update();
+        _initCheckpointRecord() {
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            if (!checkpointGr.get('u_name', this.checkpointKey)) {
+                checkpointGr.initialize();
+                checkpointGr.setValue('u_name', this.checkpointKey);
+                checkpointGr.update();
             }
         }
 
@@ -335,13 +346,22 @@ global.KLF_RecordImporter = (function() {
             });
         }
 
+        getCheckpointRecord() {
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            if (!checkpointGr.get('u_name', this.checkpointKey)) {
+                throw new Error(`Checkpoint record with name ${this.checkpointKey} does not exist in table ${CHECKPOINT_TABLE_NAME}`);
+            }
+            return checkpointGr;
+        }
+
         /**
          * Sets a system property to track the sys_updated_on value of the last imported record for a given table. This can be used to resume imports from where they left off in case of interruptions.
          * @param {string} tableName The name of the table for which to set the last imported record.
          * @param {string} sysUpdatedOn The sys_updated_on value of the last imported record, in ISO 8601 format (e.g., "2024-01-01T12:00:00Z").
+         * @param {string} [importStatusMessage] An optional message describing the import status.
          * @returns {void}
          */
-        setImportedCheckpoint(tableName, sysUpdatedOn) {
+        setImportedCheckpoint(tableName, sysUpdatedOn, importStatusMessage) {
             if (!tableName) {
                 throw new Error('Table name is required');
             }
@@ -350,15 +370,24 @@ global.KLF_RecordImporter = (function() {
                 return;
             }
 
+
             /** @type {Record<string, string>} */
             const checkpoints = this.getImportCheckpoints();
             checkpoints[tableName] = sysUpdatedOn;
-            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
-            if (!checkpointGr.get('u_name', this.checkpointKey)) {
-                checkpointGr.initialize();
-                checkpointGr.setValue('u_name', this.checkpointKey);
-            }
-            checkpointGr.setValue('u_value', JSON.stringify(checkpoints, null, 4));
+            const checkpointGr = this.getCheckpointRecord();
+
+            const loadedDataJson = checkpointGr.u_loaded_data_json.nil() ? '{}' : checkpointGr.getValue('u_loaded_data_json');
+            const loadedData = JSON.parse(loadedDataJson);
+            loadedData[tableName] = {
+                sysUpdatedOn: sysUpdatedOn,
+                importStatusMessage: importStatusMessage || ''
+            };
+            checkpointGr.setValue('u_loaded_data_json', JSON.stringify(loadedData, null, 4));
+            checkpointGr.setValue('u_loaded_data', Object.keys(loadedData).map(table => {
+                return loadedData[table].importStatusMessage ? `${table}: ${loadedData[table].importStatusMessage}` : table;
+            }).join('\n'));
+
+            checkpointGr.setValue('u_checkpoint', JSON.stringify(checkpoints, null, 4));
             checkpointGr.update();
         }
 
@@ -367,8 +396,8 @@ global.KLF_RecordImporter = (function() {
          * @returns {Record<string, string>}
          */
         getImportCheckpoints() {
-            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
-            const checkpointJson = checkpointGr.get('u_name', this.checkpointKey) ? checkpointGr.getValue('u_value') : null;
+            const checkpointGr = this.getCheckpointRecord();
+            const checkpointJson = checkpointGr.u_checkpoint.nil() ? null : checkpointGr.getValue('u_checkpoint');
             if (checkpointJson) {
                 try {
                     /** @type {Record<string, string>} */
@@ -403,6 +432,18 @@ global.KLF_RecordImporter = (function() {
         }
 
         /**
+         * @param {KLF_ExportTableOptions[]} tableOptions
+         * @returns {string} Formatted table info as a string.
+         */
+        getFormattedTableInfo(tableOptions) {
+            const tableInfos = this.exportService.getTableInfo(tableOptions);
+            // Format tableInfo in a way that is readable in a plain text area
+            return tableInfos.map(function(tableInfo) {
+                return `Table: ${tableInfo.tableName}, Total Records: ${tableInfo.rowCount}`;
+            }).join('\n');
+        }
+
+        /**
          * Imports records from all tables in a given scope, excluding any tables listed in the excluded table list.
          * This method can be used to perform an initial bulk import of all records in a scope
          * @param {Omit<KLF_RecordImporterOptions, 'tableName'>} options
@@ -425,16 +466,24 @@ global.KLF_RecordImporter = (function() {
             const tableOptions = /** @type {KLF_RecordImporterOptions[]} */ ([]);
             for (let i = 0; i < tables.length; i++) {
                 const tableName = tables[i];
-                const encodedQueryString = this.patchQueryWithCheckpoint(tableName, options.encodedQueryString);
                 tableOptions.push({
                     ...options,
                     tableName: tableName,
-                    encodedQueryString: encodedQueryString
+                    encodedQueryString: options.forceSync == true ? options.encodedQueryString: this.patchQueryWithCheckpoint(tableName, options.encodedQueryString)
                 });
             }
 
-            const tableInfo = this.exportService.getTableInfo(tableOptions);
-            this.logInfo(`Table info for scope ${scopeNamespace}: \n ${JSON.stringify(tableInfo, null, 4)}`);
+            // tableInfos is sorted by row count ascending
+            const tableInfos = this.exportService.getTableInfo(tableOptions);
+            const sortedTables = tableInfos.map(tableInfo => tableInfo.tableName);
+            const formattedTableInfo = this.getFormattedTableInfo(tableOptions);
+            const checkpointRecord = this.getCheckpointRecord();
+            checkpointRecord.setValue('u_loaded_data', '');
+            checkpointRecord.setValue('u_loaded_data_json', '');
+            checkpointRecord.setValue('u_data_manifest', formattedTableInfo);
+            checkpointRecord.update();
+
+            this.logInfo(`Table info for scope ${scopeNamespace}: \n ${formattedTableInfo}`);
 
             const importSetTable = options.importSetTable;
             const limit = importSetTable.getMaximumRows();
@@ -444,9 +493,9 @@ global.KLF_RecordImporter = (function() {
             }
 
             let totalImported = 0;
-            for (let i = 0; i < tables.length; i++) {
-                const tableName = tables[i];
-                this.logInfo(`Importing table ${tableName} (${i + 1} of ${tables.length})`);
+            for (let i = 0; i < sortedTables.length; i++) {
+                const tableName = sortedTables[i];
+                this.logInfo(`Importing table ${tableName} (${i + 1} of ${sortedTables.length})`);
                 totalImported += this.importTableToStagingTable({
                     ...options,
                     tableName: tableName,
@@ -536,7 +585,8 @@ global.KLF_RecordImporter = (function() {
                 });
                 const { records: exportedRecords = [], latestUpdatedOn: latestUpdatedOn = null, totalRecords } = response;
 
-                this.logInfo(`Loading batch [${batchStart} - ${batchStart + normalizedBatchSize} of ${totalRecords}] for table ${tableName} exported ${exportedRecords.length} records.`);
+                const importStatusMessage = `Loading batch [${batchStart} - ${batchStart + normalizedBatchSize} of ${totalRecords}] for table ${tableName} importing ${exportedRecords.length} records.`;
+                this.logInfo(importStatusMessage);
 
                 if (exportedRecords.length === 0) {
                     hasMoreRecords = false;
@@ -555,7 +605,7 @@ global.KLF_RecordImporter = (function() {
                 }
 
                 if (latestUpdatedOn) {
-                    this.setImportedCheckpoint(tableName, latestUpdatedOn);
+                    this.setImportedCheckpoint(tableName, latestUpdatedOn, importStatusMessage);
                 }
 
                 if (hasLimit && stagedCount >= limit) {
@@ -1018,14 +1068,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>133</sys_mod_count>
+        <sys_mod_count>146</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-23 20:44:30</sys_updated_on>
+        <sys_updated_on>2026-05-24 00:28:58</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
