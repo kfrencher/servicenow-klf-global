@@ -108,6 +108,10 @@ After you have called the import functions to import the data to the staging tab
 importer.complete();
 ```
 
+While the data is importing you can view the progress of the import in the KLF_RecordImporter_State table. You can find the record for your import by looking for the record with your scope name. Clicking on the record will show the details of the import. It will look something like below:
+
+![state record image](docs/import_state.png)
+
 KLF_RecordImporter is intended to be used in "Custom (Load by Script)". This is the full example code that would be used in the "Data Loaded" script section of the data source:
 
 ```javascript
