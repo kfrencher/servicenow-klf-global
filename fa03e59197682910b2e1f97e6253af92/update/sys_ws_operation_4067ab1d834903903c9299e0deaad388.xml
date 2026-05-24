@@ -9,13 +9,13 @@
         <name>Table Info</name>
         <operation_script><![CDATA[(function process(/*RESTAPIRequest*/ request, /*RESTAPIResponse*/ response) {
 
-	const { options } = request.body.data;
+	const data = request.body.data;
 
-	if (!options) {
-		throw 'options is required';
+	if (!Array.isArray(data)) {
+		throw 'Request must contain a list of ExportTableOptions';
 	}
 
-	response.setBody(new global.KLF_RecordExporter().getTableInfo(requestBody));
+	response.setBody(new global.KLF_RecordExporter().getTableInfo(data));
 
 })(request, response);]]></operation_script>
         <operation_uri>/api/global/v1/klf_export/table_info</operation_uri>
@@ -31,14 +31,14 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-23 20:20:20</sys_created_on>
         <sys_id>4067ab1d834903903c9299e0deaad388</sys_id>
-        <sys_mod_count>1</sys_mod_count>
+        <sys_mod_count>2</sys_mod_count>
         <sys_name>Table Info</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ws_operation_4067ab1d834903903c9299e0deaad388</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-23 20:42:22</sys_updated_on>
+        <sys_updated_on>2026-05-24 00:42:16</sys_updated_on>
         <web_service_definition display_value="KLF Export">e40c27068374c7103c9299e0deaad37c</web_service_definition>
         <web_service_version display_value="v1">829c67468374c7103c9299e0deaad32f</web_service_version>
     </sys_ws_operation>
