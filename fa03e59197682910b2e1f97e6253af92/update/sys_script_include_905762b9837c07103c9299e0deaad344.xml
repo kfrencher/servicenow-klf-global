@@ -95,7 +95,7 @@ global.KLF_RecordImporter = (function() {
      * @returns {string[]}
      */
     function getExistingSysIdsInTargetTable(tableName, sysIds) {
-        if(!sysIds || sysIds.length === 0) {
+        if (!sysIds || sysIds.length === 0) {
             return [];
         }
 
@@ -134,6 +134,7 @@ global.KLF_RecordImporter = (function() {
         start() {
             this.logInfo('STARTING DATA IMPORT');
             const checkpointRecord = this.getCheckpointRecord();
+            checkpointRecord.setValue('u_data_manifest', '');
             checkpointRecord.setValue('u_loaded_data', '');
             checkpointRecord.setValue('u_loaded_data_json', '');
             checkpointRecord.setValue('u_state', STATE.LOADING);
@@ -311,17 +312,25 @@ global.KLF_RecordImporter = (function() {
          * Returns the encoded query string accounting for the checkpoint of the last imported record. If there is no checkpoint, it returns the original encoded query string.
          * @param {string} tableName 
          * @param {string} [encodedQueryString]
-         * @returns {string | undefined}
+         * @returns {{encodedQueryString: string | undefined, checkpoint: string | null}}
          */
         patchQueryWithCheckpoint(tableName, encodedQueryString) {
             const checkpoint = this.getImportedCheckpoint(tableName);
             if (!checkpoint) {
-                return encodedQueryString;
+                return {
+                    encodedQueryString: encodedQueryString,
+                    checkpoint: null
+                };
             }
 
-            return encodedQueryString ?
-                `${encodedQueryString}^sys_updated_on>${checkpoint}` :
-                `sys_updated_on>${checkpoint}`;
+            const encodedQuery = encodedQueryString ?
+                `${encodedQueryString}^sys_updated_on>=${checkpoint}` :
+                `sys_updated_on>=${checkpoint}`;
+
+            return {
+                encodedQueryString: encodedQuery,
+                checkpoint: checkpoint
+            };
         }
 
         /**
@@ -339,10 +348,15 @@ global.KLF_RecordImporter = (function() {
                 throw new Error('Table name is required');
             }
 
-            const encodedQueryString = this.patchQueryWithCheckpoint(tableName, options.encodedQueryString);
+            const queryParts = this.patchQueryWithCheckpoint(tableName, options.encodedQueryString);
+
+            if (queryParts.checkpoint) {
+                this.logInfo(`Resuming import for table ${tableName} from checkpoint ${queryParts.checkpoint} with encoded query: ${queryParts.encodedQueryString}`);
+            }
+
             return this._importTableToStagingTable({
                 ...options,
-                encodedQueryString: encodedQueryString
+                encodedQueryString: queryParts.encodedQueryString,
             });
         }
 
@@ -469,12 +483,15 @@ global.KLF_RecordImporter = (function() {
                 tableOptions.push({
                     ...options,
                     tableName: tableName,
-                    encodedQueryString: options.forceSync == true ? options.encodedQueryString: this.patchQueryWithCheckpoint(tableName, options.encodedQueryString)
+                    encodedQueryString: options.forceSync === true ? options.encodedQueryString : this.patchQueryWithCheckpoint(tableName, options.encodedQueryString).encodedQueryString
                 });
             }
 
             // tableInfos is sorted by row count ascending
             const tableInfos = this.exportService.getTableInfo(tableOptions);
+            if(!tableInfos || tableInfos.length === 0) {
+                throw new Error(`Failed to get table info for tables: ${tables.join(', ')}`);
+            }
             const sortedTables = tableInfos.map(tableInfo => tableInfo.tableName);
             const formattedTableInfo = this.getFormattedTableInfo(tableOptions);
             const checkpointRecord = this.getCheckpointRecord();
@@ -482,8 +499,6 @@ global.KLF_RecordImporter = (function() {
             checkpointRecord.setValue('u_loaded_data_json', '');
             checkpointRecord.setValue('u_data_manifest', formattedTableInfo);
             checkpointRecord.update();
-
-            this.logInfo(`Table info for scope ${scopeNamespace}: \n ${formattedTableInfo}`);
 
             const importSetTable = options.importSetTable;
             const limit = importSetTable.getMaximumRows();
@@ -499,7 +514,7 @@ global.KLF_RecordImporter = (function() {
                 totalImported += this.importTableToStagingTable({
                     ...options,
                     tableName: tableName,
-                });
+                }, false);
 
                 if (hasLimit && totalImported > limit) {
                     break;
@@ -517,9 +532,33 @@ global.KLF_RecordImporter = (function() {
          * last imported record in each batch.
          *
          * @param {KLF_RecordImporterOptions} options
+         * @param {boolean} updateCheckpointManifest - Whether to update the checkpoint manifest.
          * @returns {number} Number of records imported.
          */
-        importTableToStagingTable(options) {
+        importTableToStagingTable(options, updateCheckpointManifest = true) {
+            const doUpdateCheckpointManifest = () => {
+                // Update manifest with the table being imported and the total record count for that table
+                const checkpointRecord = this.getCheckpointRecord();
+                const tableName = options.tableName;
+                const tableOptions = [{
+                    ...options,
+                    encodedQueryString: options.forceSync === true ? options.encodedQueryString : this.patchQueryWithCheckpoint(tableName, options.encodedQueryString).encodedQueryString
+                }][0];
+
+
+                const formattedTableInfo = this.getFormattedTableInfo([tableOptions]);
+                if(!formattedTableInfo) {
+                    throw new Error(`Failed to get table info for table ${tableName}`);
+                }
+                const manifest = checkpointRecord.u_data_manifest.nil() ? formattedTableInfo : checkpointRecord.getValue('u_data_manifest') + '\n' + formattedTableInfo;
+                checkpointRecord.setValue('u_data_manifest', manifest);
+                checkpointRecord.update();
+            };
+
+            if (updateCheckpointManifest) {
+                doUpdateCheckpointManifest();
+            }
+            
             if (options.forceSync === true) {
                 return this._importTableToStagingTable(options);
             } else {
@@ -646,7 +685,7 @@ global.KLF_RecordImporter = (function() {
          */
         generateUserMapping(remoteUsers, forceRegenerate) {
             const scopeName = this.scopeName;
-            gs.info('Generating user mapping for scope ' + scopeName);
+            this.logInfo('Generating user mapping for scope ' + scopeName);
             const key = scopeName + '.mapping.user';
             if (!forceRegenerate) {
                 const existingMapping = this.exportService.getUserMapping(scopeName);
@@ -655,8 +694,9 @@ global.KLF_RecordImporter = (function() {
                 }
             }
             const mapping = _RecordImporter.createUserMappingFromRemote(remoteUsers);
-            gs.info('Saving user mapping for scope ' + scopeName + ' with ' + Object.keys(mapping.mapping).length + ' users');
-            gs.getUser().savePreference(key, JSON.stringify(mapping, null, 4));
+            const checkpointGr = this.getCheckpointRecord();
+            checkpointGr.setValue('u_user_mapping', JSON.stringify(mapping, null, 4));
+            checkpointGr.update();
             return mapping;
         }
 
@@ -696,9 +736,11 @@ global.KLF_RecordImporter = (function() {
          */
         generateGroupMapping(remoteGroups) {
             const scopeName = this.scopeName;
-            const key = scopeName + '.mapping.group';
+            this.logInfo('Generating group mapping for scope ' + scopeName);
             const mapping = _RecordImporter.createGroupMappingFromRemote(remoteGroups);
-            gs.getUser().savePreference(key, JSON.stringify(mapping, null, 4));
+            const checkpointGr = this.getCheckpointRecord();
+            checkpointGr.setValue('u_group_mapping', JSON.stringify(mapping, null, 4));
+            checkpointGr.update();
             return mapping;
         }
 
@@ -1068,14 +1110,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>146</sys_mod_count>
+        <sys_mod_count>161</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-24 00:28:58</sys_updated_on>
+        <sys_updated_on>2026-05-24 20:02:32</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
