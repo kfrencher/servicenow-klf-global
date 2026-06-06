@@ -111,6 +111,60 @@ global.KLF_RecordImporter = (function() {
         return existingSysIds;
     }
 
+    /**
+     * Returns the content of an attachment as an array of strings, where each string represents a line of the attachment content.
+     * The content is returned as an array because ServiceNow limits the size of a single string to 32MB, so using an array allows for larger attachments to be read without hitting this limit.
+     * @param {GlideRecord} sysAttachmentGr sys_attachment record
+     * @returns {string[]} An array of strings representing the lines of the attachment content
+     */
+    function getAttachmentBuffer(sysAttachmentGr) {
+        const attachmentUtils = new GlideSysAttachment();
+        const attachmentSysID = sysAttachmentGr.getUniqueValue();
+
+        /** @type {GlideScriptableInputStream} */
+        const attachmentContentStream = attachmentUtils.getContentStream(attachmentSysID);
+
+        const reader = new GlideTextReader(attachmentContentStream);
+
+        // get first line
+        // I'm using an Array to hold the lines because if you use one string you can run into a string size limit
+        // ServiceNow limits the size of one string to 32MB. Using the Array allows me to hold the data in multiple
+        // strings until I have to pass it to another method
+        //
+        // I also tried using XmlDocument2 to read the inputstream, but couldn't get it to read the input stream
+        const xml = [];
+        var line = reader.readLine();
+        while (typeof line == 'string') {
+            xml.push(line);
+            line = reader.readLine();
+        }
+        return xml;
+    }
+
+    /**
+     * Gets the first attachment as a stream if one exists on the record.
+     * Returns null if no attachments are found.
+     * @param {GlideRecord} source A sys_import_set_row record 
+     * @return {GlideRecord?} The first sys_attachment record found for the source record, or null if no attachments are found
+     */
+    function getAttachmentGlideRecord(source) {
+        const importSet = source.sys_import_set.getRefRecord();
+        if (!importSet) {
+            gs.error('No import set found for source record: ' + source.sys_id);
+            return null;
+        }
+
+        const tableName = importSet.getValue('table_name');
+        const attachmentUtils = new GlideSysAttachment();
+        const sysAttachmentGr = attachmentUtils.getAttachments(tableName, source.getUniqueValue()); //create attachment GlideRecord
+
+        if (sysAttachmentGr.next()) {
+            return sysAttachmentGr;
+        }
+
+        return null;
+    }
+
     const STATE = {
         LOADING: 'loading',
         COMPLETE: 'complete'
@@ -151,8 +205,17 @@ global.KLF_RecordImporter = (function() {
         /**
          * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig
          * @param {string} scopeName
+         * @param {string} stagingTableName
          */
-        constructor(connectionConfig, scopeName) {
+        constructor(connectionConfig, scopeName, stagingTableName) {
+            if (!scopeName) {
+                throw new Error('scopeName is required when constructing global.KLF_RecordImporter');
+            }
+
+            if (!stagingTableName) {
+                throw new Error('stagingTableName is required when constructing global.KLF_RecordImporter');
+            }
+
             const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
             if (!checkpointGr.isValid()) {
                 throw new Error(`Checkpoint table ${CHECKPOINT_TABLE_NAME} does not exist or is not accessible`);
@@ -178,6 +241,7 @@ global.KLF_RecordImporter = (function() {
             this.exportService = new global.KLF_RecordExporterService(connectionConfig);
             this.scopeName = scopeName;
             this.checkpointKey = `${scopeName}.table_import_checkpoints`;
+            this.stagingTableName = stagingTableName;
             this._initCheckpointRecord();
         }
 
@@ -489,7 +553,7 @@ global.KLF_RecordImporter = (function() {
 
             // tableInfos is sorted by row count ascending
             const tableInfos = this.exportService.getTableInfo(tableOptions);
-            if(!tableInfos || tableInfos.length === 0) {
+            if (!tableInfos || tableInfos.length === 0) {
                 throw new Error(`Failed to get table info for tables: ${tables.join(', ')}`);
             }
             const sortedTables = tableInfos.map(tableInfo => tableInfo.tableName);
@@ -547,7 +611,7 @@ global.KLF_RecordImporter = (function() {
 
 
                 const formattedTableInfo = this.getFormattedTableInfo([tableOptions]);
-                if(!formattedTableInfo) {
+                if (!formattedTableInfo) {
                     throw new Error(`Failed to get table info for table ${tableName}`);
                 }
                 const manifest = checkpointRecord.u_data_manifest.nil() ? formattedTableInfo : checkpointRecord.getValue('u_data_manifest') + '\n' + formattedTableInfo;
@@ -558,7 +622,7 @@ global.KLF_RecordImporter = (function() {
             if (updateCheckpointManifest) {
                 doUpdateCheckpointManifest();
             }
-            
+
             if (options.forceSync === true) {
                 return this._importTableToStagingTable(options);
             } else {
@@ -634,12 +698,50 @@ global.KLF_RecordImporter = (function() {
 
                 for (let index = 0; index < exportedRecords.length; index++) {
                     const record = exportedRecords[index];
-                    importSetTable.insert({
-                        record_xml: record.xml,
-                        record_sys_updated_on: record.sysUpdatedOn,
-                        record_sys_id: record.sysId,
-                        record_table_name: record.tableName
-                    });
+                    // If record.xml.length is greater than 10MB then we need to store as an attachment instead of a field on the staging table
+                    // This is because ServiceNow stores strings in MySQL mediumtext fields which have a maximum size of 16MB.
+                    let xmlLength = 0;
+                    try {
+                        xmlLength = record.xml.length;
+                    } catch (e) {
+                        // ServiceNow will limit string length to around 33,554,432 characters. If the XML is larger than that an error will be thrown
+                        // that looks like:
+                        // InternalError: String object has exceeded maximum permitted size of 33554432
+                        xmlLength = -1;
+                    }
+                    if (xmlLength > 10 * 1024 * 1024 || xmlLength === -1) {
+                        const attachmentToken = gs.generateGUID();
+                        const substituteStagingRecord = new GlideRecord(this.stagingTableName);
+                        substituteStagingRecord.setNewGuidValue(attachmentToken);
+                        const attachment = new GlideSysAttachment();
+                        const attachmentSysId = attachment.write(substituteStagingRecord, `${record.tableName}.${record.sysId}.record_xml`, 'application/xml', record.xml);
+                        if (!attachmentSysId) {
+                            this.logError(`Failed to create attachment for record with sys_id ${record.sysId} and table ${record.tableName}`);
+                            throw new Error(`Failed to create attachment for record with sys_id ${record.sysId} and table ${record.tableName}`);
+                        }
+
+                        importSetTable.insert({
+                            record_xml_attachment_sys_id: String(attachmentSysId),
+                            record_sys_updated_on: record.sysUpdatedOn,
+                            record_sys_id: record.sysId,
+                            record_table_name: record.tableName
+                        });
+
+
+                        const attachmentGr = new GlideRecord('sys_attachment');
+                        if (attachmentGr.get(attachmentSysId)) {
+                            gs.eventQueue('klf_recordimporter.link_attachment', attachmentGr, this.stagingTableName);
+                        } else {
+                            this.logError(`Failed to find attachment with sys_id ${attachmentSysId} to queue event for record with sys_id ${record.sysId} and table ${record.tableName}`);
+                        }
+                    } else {
+                        importSetTable.insert({
+                            record_xml: record.xml,
+                            record_sys_updated_on: record.sysUpdatedOn,
+                            record_sys_id: record.sysId,
+                            record_table_name: record.tableName
+                        });
+                    }
                     stagedCount++;
                 }
 
@@ -761,17 +863,6 @@ global.KLF_RecordImporter = (function() {
     }
 
     /**
-     * @param {GlideRecord} source
-     */
-    _RecordImporter.importRecord = function(source) {
-        const xml = source.getValue('u_record_xml');
-
-        // @ts-ignore
-        var updateManager = new global.GlideUpdateManager2();
-        updateManager.loadXML(xml);
-    };
-
-    /**
      * @param {string} message 
      */
     _RecordImporter.logInfo = function(message) {
@@ -782,7 +873,53 @@ global.KLF_RecordImporter = (function() {
      * @param {string} message 
      */
     _RecordImporter.logError = function(message) {
-        gs.error(`${LOG_PREFIX}${message}`, LOG_SOURCE);
+        gs.logError(`${LOG_PREFIX}${message}`, LOG_SOURCE);
+    };
+
+    /**
+     * Will import a record using XML either from an XML field directly on the staging table
+     * or from an attachment if the XML is too large to fit in a field. 
+     * @param {GlideRecord} source
+     */
+    _RecordImporter.importRecord = function(source) {
+        /**
+         * @param {GlideRecord} source 
+         * @returns {string[]?} XML content of the record
+         */
+        const getRecordXmlFromAttachment = (source) =>  {
+            const attachmentGr = new GlideRecord('sys_attachment');
+            if (attachmentGr.get(source.getValue('u_record_xml_attachment_sys_id'))) {
+                return getAttachmentBuffer(attachmentGr);
+            } else {
+                this.logError(`Failed to find attachment with sys_id ${source.getValue('u_record_xml_attachment_sys_id')} to import record with sys_id ${source.getValue('record_sys_id')} and table ${source.getValue('record_table_name')}`);
+            }
+            return null;
+        };
+
+        const xml = !source.u_record_xml_attachment_sys_id.nil() ? getRecordXmlFromAttachment(source)
+        : source.getValue('u_record_xml');
+
+        if(xml) {
+            // @ts-ignore
+            var updateManager = new global.GlideUpdateManager2();
+            updateManager.loadXML(xml);
+        }
+    };
+
+    /**
+     * 
+     * @param {GlideRecord} attachmentGr 
+     * @param {string} stagingTableName 
+     */
+    _RecordImporter.handleLinkAttachment = function(attachmentGr, stagingTableName) {
+        const attachmentSysId = attachmentGr.getUniqueValue();
+        const stagingRecordGr = new GlideRecord(stagingTableName);
+        if (stagingRecordGr.get('u_record_xml_attachment_sys_id', attachmentSysId)) {
+                attachmentGr.table_sys_id = stagingRecordGr.getUniqueValue();
+                attachmentGr.update();
+        } else {
+            this.logError(`Failed to find attachment with sys_id ${attachmentSysId} to update with staging record sys_id ${stagingRecordGr.getUniqueValue()}`);
+        }
     };
 
     /**
@@ -791,6 +928,7 @@ global.KLF_RecordImporter = (function() {
      */
     _RecordImporter.buildImportSetTable = function(importSetTable) {
         importSetTable.addColumn('record_xml', 5000);
+        importSetTable.addColumn('record_xml_attachment_sys_id', 32);
         importSetTable.addColumn('record_table_name', 255);
         importSetTable.addColumn('record_sys_id', 32);
         importSetTable.addColumn('record_sys_updated_on', 40);
@@ -1103,6 +1241,15 @@ global.KLF_RecordImporter = (function() {
         };
     };
 
+    /**
+     * @param {string} [propertyName='KLF_RecordSync.password']
+     * @returns {string}
+     */
+    _RecordImporter.getPassword = function(propertyName) {
+        const _propertyName = propertyName || 'KLF_RecordSync.password';
+        return gs.getProperty(_propertyName);
+    };
+
     return _RecordImporter;
 
 })();]]></script>
@@ -1110,14 +1257,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>161</sys_mod_count>
+        <sys_mod_count>196</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-05-24 20:02:32</sys_updated_on>
+        <sys_updated_on>2026-06-05 23:56:07</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
