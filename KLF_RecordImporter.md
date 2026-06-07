@@ -150,18 +150,16 @@ KLF_RecordImporter is intended to be used in "Custom (Load by Script)". This is 
  * @returns {void}
  */
 
-/** @type {Record<string, unknown>} */
-const globals = /** @type {Record<string, unknown>} */ (global);
-/** @type {ImportSetTable} */
-const importSetTable = /** @type {ImportSetTable} */ (globals.import_set_table);
-/** @type {GlideRecord} */
-const dataSource = /** @type {GlideRecord} */ (globals.data_source);
-/** @type {ImportLog} */
-const importLog = /** @type {ImportLog} */ (globals.import_log);
-/** @type {GlideDateTime | string | null} */
-const lastSuccessImportTime = /** @type {GlideDateTime | string | null} */ (globals.last_success_import_time);
-/** @type {Record<string, unknown> | null} */
-const partitionInfo = /** @type {Record<string, unknown> | null} */ (globals.partition_info);
+// @ts-ignore
+const importSetTable = /** @type {ImportSetTable} */ (import_set_table);
+// @ts-ignore
+const dataSource = /** @type {GlideRecord} */ (data_source);
+// @ts-ignore
+const importLog = /** @type {ImportLog} */ (import_log);
+// @ts-ignore
+const lastSuccessImportTime = /** @type {GlideDateTime | string | null} */ (last_success_import_time);
+// @ts-ignore
+const partitionInfo = /** @type {Record<string, unknown> | null} */ (partition_info);
 
 (function loadData(import_set_table, data_source, import_log, last_success_import_time, partition_info) {
 	// Add columns to import_set_table to store data
