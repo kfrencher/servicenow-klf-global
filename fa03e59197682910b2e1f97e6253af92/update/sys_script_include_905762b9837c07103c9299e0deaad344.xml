@@ -206,8 +206,9 @@ global.KLF_RecordImporter = (function() {
          * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig
          * @param {string} scopeName
          * @param {string} stagingTableName
+         * @param {number} attachmentSizeThresholdMB - The maximum size in megabytes for XML content to be stored directly in a field on the staging table. If the XML content exceeds this size, it will be stored as an attachment instead. Defaults to 10MB.
          */
-        constructor(connectionConfig, scopeName, stagingTableName) {
+        constructor(connectionConfig, scopeName, stagingTableName, attachmentSizeThresholdMB = 10) {
             if (!scopeName) {
                 throw new Error('scopeName is required when constructing global.KLF_RecordImporter');
             }
@@ -242,6 +243,7 @@ global.KLF_RecordImporter = (function() {
             this.scopeName = scopeName;
             this.checkpointKey = `${scopeName}.table_import_checkpoints`;
             this.stagingTableName = stagingTableName;
+            this.attachmentSizeThresholdMB = attachmentSizeThresholdMB;
             this._initCheckpointRecord();
         }
 
@@ -709,7 +711,7 @@ global.KLF_RecordImporter = (function() {
                         // InternalError: String object has exceeded maximum permitted size of 33554432
                         xmlLength = -1;
                     }
-                    if (xmlLength > 10 * 1024 * 1024 || xmlLength === -1) {
+                    if (xmlLength > this.attachmentSizeThresholdMB * 1024 * 1024 || xmlLength === -1) {
                         const attachmentToken = gs.generateGUID();
                         const substituteStagingRecord = new GlideRecord(this.stagingTableName);
                         substituteStagingRecord.setNewGuidValue(attachmentToken);
@@ -1257,14 +1259,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>196</sys_mod_count>
+        <sys_mod_count>197</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-06-05 23:56:07</sys_updated_on>
+        <sys_updated_on>2026-06-07 11:38:42</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
