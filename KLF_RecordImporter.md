@@ -41,12 +41,16 @@ These are the important columns of the staging table:
 | `u_record_sys_id` | record_sys_id | The sys_id of the record on the source instance. This is used for updates and to prevent duplicates. |
 | `u_record_sys_updated_on` | record_sys_updated_on | The sys_updated_on value of the record on the source instance. This is used for updates. |
 | `u_record_xml` | record_xml | The XML representation of the record. This is used to insert the data into the target table using global.GlideUpdateManager2 |
+| `u_record_xml_attachment_sys_id` | record_xml_attachment_sys_id | The sys_id of the `sys_attachment` record storing the XML when the record is too large to store directly in `u_record_xml`. See the note on attachment size below. |
+
+> **Note on large record XML:** If the XML for an imported record exceeds the `attachmentSizeThresholdMB` limit (default 10 MB), KLF_RecordImporter will store the XML as an attachment on the `sys_attachment` table instead of writing it to the `u_record_xml` column. The `u_record_xml_attachment_sys_id` column will contain the sys_id of the resulting `sys_attachment` record. This is necessary because ServiceNow stores string fields in MySQL `mediumtext` columns, which have a maximum size of 16 MB. The attachment is written with the file name format `<tableName>.<sysId>.record_xml` and content type `application/xml`. You can control the size threshold by passing the optional `attachmentSizeThresholdMB` argument to the KLF_RecordImporter constructor.
+
 ```javascript
 // Add columns to import_set_table to store data
 global.KLF_RecordImporter.buildImportSetTable(import_set_table);
 ```
 
-Setup the connection configuration and construct a new KLF_RecordImporter instance. The connection configuration should include the instance URL, username, and password for the source instance. The scope name should be the same as the scope of the application you want to import, for example 'x_53417_demo'.
+Setup the connection configuration and construct a new KLF_RecordImporter instance. The connection configuration should include the instance URL, username, and password for the source instance. The scope name should be the same as the scope of the application you want to import, for example 'x_53417_demo'. The staging table name is the name of the import set table associated with the data source, which can be retrieved via `data_source.getValue('import_set_table_name')`.
 ```javascript
 const connectionConfig = {
       instanceUrl: 'https://abspscpov2.service-now.com',
@@ -55,7 +59,8 @@ const connectionConfig = {
   };
 
 const scopeName = 'x_53417_demo';
-const importer = new global.KLF_RecordImporter(connectionConfig, scopeName);	
+const stagingTableName = data_source.getValue('import_set_table_name');
+const importer = new global.KLF_RecordImporter(connectionConfig, scopeName, stagingTableName);	
 ```
 
 After constructing the KLF_RecordImporter, you need to call the start function to initialize the import process. This will create a new record in the KLF_RecordImporter_State table to track the state of the import process.
@@ -169,7 +174,8 @@ const partitionInfo = /** @type {Record<string, unknown> | null} */ (globals.par
     };
 
 	const scopeName = 'x_53417_demo';
-	const importer = new global.KLF_RecordImporter(connectionConfig, scopeName);	
+	const stagingTableName = data_source.getValue('import_set_table_name');
+	const importer = new global.KLF_RecordImporter(connectionConfig, scopeName, stagingTableName);	
 	importer.start();
 
 	// Make sure there are mappings set for User and Groups
