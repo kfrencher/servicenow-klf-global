@@ -996,6 +996,33 @@ global.KLF_RecordImporter = (function() {
                 stagingRecord.update();
             }
         }
+
+		/**
+		 * Check to see if there are any orphaned attachments
+		 */
+
+		// Find all source records in the staging table that have attachments
+		const source = new GlideRecord(stagingTableName);
+		source.addQuery('sys_import_set', importSetSysId);
+		source.addNotNullQuery('u_record_xml_attachment_sys_id');
+		source.query();
+		while(source.next()) {
+			// The associated attachment should have the source's sys_id
+			var targetTableSysId = source.getUniqueValue();
+
+			// Check to make sure the attachment has the source's sys_id
+			// If the source.sys_id is different than that attachment.table_sys_id they are different and should be updated
+			var attachmentSysId = source.getValue('u_record_xml_attachment_sys_id');
+			var attachmentGr = new GlideRecord('sys_attachment');
+			attachmentGr.setLimit(1);
+			attachmentGr.addQuery('sys_id', attachmentSysId);
+			attachmentGr.addQuery('table_sys_id', '!=', targetTableSysId);
+			attachmentGr.query();
+			if (attachmentGr.next()) {
+				attachmentGr.table_sys_id = targetTableSysId;
+				attachmentGr.update();
+			}
+		}
     };
 
     /**
@@ -1259,14 +1286,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>197</sys_mod_count>
+        <sys_mod_count>199</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-06-07 11:38:42</sys_updated_on>
+        <sys_updated_on>2026-06-08 17:31:26</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
