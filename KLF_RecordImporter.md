@@ -226,7 +226,7 @@ onStart:
 ```javascript
 (function runTransformScript(source, map, log, target /*undefined onStart*/) {
 
-	global.KLF_RecordImporter.onImportStart(import_set, source);
+	global.KLF_RecordImporter.onImportStart(import_set);
 
 })(source, map, log, target);
 ```
