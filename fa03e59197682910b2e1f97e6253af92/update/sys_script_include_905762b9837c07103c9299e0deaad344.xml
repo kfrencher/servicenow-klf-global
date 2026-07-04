@@ -994,11 +994,38 @@ global.KLF_RecordImporter = (function() {
     };
 
     /**
+     * @param {GlideRecord} source 
+     * @returns {number} The size of the import set associated with the source record
+     */
+    _RecordImporter.getImportSetSize = function(source) {
+        const importSetSysId = source.getValue('sys_import_set');
+        const stagingTableName = source.sys_import_set.table_name.toString();
+        const _source = new GlideAggregate(stagingTableName);
+        _source.addQuery('sys_import_set', importSetSysId);
+        _source.addAggregate('COUNT');
+        _source.query();
+        if(_source.next()) {
+            return Number(_source.getAggregate('COUNT') || 0);
+        }
+        return 0;
+    };
+
+    /**
      * Will import a record using XML either from an XML field directly on the staging table
      * or from an attachment if the XML is too large to fit in a field. 
      * @param {GlideRecord} source
      */
     _RecordImporter.importRecord = function(source) {
+        // for every 100 rows, update the checkpoint record transform position field
+        const row = Number(source.getValue('sys_import_row'));
+        if(row % 100 === 0) {
+            const checkpointRecord = this.getCheckpointRecord(source);
+            if(checkpointRecord) {
+                checkpointRecord.u_transform_position = `${row} of ${this.getImportSetSize(source)}`;
+                checkpointRecord.update();
+            }
+        }
+
         /**
          * @param {GlideRecord} source 
          * @returns {string[]?} XML content of the record
@@ -1507,14 +1534,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>254</sys_mod_count>
+        <sys_mod_count>256</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-04 21:13:53</sys_updated_on>
+        <sys_updated_on>2026-07-04 23:21:33</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>

@@ -17,6 +17,7 @@
         <element label="Checkpoint" max_length="10000" name="u_checkpoint" type="string"/>
         <element label="Loaded Data JSON" max_length="5000" name="u_loaded_data_json" type="string"/>
         <element attributes="edge_encryption_enabled=true" label="Force Transform All" max_length="40" name="u_force_transform_all" type="boolean"/>
+        <element label="Transform Position" max_length="255" name="u_transform_position" type="string"/>
         <element label="Name" max_length="255" name="u_name" read_only="true" type="string" unique="true"/>
         <element label="Data Manifest" max_length="1000" name="u_data_manifest" type="string"/>
         <index name="index" unique="true">
