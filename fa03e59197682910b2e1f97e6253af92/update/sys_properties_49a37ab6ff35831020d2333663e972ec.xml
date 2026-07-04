@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description/>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>KLF_RecordImporter.scheduled_imports</name>
+        <read_roles/>
+        <suffix/>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-04 15:11:56</sys_created_on>
+        <sys_id>49a37ab6ff35831020d2333663e972ec</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>KLF_RecordImporter.scheduled_imports</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_properties_49a37ab6ff35831020d2333663e972ec</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-04 21:02:47</sys_updated_on>
+        <type>string</type>
+        <value>[&#13;
+{"scheduledImportName": "KLF Import Demo", "scopeName": "x_53417_demo"},&#13;
+{"scheduledImportName": "KLF Import Demo 2", "scopeName": "x_53417_demo2"},&#13;
+{"scheduledImportName": "KLF Import Demo 3", "scopeName": "x_53417_demo3"}&#13;
+]</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=49a37ab6ff35831020d2333663e972ec"/>
+</record_update>

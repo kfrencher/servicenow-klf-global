@@ -39,6 +39,25 @@
             <element>u_state</element>
             <hint/>
             <inactive>false</inactive>
+            <label>Loaded</label>
+            <language>en</language>
+            <name>u_klf_recordimporter_state</name>
+            <sequence/>
+            <synonyms/>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-07-04 20:10:19</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_mod_count>1</sys_mod_count>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-07-04 20:10:20</sys_updated_on>
+            <value>loaded</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>u_state</element>
+            <hint/>
+            <inactive>false</inactive>
             <label>Loading</label>
             <language>en</language>
             <name>u_klf_recordimporter_state</name>
@@ -52,6 +71,25 @@
             <sys_updated_by>admin</sys_updated_by>
             <sys_updated_on>2026-05-24 00:28:20</sys_updated_on>
             <value>loading</value>
+        </sys_choice>
+        <sys_choice action="INSERT_OR_UPDATE">
+            <dependent_value/>
+            <element>u_state</element>
+            <hint/>
+            <inactive>false</inactive>
+            <label>Transforming</label>
+            <language>en</language>
+            <name>u_klf_recordimporter_state</name>
+            <sequence/>
+            <synonyms/>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-07-04 20:10:28</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_mod_count>1</sys_mod_count>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-07-04 20:10:30</sys_updated_on>
+            <value>transforming</value>
         </sys_choice>
     </sys_choice>
 </record_update>

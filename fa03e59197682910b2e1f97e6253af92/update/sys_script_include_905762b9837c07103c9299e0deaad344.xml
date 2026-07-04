@@ -50,6 +50,7 @@ var global = global || {};
  * Contains utility functions for importing records exported by `RecordExporter`.
  */
 global.KLF_RecordImporter = (function() {
+    const SCHEDULED_JOB_LIST_PROPERTY_NAME = 'KLF_RecordImporter.scheduled_imports';
     const CHECKPOINT_TABLE_NAME = 'u_klf_recordimporter_state';
     const LOG_SOURCE = 'KLF_RecordImporter';
     const LOG_PREFIX = `[${LOG_SOURCE}] - `;
@@ -167,6 +168,8 @@ global.KLF_RecordImporter = (function() {
 
     const STATE = {
         LOADING: 'loading',
+        LOADED: 'loaded',
+        TRANSFORMING: 'transforming',
         COMPLETE: 'complete'
     };
 
@@ -198,7 +201,7 @@ global.KLF_RecordImporter = (function() {
         complete() {
             this.logInfo('DATA IMPORT COMPLETE');
             const checkpointRecord = this.getCheckpointRecord();
-            checkpointRecord.setValue('u_state', STATE.COMPLETE);
+            checkpointRecord.setValue('u_state', STATE.LOADED);
             checkpointRecord.update();
         }
 
@@ -206,9 +209,10 @@ global.KLF_RecordImporter = (function() {
          * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig
          * @param {string} scopeName
          * @param {string} stagingTableName
+         * @param {string} scheduledJobName
          * @param {number} attachmentSizeThresholdMB - The maximum size in megabytes for XML content to be stored directly in a field on the staging table. If the XML content exceeds this size, it will be stored as an attachment instead. Defaults to 10MB.
          */
-        constructor(connectionConfig, scopeName, stagingTableName, attachmentSizeThresholdMB = 10) {
+        constructor(connectionConfig, scopeName, stagingTableName, scheduledJobName = '', attachmentSizeThresholdMB = 10) {
             if (!scopeName) {
                 throw new Error('scopeName is required when constructing global.KLF_RecordImporter');
             }
@@ -241,9 +245,10 @@ global.KLF_RecordImporter = (function() {
             this.connectionConfig = connectionConfig;
             this.exportService = new global.KLF_RecordExporterService(connectionConfig);
             this.scopeName = scopeName;
-            this.checkpointKey = `${scopeName}.table_import_checkpoints`;
+            this.checkpointKey = _RecordImporter.calculateCheckpointKey(scopeName);
             this.stagingTableName = stagingTableName;
             this.attachmentSizeThresholdMB = attachmentSizeThresholdMB;
+            this.scheduledJobName = scheduledJobName;
             this.checkpointRecordSysId = this._initCheckpointRecord();
         }
 
@@ -258,6 +263,9 @@ global.KLF_RecordImporter = (function() {
             if (!checkpointGr.get('u_name', this.checkpointKey)) {
                 checkpointGr.initialize();
                 checkpointGr.setValue('u_name', this.checkpointKey);
+                if (this.scheduledJobName) {
+                    checkpointGr.setValue('u_scheduled_job_name', this.scheduledJobName);
+                }
                 checkpointGr.update();
             }
             return checkpointGr.getUniqueValue();
@@ -1050,36 +1058,47 @@ global.KLF_RecordImporter = (function() {
     };
 
     /**
+     * @param {GlideRecord} importSet - The import set to get the first record from
+     * @returns {GlideRecord|null} - The first record in the import set or null if none found
+     */
+    _RecordImporter.getFirstRecordInImportSet = function(importSet) {
+        const importSetSysId = importSet.getUniqueValue();
+        const stagingTableName = importSet.getValue('table_name');
+        const _source = new GlideRecord(stagingTableName);
+        _source.addQuery('sys_import_set', importSetSysId);
+        _source.setLimit(1);
+        _source.query();
+        if(_source.next()) {
+            return _source;
+        }
+        return null;
+    };
+
+    /**
      * Called from the import set transform map before the transform runs
      * @param {GlideRecord} importSet
-     * @param {GlideRecord} source - The first record in the import set
      */
-    _RecordImporter.onImportStart = function(importSet, source) {
+    _RecordImporter.onImportStart = function(importSet) {
         if(!importSet) {
             this.logError('_RecordImporter.onImportStart: Import set is not provided');
         }
 
-        if(!source) {
-            this.logError('_RecordImporter.onImportStart: Source record is not provided');
-        }
-
-        if(source) {
-            const _source = new GlideRecord(source.getRecordClassName());
-            _source.addEncodedQuery(source.getEncodedQuery());
-            _source.setLimit(1);
-            _source.query();
-            if(_source.next()) {
-                const checkpointRecord = this.getCheckpointRecord(_source);
-                if (checkpointRecord && checkpointRecord.u_force_transform_all) {
+        const _source = this.getFirstRecordInImportSet(importSet);
+        if(_source) {
+            const checkpointRecord = this.getCheckpointRecord(_source);
+            if (checkpointRecord) {
+                checkpointRecord.u_state = STATE.TRANSFORMING;
+                checkpointRecord.update();
+                this.logError('Updating checkpoint record');
+                if(checkpointRecord.u_force_transform_all) {
                     // If the checkpoint record indicates that all records should be transformed,
                     // skip ignoring existing records in the import set and allow the transform to process all records.
                     this.logInfo('_RecordImporter.onImportStart: Skipping ignore of existing records in the import set due to u_force_transform_all being true');
                     return;
                 }
             }
-    
         }
-
+    
         this.logInfo('_RecordImporter.onImportStart: Ignoring existing records');
         this.ignoreExistingRecordsInImportSet(importSet.getUniqueValue(), importSet.getValue('table_name'));
     };
@@ -1142,17 +1161,17 @@ global.KLF_RecordImporter = (function() {
 		 */
 
 		// Find all source records in the staging table that have attachments
-		const source = new GlideRecord(stagingTableName);
-		source.addQuery('sys_import_set', importSetSysId);
-		source.addNotNullQuery('u_record_xml_attachment_sys_id');
-		source.query();
-		while(source.next()) {
+		const sourceWithAttachment = new GlideRecord(stagingTableName);
+		sourceWithAttachment.addQuery('sys_import_set', importSetSysId);
+		sourceWithAttachment.addNotNullQuery('u_record_xml_attachment_sys_id');
+		sourceWithAttachment.query();
+		while(sourceWithAttachment.next()) {
 			// The associated attachment should have the source's sys_id
-			var targetTableSysId = source.getUniqueValue();
+			var targetTableSysId = sourceWithAttachment.getUniqueValue();
 
 			// Check to make sure the attachment has the source's sys_id
 			// If the source.sys_id is different than that attachment.table_sys_id they are different and should be updated
-			var attachmentSysId = source.getValue('u_record_xml_attachment_sys_id');
+			var attachmentSysId = sourceWithAttachment.getValue('u_record_xml_attachment_sys_id');
 			var attachmentGr = new GlideRecord('sys_attachment');
 			attachmentGr.setLimit(1);
 			attachmentGr.addQuery('sys_id', attachmentSysId);
@@ -1163,6 +1182,15 @@ global.KLF_RecordImporter = (function() {
 				attachmentGr.update();
 			}
 		}
+
+        const _source = this.getFirstRecordInImportSet(importSet);
+        if(_source) {
+            const checkpointRecord = this.getCheckpointRecord(_source);
+            if(checkpointRecord) {
+                checkpointRecord.u_state = STATE.COMPLETE;
+                checkpointRecord.update();
+            }
+        }
     };
 
     /**
@@ -1419,6 +1447,59 @@ global.KLF_RecordImporter = (function() {
         return gs.getProperty(_propertyName);
     };
 
+    /**
+     * @returns {{scheduledImportName: string, scopeName: string}[]?} - The list of scheduled jobs as a string.
+     */
+    _RecordImporter.getScheduledJobList = function() {
+        const scheduledJobsJson = gs.getProperty(SCHEDULED_JOB_LIST_PROPERTY_NAME);
+        if(!scheduledJobsJson) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(scheduledJobsJson);
+        } catch(e) {
+            this.logError(`_RecordImporter.getScheduledJobList - Failed to parse JSON`);
+            return null;
+        }
+    };
+
+    /**
+     * @param {GlideRecord} checkpointRecord - The checkpoint record to show the execute job for.
+     */
+    _RecordImporter.showExecuteJob = function(checkpointRecord) {
+        const state = checkpointRecord.getValue('u_state');
+        if(!state || state === 'complete') {
+            return checkpointRecord.canWrite() && !checkpointRecord.u_scheduled_job_name.nil();
+        }
+
+        return false;
+    };
+
+    /**
+     * @param {GlideRecord} checkpointRecord - The checkpoint record to execute the job for.
+     */
+    _RecordImporter.executeJob = function(checkpointRecord) {
+        if (checkpointRecord.canWrite() && !checkpointRecord.u_scheduled_job_name.nil()) {
+            const scheduledJob = new GlideRecord('scheduled_import_set');
+            const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+            if(scheduledJob.get('name', scheduledJobName)) {
+                // @ts-ignore
+                SncTriggerSynchronizer.executeNow(scheduledJob);
+            } else {
+                gs.addErrorMessage(`Could not find scheduled import named ${scheduledJobName}`);
+            }
+        }
+    };
+
+    /**
+     * @param {string} scopeName 
+     * @returns {string}
+     */
+    _RecordImporter.calculateCheckpointKey = function(scopeName) {
+        return `${scopeName}.table_import_checkpoints`;
+    };
+
     return _RecordImporter;
 
 })();]]></script>
@@ -1426,14 +1507,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>222</sys_mod_count>
+        <sys_mod_count>254</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-04 13:05:45</sys_updated_on>
+        <sys_updated_on>2026-07-04 21:13:53</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
