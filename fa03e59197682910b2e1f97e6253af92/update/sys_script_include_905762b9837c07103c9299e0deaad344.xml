@@ -244,13 +244,14 @@ global.KLF_RecordImporter = (function() {
             this.checkpointKey = `${scopeName}.table_import_checkpoints`;
             this.stagingTableName = stagingTableName;
             this.attachmentSizeThresholdMB = attachmentSizeThresholdMB;
-            this._initCheckpointRecord();
+            this.checkpointRecordSysId = this._initCheckpointRecord();
         }
 
 
         /**
          * Creates a system property directly in they sys_properties table
          * and marks it as ignore_cache so it does not invalidate the cache every time it is updated
+         * @returns {string} The unique ID of the checkpoint record
          */
         _initCheckpointRecord() {
             const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
@@ -259,6 +260,7 @@ global.KLF_RecordImporter = (function() {
                 checkpointGr.setValue('u_name', this.checkpointKey);
                 checkpointGr.update();
             }
+            return checkpointGr.getUniqueValue();
         }
 
         getExportService() {
@@ -726,7 +728,8 @@ global.KLF_RecordImporter = (function() {
                             record_xml_attachment_sys_id: String(attachmentSysId),
                             record_sys_updated_on: record.sysUpdatedOn,
                             record_sys_id: record.sysId,
-                            record_table_name: record.tableName
+                            record_table_name: record.tableName,
+                            checkpoint_record: this.checkpointRecordSysId
                         });
 
 
@@ -741,7 +744,8 @@ global.KLF_RecordImporter = (function() {
                             record_xml: record.xml,
                             record_sys_updated_on: record.sysUpdatedOn,
                             record_sys_id: record.sysId,
-                            record_table_name: record.tableName
+                            record_table_name: record.tableName,
+                            checkpoint_record: this.checkpointRecordSysId
                         });
                     }
                     stagedCount++;
@@ -879,6 +883,109 @@ global.KLF_RecordImporter = (function() {
     };
 
     /**
+     * @param {GlideRecord} source 
+     * @returns {GlideRecord|null} The checkpoint record or null if not found
+     */
+    _RecordImporter.getCheckpointRecord = function(source) {
+        if(source.u_checkpoint_record.nil()) {
+            return null;
+        }
+
+        const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+        if (checkpointGr.get(source.getValue('u_checkpoint_record'))) {
+            return checkpointGr;
+        }
+
+        return null;
+    };
+
+    /**
+     * @param {string} xml 
+     * @param {string} userMapping JSON string representing the user mapping
+     * @returns {string}
+     */
+    _RecordImporter.mapUsers = function(xml, userMapping) {
+        if(!userMapping) {
+            return xml;
+        }
+
+        try {
+            /** @type {KLF_RecordSync_UserMapping} */
+            const userMappingObj = JSON.parse(userMapping);
+            const mapping = userMappingObj.mapping;
+            if(!mapping) {
+                this.logError(`User mapping JSON does not contain a mapping object`);
+                return xml;
+            }
+            // The mapping is from source user IDs to target user IDs
+            let mappedXml = xml;
+            for (const sourceUserId in mapping) {
+                if (mapping.hasOwnProperty(sourceUserId)) {
+                    var targetUserId = mapping[sourceUserId];
+                    // @ts-ignore
+                    mappedXml = mappedXml.replaceAll(sourceUserId, targetUserId);
+                }
+            }
+            return mappedXml;
+        } catch (e) {
+            this.logError(`Invalid user mapping JSON: ${e instanceof Error ? e.message : String(e)}`);
+            return xml;
+        }
+    };
+
+    /**
+     * @param {string} xml 
+     * @param {string} groupMapping JSON string representing the group mapping
+     * @returns {string}
+     */
+    _RecordImporter.mapGroups = function(xml, groupMapping) {
+         if(!groupMapping) {
+            return xml;
+        }
+
+        try {
+            /** @type {KLF_RecordSync_GroupMapping} */
+            const groupMappingObj = JSON.parse(groupMapping);
+            const mapping = groupMappingObj.mapping;
+            if(!mapping) {
+                this.logError(`Group mapping JSON does not contain a mapping object`);
+                return xml;
+            }
+            // The mapping is from source group IDs to target group IDs
+            let mappedXml = xml;
+            for (const sourceGroupId in mapping) {
+                if (mapping.hasOwnProperty(sourceGroupId)) {
+                    var targetGroupId = mapping[sourceGroupId];
+                    // @ts-ignore
+                    mappedXml = mappedXml.replaceAll(sourceGroupId, targetGroupId);
+                }
+            }
+            return mappedXml;
+        } catch (e) {
+            this.logError(`Invalid group mapping JSON: ${e instanceof Error ? e.message : String(e)}`);
+            return xml;
+        }
+    };
+
+    /**
+     * @param {string} xml 
+     * @param {GlideRecord} source The source record used to retrieve the checkpoint record
+     * @returns {string} Mapped XML content
+     */
+    _RecordImporter.mapUsersAndGroups = function(xml, source) {
+        const checkpointRecord = this.getCheckpointRecord(source);
+        if(!checkpointRecord) {
+            return xml;
+        }
+        const userMapping = checkpointRecord.getValue('u_user_mapping');
+        const groupMapping = checkpointRecord.getValue('u_group_mapping');
+        
+        let mappedXml = this.mapUsers(xml, userMapping);
+        mappedXml = this.mapGroups(mappedXml, groupMapping);
+        return mappedXml;
+    };
+
+    /**
      * Will import a record using XML either from an XML field directly on the staging table
      * or from an attachment if the XML is too large to fit in a field. 
      * @param {GlideRecord} source
@@ -904,7 +1011,12 @@ global.KLF_RecordImporter = (function() {
         if(xml) {
             // @ts-ignore
             var updateManager = new global.GlideUpdateManager2();
-            updateManager.loadXML(xml);
+            if(typeof xml === 'string') {
+                const mappedXml = this.mapUsersAndGroups(xml, source);
+                updateManager.loadXML(mappedXml);
+            } else {
+                updateManager.loadXML(xml);
+            }
         }
     };
 
@@ -934,6 +1046,7 @@ global.KLF_RecordImporter = (function() {
         importSetTable.addColumn('record_table_name', 255);
         importSetTable.addColumn('record_sys_id', 32);
         importSetTable.addColumn('record_sys_updated_on', 40);
+        importSetTable.addColumn('checkpoint_record', 32);
     };
 
     /**
@@ -1286,14 +1399,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>199</sys_mod_count>
+        <sys_mod_count>211</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-06-08 17:31:26</sys_updated_on>
+        <sys_updated_on>2026-07-04 01:27:02</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
