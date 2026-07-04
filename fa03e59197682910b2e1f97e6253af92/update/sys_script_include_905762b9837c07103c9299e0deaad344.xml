@@ -1052,8 +1052,35 @@ global.KLF_RecordImporter = (function() {
     /**
      * Called from the import set transform map before the transform runs
      * @param {GlideRecord} importSet
+     * @param {GlideRecord} source - The first record in the import set
      */
-    _RecordImporter.onImportStart = function(importSet) {
+    _RecordImporter.onImportStart = function(importSet, source) {
+        if(!importSet) {
+            this.logError('_RecordImporter.onImportStart: Import set is not provided');
+        }
+
+        if(!source) {
+            this.logError('_RecordImporter.onImportStart: Source record is not provided');
+        }
+
+        if(source) {
+            const _source = new GlideRecord(source.getRecordClassName());
+            _source.addEncodedQuery(source.getEncodedQuery());
+            _source.setLimit(1);
+            _source.query();
+            if(_source.next()) {
+                const checkpointRecord = this.getCheckpointRecord(_source);
+                if (checkpointRecord && checkpointRecord.u_force_transform_all) {
+                    // If the checkpoint record indicates that all records should be transformed,
+                    // skip ignoring existing records in the import set and allow the transform to process all records.
+                    this.logInfo('_RecordImporter.onImportStart: Skipping ignore of existing records in the import set due to u_force_transform_all being true');
+                    return;
+                }
+            }
+    
+        }
+
+        this.logInfo('_RecordImporter.onImportStart: Ignoring existing records');
         this.ignoreExistingRecordsInImportSet(importSet.getUniqueValue(), importSet.getValue('table_name'));
     };
 
@@ -1399,14 +1426,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>211</sys_mod_count>
+        <sys_mod_count>222</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-04 01:27:02</sys_updated_on>
+        <sys_updated_on>2026-07-04 13:05:45</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
