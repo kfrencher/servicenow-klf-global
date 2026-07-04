@@ -18,7 +18,7 @@
         <name>KLF Global</name>
         <package_json/>
         <private>false</private>
-        <restrict_table_access>false</restrict_table_access>
+        <restrict_table_access>true</restrict_table_access>
         <runtime_access_tracking/>
         <scope>global</scope>
         <scoped_administration>false</scoped_administration>
@@ -32,9 +32,9 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:01:55</sys_created_on>
         <sys_id>fa03e59197682910b2e1f97e6253af92</sys_id>
-        <sys_mod_count>4</sys_mod_count>
+        <sys_mod_count>5</sys_mod_count>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-10 01:14:55</sys_updated_on>
+        <sys_updated_on>2026-07-04 14:51:00</sys_updated_on>
         <template/>
         <trackable>true</trackable>
         <uninstall_blocked>false</uninstall_blocked>
@@ -43,12 +43,12 @@
         <vendor_prefix/>
         <version>1.1.0</version>
     </sys_app>
-    <sys_translated_text action="delete_multiple" query="documentkey=fa03e59197682910b2e1f97e6253af92"/>
     <sys_attachment action="INSERT_OR_UPDATE">
         <average_image_color/>
         <chunk_size_bytes>700000</chunk_size_bytes>
         <compressed>true</compressed>
         <content_type>text/x-yaml</content_type>
+        <encryption_context/>
         <file_name>53417_klf_import_xml_latest_spec.yaml</file_name>
         <hash>894ee9f68150231c241642d5747b5b571dbcef45a91dcbd93019aee9808337ea</hash>
         <image_height/>
