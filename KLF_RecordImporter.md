@@ -12,7 +12,7 @@ There is a table called KLF_RecordImporter_State (u_klf_recordimporter_state) th
 | Column Name | Label | Description |
 |---|---|---|
 | `u_name` | Name | The name of the import. This is derived from the scope name given to the KLF_RecordImporter constructor. |
-| `u_state` | State | The current state of the import process. Set to "loading" when in progress and "complete" when finished. |
+| `u_state` | State | The current state of the import process. Set to "Loading" when data is loading from source system. Set to "Loaded" when all data is loaded into the staging table. Set to "Transforming" when the data is being transformed and inserted into the target tables. Set to "Complete" when finished. |
 | `u_data_manifest` | Data Manifest | A list of all tables included in the import and the number of records for each. Initialized at the start and not updated. |
 | `u_loaded_data` | Loaded Data | A list of all records that have been imported. Updated in real-time during the import process. |
 | `u_loaded_data_json` | Loaded Data JSON | A JSON version of the `u_loaded_data` column that is easier to query. |
@@ -85,7 +85,8 @@ const connectionConfig = {
 
 const scopeName = 'x_53417_demo';
 const stagingTableName = data_source.getValue('import_set_table_name');
-const importer = new global.KLF_RecordImporter(connectionConfig, scopeName, stagingTableName);	
+const scheduledJobName = 'KLF Import Demo';
+const importer = new global.KLF_RecordImporter(connectionConfig, scopeName, stagingTableName, scheduledJobName);
 ```
 
 After constructing the KLF_RecordImporter, you need to call the start function to initialize the import process. This will create a new record in the KLF_RecordImporter_State table to track the state of the import process.
@@ -198,7 +199,8 @@ const partitionInfo = /** @type {Record<string, unknown> | null} */ (partition_i
 
 	const scopeName = 'x_53417_demo';
 	const stagingTableName = data_source.getValue('import_set_table_name');
-	const importer = new global.KLF_RecordImporter(connectionConfig, scopeName, stagingTableName);	
+	const scheduledJobName = 'KLF Import Demo';
+	const importer = new global.KLF_RecordImporter(connectionConfig, scopeName, stagingTableName, scheduledJobName);
 	importer.start();
 
 	// Make sure there are mappings set for User and Groups
