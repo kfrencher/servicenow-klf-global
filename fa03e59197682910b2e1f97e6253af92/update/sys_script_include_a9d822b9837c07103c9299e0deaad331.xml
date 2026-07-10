@@ -127,6 +127,20 @@ global.KLF_RecordExporter = (function() {
          * @returns {KLF_TableInfo[]}
          */
         getTableInfo(options) {
+            // Validate that tables actually exist before attempting to query them
+            const invalidOptions = options.filter(option => {
+                if (!option.tableName) {
+                    return true;
+                }
+                var glideRecord = new GlideRecord(option.tableName);
+                return !glideRecord.isValid();
+            });
+
+            if (invalidOptions.length > 0) {
+                const invalidTableNames = invalidOptions.map(option => option.tableName || 'undefined');
+                throw new IllegalArgumentError('The following table names are invalid: ' + invalidTableNames.join(', '));
+            }
+
             return options.map(option => {
                 if (!option.tableName) {
                     throw new IllegalArgumentError('Table name is required for each option');
@@ -241,17 +255,15 @@ global.KLF_RecordExporter = (function() {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:47:51</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>a9d822b9837c07103c9299e0deaad331</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>KLF_RecordExporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_a9d822b9837c07103c9299e0deaad331</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-03 07:02:16</sys_updated_on>
+        <sys_updated_on>2026-07-10 05:20:07</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a9d822b9837c07103c9299e0deaad331</id>

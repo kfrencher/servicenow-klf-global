@@ -242,6 +242,11 @@ global.KLF_RecordImporter = (function() {
                 throw new Error('Connection config is missing password');
             }
 
+            const validationResponse = _RecordImporter.validateRemoteCredentials(connectionConfig);
+            if (!validationResponse.success) {
+                throw new Error(validationResponse.message);
+            }
+
             this.connectionConfig = connectionConfig;
             this.exportService = new global.KLF_RecordExporterService(connectionConfig);
             this.scopeName = scopeName;
@@ -1756,8 +1761,8 @@ global.KLF_RecordImporter = (function() {
             if (scheduledJob.get('name', scheduledJobName)) {
                 // @ts-ignore
                 SncTriggerSynchronizer.executeNow(scheduledJob);
-				checkpointRecord.u_state = STATE.LOADING;
-				checkpointRecord.update();
+                checkpointRecord.u_state = STATE.LOADING;
+                checkpointRecord.update();
             } else {
                 gs.addErrorMessage(`Could not find scheduled import named ${scheduledJobName}`);
             }
@@ -1769,19 +1774,19 @@ global.KLF_RecordImporter = (function() {
      * If not, an error message is added.
      * @param {GlideRecord} checkpointRecord 
      */
-	_RecordImporter.checkScheduledJobList = function(checkpointRecord) {
-		const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
-		if(!scheduledJobName) {
-			return;
-		}
-		const name = checkpointRecord.getValue('u_name');
+    _RecordImporter.checkScheduledJobList = function(checkpointRecord) {
+        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+        if (!scheduledJobName) {
+            return;
+        }
+        const name = checkpointRecord.getValue('u_name');
         /** @type {{scheduledImportName: string, scopeName: string}[]} */
-		const scheduledImports = JSON.parse(gs.getProperty('KLF_RecordImporter.scheduled_imports'));
-		const scheduledJobNames = scheduledImports.map(scheduledImport => scheduledImport.scheduledImportName);
-		if(!scheduledJobNames.includes(scheduledJobName)) {
-			gs.addErrorMessage(`Scheduled Import "${scheduledJobName}" not found in SNB_RecordImporter.scheduled_imports system property. Please add job name to system property.`);
-		}
-	};
+        const scheduledImports = JSON.parse(gs.getProperty('KLF_RecordImporter.scheduled_imports'));
+        const scheduledJobNames = scheduledImports.map(scheduledImport => scheduledImport.scheduledImportName);
+        if (!scheduledJobNames.includes(scheduledJobName)) {
+            gs.addErrorMessage(`Scheduled Import "${scheduledJobName}" not found in SNB_RecordImporter.scheduled_imports system property. Please add job name to system property.`);
+        }
+    };
 
     /**
      * @param {string} scopeName 
@@ -1791,6 +1796,89 @@ global.KLF_RecordImporter = (function() {
         return `${scopeName}.table_import_checkpoints`;
     };
 
+    /**
+     * 
+     * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
+     * @returns {{message: string, success: boolean}}
+     */
+    _RecordImporter.validateRemoteCredentials = function(connectionConfig) {
+        try {
+            if(!connectionConfig) {
+                return {
+                    success: false,
+                    message: 'Connection config is required'
+                };
+            }
+
+            if(!connectionConfig.instanceUrl) {
+                return {
+                    success: false,
+                    message: 'Instance URL is required'
+                };
+            }
+
+            if(!connectionConfig.username) {
+                return {
+                    success: false,
+                    message: 'Username is required'
+                };
+            }
+
+            if(!connectionConfig.password) {
+                return {
+                    success: false,
+                    message: 'Password is required'
+                };
+            }
+
+            const request = new sn_ws.RESTMessageV2();
+
+            // Use a lightweight endpoint to minimize payload and processing time
+            const endpoint = connectionConfig.instanceUrl + '/api/now/table/sys_user?sysparm_limit=1';
+            request.setEndpoint(endpoint);
+            request.setHttpMethod('GET');
+
+            // Pass the client credentials
+            request.setBasicAuth(connectionConfig.username, connectionConfig.password);
+
+            // Set a timeout (in milliseconds) so the script doesn't hang if the remote instance is unreachable
+            request.setHttpTimeout(10000);
+
+            const response = request.execute();
+            const statusCode = response.getStatusCode();
+
+            // HTTP 200 confirms the credentials are valid and the user has basic REST access
+            if (statusCode === 200) {
+                this.logInfo('Successfully authenticated against remote instance: ' + connectionConfig.instanceUrl);
+                return {
+                    success: true,
+                    message: 'Successfully authenticated'
+                };
+            } else if (statusCode === 401) {
+                const errorMessage = 'Authentication failed (401 Unauthorized) for user ' + connectionConfig.username + ' at ' + connectionConfig.instanceUrl;
+                this.logError(errorMessage);
+                return {
+                    success: false,
+                    message: errorMessage
+                };
+            } else {
+                const errorMessage = 'Unexpected status code ' + statusCode + ' returned from ' + connectionConfig.instanceUrl;
+                this.logError(errorMessage);
+                return {
+                    success: false,
+                    message: errorMessage
+                };
+            }
+        } catch (e) {
+            const errorMessage = 'Exception occurred while validating remote credentials: ' + (e instanceof Error ? e.message : e);
+            this.logError(errorMessage);
+            return {
+                success: false,
+                message: errorMessage
+            };
+        }
+    };
+
     return _RecordImporter;
 
 })();]]></script>
@@ -1798,14 +1886,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>276</sys_mod_count>
+        <sys_mod_count>284</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-08 00:01:43</sys_updated_on>
+        <sys_updated_on>2026-07-10 05:38:01</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
