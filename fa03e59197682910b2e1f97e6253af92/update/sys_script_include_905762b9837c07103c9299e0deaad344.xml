@@ -178,14 +178,14 @@ global.KLF_RecordImporter = (function() {
          * @param {string} message 
          */
         logInfo(message) {
-            _RecordImporter.logInfo(message);
+            _RecordImporter.logInfo(message, this.transactionId);
         }
 
         /**
          * @param {string} message 
          */
         logError(message) {
-            _RecordImporter.logError(message);
+            _RecordImporter.logError(message, this.transactionId);
         }
 
         start() {
@@ -226,42 +226,30 @@ global.KLF_RecordImporter = (function() {
                 throw new Error(`Checkpoint table ${CHECKPOINT_TABLE_NAME} does not exist or is not accessible`);
             }
 
-            if (!connectionConfig) {
-                throw new Error('You must provide a connection config with instanceUrl, username, and password to use KLF_RecordImporter');
-            }
-
-            if (!connectionConfig.instanceUrl) {
-                throw new Error('Connection config is missing instanceUrl');
-            }
-
-            if (!connectionConfig.username) {
-                throw new Error('Connection config is missing username');
-            }
-
-            if (!connectionConfig.password) {
-                throw new Error('Connection config is missing password');
-            }
-
-            const validationResponse = _RecordImporter.validateRemoteCredentials(connectionConfig);
-            if (!validationResponse.success) {
-                throw new Error(validationResponse.message);
-            }
-
             this.connectionConfig = connectionConfig;
-            this.exportService = new global.KLF_RecordExporterService(connectionConfig);
             this.scopeName = scopeName;
             this.checkpointKey = _RecordImporter.calculateCheckpointKey(scopeName);
             this.stagingTableName = stagingTableName;
             this.attachmentSizeThresholdMB = attachmentSizeThresholdMB;
             this.scheduledJobName = scheduledJobName;
-            this.checkpointRecordSysId = this._initCheckpointRecord();
+            const checkpointIds = this._initCheckpointRecord();
+            this.checkpointRecordSysId = checkpointIds.checkpointRecordSysId;
+            this.transactionId = checkpointIds.transactionId;
+            this.exportService = new global.KLF_RecordExporterService(connectionConfig, this.transactionId);
+            const validationResponse = this.exportService.validateRemoteCredentials(connectionConfig);
+            if (!validationResponse.success) {
+                this.logError(validationResponse.message);
+                throw new Error(validationResponse.message);
+            }
         }
 
 
         /**
-         * Creates a system property directly in they sys_properties table
-         * and marks it as ignore_cache so it does not invalidate the cache every time it is updated
-         * @returns {string} The unique ID of the checkpoint record
+         * Creates a checkpoint record in the checkpoint table to track the progress of the import. If a checkpoint record with the same name already exists, it will be updated with a new transaction ID and scheduled job name (if provided).
+         * @returns {{
+         * checkpointRecordSysId: string,
+         * transactionId: string
+         * }} The unique ID of the checkpoint record and the transaction ID
          */
         _initCheckpointRecord() {
             const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
@@ -270,10 +258,15 @@ global.KLF_RecordImporter = (function() {
                 checkpointGr.setValue('u_name', this.checkpointKey);
             }
             if (this.scheduledJobName) {
-                checkpointGr.setValue('u_scheduled_job_name', this.scheduledJobName);
+                checkpointGr.u_scheduled_job_name = this.scheduledJobName;
             }
+            const transactionId = gs.generateGUID();
+            checkpointGr.u_transaction_id = transactionId;
             checkpointGr.update();
-            return checkpointGr.getUniqueValue();
+            return {
+                checkpointRecordSysId: checkpointGr.getUniqueValue(),
+                transactionId: transactionId
+            };
         }
 
         getExportService() {
@@ -881,18 +874,24 @@ global.KLF_RecordImporter = (function() {
         }
     }
 
+    _RecordImporter.transactionId = '';
+
     /**
      * @param {string} message 
+     * @param {string} [transactionId]
      */
-    _RecordImporter.logInfo = function(message) {
-        gs.log(`${LOG_PREFIX}${message}`, LOG_SOURCE);
+    _RecordImporter.logInfo = function(message, transactionId) {
+        const _transactionId = transactionId || this.transactionId || '';
+        gs.log(`${LOG_PREFIX}${_transactionId ? '[' + _transactionId + '] ' : ''}${message}`, LOG_SOURCE);
     };
 
     /**
      * @param {string} message 
+     * @param {string} [transactionId]
      */
-    _RecordImporter.logError = function(message) {
-        gs.logError(`${LOG_PREFIX}${message}`, LOG_SOURCE);
+    _RecordImporter.logError = function(message, transactionId) {
+        const _transactionId = transactionId || this.transactionId || '';
+        gs.logError(`${LOG_PREFIX}${_transactionId ? '[' + _transactionId + '] ' : ''}${message}`, LOG_SOURCE);
     };
 
     /**
@@ -1040,7 +1039,9 @@ global.KLF_RecordImporter = (function() {
             if (attachmentGr.get(source.getValue('u_record_xml_attachment_sys_id'))) {
                 return getAttachmentBuffer(attachmentGr);
             } else {
-                this.logError(`Failed to find attachment with sys_id ${source.getValue('u_record_xml_attachment_sys_id')} to import record with sys_id ${source.getValue('record_sys_id')} and table ${source.getValue('record_table_name')}`);
+                const checkpointRecord = this.getCheckpointRecord(source);
+                const transactionId = checkpointRecord ? checkpointRecord.getValue('u_transaction_id') : '';
+                this.logError(`Failed to find attachment with sys_id ${source.getValue('u_record_xml_attachment_sys_id')} to import record with sys_id ${source.getValue('record_sys_id')} and table ${source.getValue('record_table_name')}`, transactionId);
             }
             return null;
         };
@@ -1107,13 +1108,30 @@ global.KLF_RecordImporter = (function() {
     };
 
     /**
+     * @param {GlideRecord} importSet 
+     */
+    _RecordImporter.setTransactionIdForImportSet = function(importSet) {
+        if (!importSet) {
+            const errorMessage = '_RecordImporter.setTransactionIdForImportSet: Import set is not provided';
+            this.logError(errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        const _source = this.getFirstRecordInImportSet(importSet);
+        if (_source) {
+            const checkpointRecord = this.getCheckpointRecord(_source);
+            if (checkpointRecord) {
+                _RecordImporter.transactionId = checkpointRecord.getValue('u_transaction_id');
+            }
+        }
+    };
+
+    /**
      * Called from the import set transform map before the transform runs
      * @param {GlideRecord} importSet
      */
     _RecordImporter.onImportStart = function(importSet) {
-        if (!importSet) {
-            this.logError('_RecordImporter.onImportStart: Import set is not provided');
-        }
+        this.setTransactionIdForImportSet(importSet);
 
         const _source = this.getFirstRecordInImportSet(importSet);
         if (_source) {
@@ -1140,6 +1158,7 @@ global.KLF_RecordImporter = (function() {
      * @param {GlideRecord} importSet
      */
     _RecordImporter.onImportComplete = function(importSet) {
+        this.setTransactionIdForImportSet(importSet);
         const importSetSysId = importSet.getUniqueValue();
         const stagingTableName = importSet.getValue('table_name');
 
@@ -1796,89 +1815,6 @@ global.KLF_RecordImporter = (function() {
         return `${scopeName}.table_import_checkpoints`;
     };
 
-    /**
-     * 
-     * @param {KLF_RecordExportServiceConnectionConfig} connectionConfig 
-     * @returns {{message: string, success: boolean}}
-     */
-    _RecordImporter.validateRemoteCredentials = function(connectionConfig) {
-        try {
-            if(!connectionConfig) {
-                return {
-                    success: false,
-                    message: 'Connection config is required'
-                };
-            }
-
-            if(!connectionConfig.instanceUrl) {
-                return {
-                    success: false,
-                    message: 'Instance URL is required'
-                };
-            }
-
-            if(!connectionConfig.username) {
-                return {
-                    success: false,
-                    message: 'Username is required'
-                };
-            }
-
-            if(!connectionConfig.password) {
-                return {
-                    success: false,
-                    message: 'Password is required'
-                };
-            }
-
-            const request = new sn_ws.RESTMessageV2();
-
-            // Use a lightweight endpoint to minimize payload and processing time
-            const endpoint = connectionConfig.instanceUrl + '/api/now/table/sys_user?sysparm_limit=1';
-            request.setEndpoint(endpoint);
-            request.setHttpMethod('GET');
-
-            // Pass the client credentials
-            request.setBasicAuth(connectionConfig.username, connectionConfig.password);
-
-            // Set a timeout (in milliseconds) so the script doesn't hang if the remote instance is unreachable
-            request.setHttpTimeout(10000);
-
-            const response = request.execute();
-            const statusCode = response.getStatusCode();
-
-            // HTTP 200 confirms the credentials are valid and the user has basic REST access
-            if (statusCode === 200) {
-                this.logInfo('Successfully authenticated against remote instance: ' + connectionConfig.instanceUrl);
-                return {
-                    success: true,
-                    message: 'Successfully authenticated'
-                };
-            } else if (statusCode === 401) {
-                const errorMessage = 'Authentication failed (401 Unauthorized) for user ' + connectionConfig.username + ' at ' + connectionConfig.instanceUrl;
-                this.logError(errorMessage);
-                return {
-                    success: false,
-                    message: errorMessage
-                };
-            } else {
-                const errorMessage = 'Unexpected status code ' + statusCode + ' returned from ' + connectionConfig.instanceUrl;
-                this.logError(errorMessage);
-                return {
-                    success: false,
-                    message: errorMessage
-                };
-            }
-        } catch (e) {
-            const errorMessage = 'Exception occurred while validating remote credentials: ' + (e instanceof Error ? e.message : e);
-            this.logError(errorMessage);
-            return {
-                success: false,
-                message: errorMessage
-            };
-        }
-    };
-
     return _RecordImporter;
 
 })();]]></script>
@@ -1886,14 +1822,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>284</sys_mod_count>
+        <sys_mod_count>300</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-10 05:38:01</sys_updated_on>
+        <sys_updated_on>2026-07-10 13:18:11</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>

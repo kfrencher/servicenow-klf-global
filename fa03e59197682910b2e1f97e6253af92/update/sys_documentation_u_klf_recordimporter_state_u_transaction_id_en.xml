@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_documentation element="u_transaction_id" label="Transaction ID" language="en" table="u_klf_recordimporter_state">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element>u_transaction_id</element>
+            <help/>
+            <hint/>
+            <label>Transaction ID</label>
+            <language>en</language>
+            <name>u_klf_recordimporter_state</name>
+            <plural>Transaction IDs</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-07-10 12:34:50</sys_created_on>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>Transaction ID</sys_name>
+            <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+            <sys_update_name>sys_documentation_u_klf_recordimporter_state_u_transaction_id_en</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-07-10 12:34:50</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>
