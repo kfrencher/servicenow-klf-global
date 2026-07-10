@@ -8,6 +8,15 @@ Some data sets will be large. KLF_RecordImporter is designed to be resilient to 
 
 Some records will require references to users and groups to be properly imported. This mapping is done on the source instance before sending the data to the target instance. The KLF_RecordImporter provides functions to initialize the user and group mappings. Again, the mapping itself is done on the source instance, but you can find the generated mapping on both the source and target instances. On the target system you can find the mapping in the KLF_RecordImporter_State table in the u_user_mapping and u_group_mapping columns.
 
+This is a breakdown of the steps to use KLF_RecordImporter:
+1. Create a new Data Source record with the type "Custom (Load by Script)".
+2. Specify the script to run in the "Data Loaded" section of the data source. This script should construct a new KLF_RecordImporter and call the appropriate functions to import the data.
+3. Create a new Transform Map with the target table set to any table. The target table will not be written to. This transform map will be used to transform the data from the staging table to the target tables that are embedded in the XML retrieved from the source instance. The transform map should have the appropriate scripts configured to call the KLF_RecordImporter functions to import the records.
+4. Make sure you have installed the appropriate web services on the source instance. These web services are used by the KLF_RecordImporter to retrieve the data from the source instance.
+5. You need to make sure that the user specified in the connection configuration has the appropriate permissions on the source instance to access the data being imported and to access the web services.
+6. Create a Scheduled Import to run the data source. The scheduled import's `Active` flag should be set to false. It will be either triggered by an administrator or by the the `Execute Job` UI Action on the KLF_RecordImporter_State record.
+
+
 There is a table called KLF_RecordImporter_State (u_klf_recordimporter_state) that stores the state of the import process. The import is unusual because it is importing data into multiple tables. This table allows tracking the progress of the import. You can see what tables are being imported and where in the process each table is. You can also see the mapping information used for the user and group table. This table has the following important columns:
 | Column Name | Label | Description |
 |---|---|---|
@@ -42,20 +51,13 @@ When those fields are set, you can manage the import from the KLF_RecordImporter
 3. Stop Transform - This will stop the transform process for the records that are being transformed from the staging table to the target tables.
 4. Retrieve Logs - This retrieves Error-level logs associated with the transaction ID on the record and stores them in the Logs field.
 
-Action availability is state-based:
-1. Execute Job is shown when the KLF_RecordImporter_State record `Name` field (`u_name`) is set, `Scheduled Import Name` field (`u_scheduled_job_name`) is set, and the state is empty or `Complete`.
-2. Stop Data Load is shown when the KLF_RecordImporter_State `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, and there is an active killable data load transaction for the scheduled job.
-3. Stop Transform is shown when the KLF_RecordImporter_State record `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, the state is `Transforming`, and there are active running transform runs.
-4. Retrieve Logs is shown when the KLF_RecordImporter_State record is writable and `Transaction ID` (`u_transaction_id`) is set.
+UI Actions
+1. Execute Job - Shown when the KLF_RecordImporter_State record `Name` field (`u_name`) is set, `Scheduled Import Name` field (`u_scheduled_job_name`) is set, and the state is empty or `Complete`.
+2. Stop Data Load - Shown when the KLF_RecordImporter_State `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, and there is an active killable data load transaction for the scheduled job.
+3. Stop Transform - Shown when the KLF_RecordImporter_State record `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, the state is `Transforming`, and there are active running transform runs.
+4. Retrieve Logs - Shown when the KLF_RecordImporter_State `Transaction ID` (`u_transaction_id`) is set.
 
 If one of these actions is missing or has no effect, verify the KLF_RecordImporter_State `u_name`, `u_scheduled_job_name`, `u_transaction_id`, and the current runtime state (active data load transaction or active transform run).
-
-This is a breakdown of the steps to use KLF_RecordImporter:
-1. Create a new Data Source record with the type "Custom (Load by Script)". The data source must be created in global scope.
-2. Specify the script to run in the "Data Loaded" section of the data source. This script should construct a new KLF_RecordImporter and call the appropriate functions to import the data.
-3. Create a new Transform Map with the target table set to "Global". This transform map will be used to transform the data from the staging table to the target tables. The transform map should have the appropriate scripts configured to call the KLF_RecordImporter functions to import the records.
-4. Make sure you have installed the appropriate web services on the source instance. These web services are used by the KLF_RecordImporter to retrieve the data from the source instance.
-5. You need to make sure that the user specified in the connection configuration has the appropriate permissions on the source instance to access the data being imported and to access the web services.
 
 # Creating the Data Source
 This is a high-level overview of what the code in the "Data Loaded" section of the data source should look like. The actual implementation will depend on the specific requirements of the import and the structure of the data being imported.
