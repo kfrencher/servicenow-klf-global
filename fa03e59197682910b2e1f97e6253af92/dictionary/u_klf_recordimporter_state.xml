@@ -9,6 +9,7 @@
                 <element inactive_on_update="false" label="Loading" value="loading"/>
             </choice>
         </element>
+        <element label="Logs" max_length="10000" name="u_logs" type="string"/>
         <element label="Loaded Data" max_length="5000" name="u_loaded_data" type="string"/>
         <element label="User Mapping" max_length="5000" name="u_user_mapping" type="string"/>
         <element choice="1" label="Scheduled Job Name" max_length="255" name="u_scheduled_job_name" type="string">
