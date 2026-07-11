@@ -170,7 +170,9 @@ global.KLF_RecordImporter = (function() {
         LOADING: 'loading',
         LOADED: 'loaded',
         TRANSFORMING: 'transforming',
-        COMPLETE: 'complete'
+        COMPLETE: 'complete',
+        CANCELLED: 'cancelled',
+        CANCELLING: 'cancelling'
     };
 
     class _RecordImporter {
@@ -641,6 +643,24 @@ global.KLF_RecordImporter = (function() {
         }
 
         /**
+         * Checks to see if the import has been cancelled by looking at the checkpoint record state. If the state is "cancelled" then this returns true, otherwise it returns false.
+         * @returns {boolean} True if the import has been cancelled, false otherwise.
+         */
+        isCancelled() {
+            if(!this.checkpointRecordSysId) {
+                throw new Error('Checkpoint record sys_id is not set');
+            }
+
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            checkpointGr.addQuery('sys_id', this.checkpointRecordSysId);
+            checkpointGr.addQuery('u_state', STATE.CANCELLING)
+                .addOrCondition('u_state', STATE.CANCELLED);
+            checkpointGr.setLimit(1);
+            checkpointGr.query();
+            return checkpointGr.hasNext();
+        }
+
+        /**
          * Imports records from a table in batches and stores progress so the job can resume after interruption.
          *
          * This method exports records via `RecordExporter.exportTable`, imports each XML payload via
@@ -685,6 +705,18 @@ global.KLF_RecordImporter = (function() {
             let hasMoreRecords = true;
 
             while (hasMoreRecords) {
+                if(this.isCancelled()) {
+                    this.logError('Cancellation detected - stopping data load gracefully for table ' + tableName + '. Records staged so far: ' + stagedCount);
+                    try {
+                        const checkpointGr = this.getCheckpointRecord();
+                        checkpointGr.setValue('u_state', STATE.CANCELLED);
+                        checkpointGr.update();
+                    } catch (e) {
+                        this.logError('Error updating checkpoint record: ' + (e instanceof Error ? e.message : 'Unknown error'));
+                    }
+                    break;
+                }
+
                 const response = exportService.exportTable({
                     tableName: tableName,
                     scopeName: scopeNamespace,
@@ -1754,67 +1786,8 @@ global.KLF_RecordImporter = (function() {
             return;
         }
 
-        // @ts-ignore
-        const transactionManager = GlideTransactionManager.get();
-        if (!transactionManager) {
-            this.logError('_RecordImporter.stopDataLoad - GlideTransactionManager unavailable');
-            return;
-        }
-
-        const transactionUrl = `System Trigger-${scheduledJobName}`;
-        const transactionGr = new GlideRecord('v_transaction');
-        transactionGr.addQuery('url', transactionUrl);
-        transactionGr.query();
-
-        /** @type {Record<string, true>} */
-        const killedTransactionIds = {};
-        let matchedCount = 0;
-        let killedCount = 0;
-        let uncancelableCount = 0;
-
-        while (transactionGr.next()) {
-            matchedCount += 1;
-
-            const isUncancelable = transactionGr.getValue('uncancelable') === 'true';
-            if (isUncancelable) {
-                uncancelableCount += 1;
-                continue;
-            }
-
-            const transactionSysId = transactionGr.getUniqueValue();
-            const transactionId = transactionGr.getValue('transaction_id');
-            if (!transactionSysId || !transactionId) {
-                this.logError(`_RecordImporter.stopDataLoad - missing identifiers for transaction on "${transactionUrl}"`);
-                continue;
-            }
-
-            if (killedTransactionIds[transactionId]) {
-                continue;
-            }
-
-            try {
-                transactionManager.killByTransactionId(transactionId);
-                killedTransactionIds[transactionId] = true;
-                killedCount += 1;
-            } catch (error) {
-                this.logError(`_RecordImporter.stopDataLoad - failed to kill transaction_id ${transactionId}: ${error}`);
-            }
-        }
-
-        if (matchedCount === 0) {
-            this.logInfo(`_RecordImporter.stopDataLoad - no active transactions found for "${transactionUrl}"`);
-            gs.addInfoMessage(`No active data load transaction found for "${scheduledJobName}".`);
-            return;
-        }
-
-        if (killedCount > 0) {
-            gs.addInfoMessage(`Sent kill request for ${killedCount} transaction(s) for "${scheduledJobName}".`);
-            gs.addInfoMessage(gs.getMessage('Transaction may not terminate immediately'));
-        } else {
-            gs.addInfoMessage(`Found ${matchedCount} transaction(s) for "${scheduledJobName}", but none were killable.`);
-        }
-
-        this.logInfo(`_RecordImporter.stopDataLoad - matched=${matchedCount}, killed=${killedCount}, uncancelable=${uncancelableCount} for "${transactionUrl}"`);
+        checkpointRecord.u_state = STATE.CANCELLING;
+        checkpointRecord.update();
     };
 
     /**
@@ -1881,14 +1854,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>330</sys_mod_count>
+        <sys_mod_count>338</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-11 13:19:58</sys_updated_on>
+        <sys_updated_on>2026-07-11 15:37:26</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>

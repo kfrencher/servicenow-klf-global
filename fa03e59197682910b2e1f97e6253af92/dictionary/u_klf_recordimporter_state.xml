@@ -6,7 +6,9 @@
                 <element inactive_on_update="false" label="Complete" value="complete"/>
                 <element inactive_on_update="false" label="Transforming" value="transforming"/>
                 <element inactive_on_update="false" label="Loaded" value="loaded"/>
+                <element inactive_on_update="false" label="Cancelled" value="cancelled"/>
                 <element inactive_on_update="false" label="Loading" value="loading"/>
+                <element inactive_on_update="false" label="Cancelling" value="cancelling"/>
             </choice>
         </element>
         <element label="Logs" max_length="10000" name="u_logs" type="string"/>
