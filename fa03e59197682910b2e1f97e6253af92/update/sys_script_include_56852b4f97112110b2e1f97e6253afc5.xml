@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_CommandProbe</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * This class is used to execute shell commands on a mid server. The command is executed by sending an
  * ecc_queue record to the mid server by {@link global.KLF_CommandProbe#executeCommand}. 
@@ -153,11 +154,13 @@ global.KLF_CommandProbe.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-03-05 15:48:29</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>56852b4f97112110b2e1f97e6253afc5</sys_id>
         <sys_mod_count>51</sys_mod_count>
         <sys_name>KLF_CommandProbe</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_56852b4f97112110b2e1f97e6253afc5</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>

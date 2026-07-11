@@ -17,14 +17,15 @@
         <sys_class_name>sys_script_client</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-02-04 23:53:09</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_domain>global</sys_domain>
-        <sys_domain_path>/</sys_domain_path>
         <sys_id>170eb3fd97346510b2e1f97e6253aff5</sys_id>
         <sys_mod_count>2</sys_mod_count>
         <sys_name>Description mandatory / Add placeholder</sys_name>
         <sys_overrides/>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_client_170eb3fd97346510b2e1f97e6253aff5</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>

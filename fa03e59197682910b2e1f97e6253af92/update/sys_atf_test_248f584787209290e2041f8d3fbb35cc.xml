@@ -8,6 +8,7 @@
         <name>KLF_ScoperUtilsTest</name>
         <parameters/>
         <remember/>
+        <sn_atf_tg_generated>false</sn_atf_tg_generated>
         <sys_class_name>sys_atf_test</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2024-09-14 07:09:40</sys_created_on>

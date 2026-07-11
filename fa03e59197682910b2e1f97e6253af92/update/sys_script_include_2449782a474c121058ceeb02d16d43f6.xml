@@ -6,7 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_RoleUtilsTest</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[// @ts-ignore
 function KLF_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
 
