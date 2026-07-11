@@ -871,11 +871,13 @@ Refer to comments in the "Server script" field for details on customizations.</d
         <sys_class_name>sp_widget</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:10:22</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>bef4a95597682910b2e1f97e6253af86</sys_id>
         <sys_mod_count>44</sys_mod_count>
         <sys_name>KLF Form</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_widget_bef4a95597682910b2e1f97e6253af86</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
