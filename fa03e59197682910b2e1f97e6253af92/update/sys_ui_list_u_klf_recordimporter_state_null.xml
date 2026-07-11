@@ -58,13 +58,14 @@
             <sys_class_name>sys_ui_list</sys_class_name>
             <sys_created_by>admin</sys_created_by>
             <sys_created_on>2026-07-04 23:07:45</sys_created_on>
+            <sys_customer_update>false</sys_customer_update>
             <sys_domain>global</sys_domain>
-            <sys_domain_path>/</sys_domain_path>
             <sys_id>aee02cc7ff71c31020d2333663e97274</sys_id>
             <sys_mod_count>0</sys_mod_count>
             <sys_name>u_klf_recordimporter_state</sys_name>
             <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
             <sys_policy/>
+            <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
             <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
             <sys_update_name>sys_ui_list_u_klf_recordimporter_state_null</sys_update_name>
             <sys_updated_by>admin</sys_updated_by>

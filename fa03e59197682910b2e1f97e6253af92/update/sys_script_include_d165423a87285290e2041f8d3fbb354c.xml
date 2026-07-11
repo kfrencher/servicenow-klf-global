@@ -6,7 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_ScoperUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var global = global || {};
 /**
  * Object used to copy application elements from one scope to another.

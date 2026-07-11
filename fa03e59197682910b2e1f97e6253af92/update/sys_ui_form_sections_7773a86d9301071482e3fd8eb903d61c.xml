@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update>
-    <sys_ui_form_sections form_id="622757e1831943143c9299e0deaad34d" sys_domain="global" table="u_klf_recordimporter_state" version="3">
+    <sys_ui_form_sections form_id="7773a86d9301071482e3fd8eb903d61c" sys_domain="global" table="u_klf_recordimporter_state" version="3">
         <sys_ui_form_section action="INSERT_OR_UPDATE">
             <position>1</position>
             <sys_created_by>admin</sys_created_by>
             <sys_created_on>2026-05-24 20:45:54</sys_created_on>
             <sys_domain>global</sys_domain>
-            <sys_domain_path>/</sys_domain_path>
             <sys_id>7847747d8381c3903c9299e0deaad3ff</sys_id>
             <sys_mod_count>0</sys_mod_count>
             <sys_overrides/>
-            <sys_ui_form display_value="u_klf_recordimporter_state" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">622757e1831943143c9299e0deaad34d</sys_ui_form>
+            <sys_ui_form display_value="u_klf_recordimporter_state" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">7773a86d9301071482e3fd8eb903d61c</sys_ui_form>
             <sys_ui_section caption="NULL" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
             <sys_updated_by>admin</sys_updated_by>
             <sys_updated_on>2026-05-24 20:45:54</sys_updated_on>
@@ -20,16 +19,17 @@
             <sys_class_name>sys_ui_form</sys_class_name>
             <sys_created_by>admin</sys_created_by>
             <sys_created_on>2026-05-24 20:45:54</sys_created_on>
+            <sys_customer_update>false</sys_customer_update>
             <sys_domain>global</sys_domain>
-            <sys_domain_path>/</sys_domain_path>
-            <sys_id>622757e1831943143c9299e0deaad34d</sys_id>
+            <sys_id>7773a86d9301071482e3fd8eb903d61c</sys_id>
             <sys_mod_count>0</sys_mod_count>
             <sys_name>u_klf_recordimporter_state</sys_name>
             <sys_overrides/>
             <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
             <sys_policy/>
+            <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
             <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
-            <sys_update_name>sys_ui_form_sections_622757e1831943143c9299e0deaad34d</sys_update_name>
+            <sys_update_name>sys_ui_form_sections_7773a86d9301071482e3fd8eb903d61c</sys_update_name>
             <sys_updated_by>admin</sys_updated_by>
             <sys_updated_on>2026-05-24 20:45:54</sys_updated_on>
             <sys_user/>

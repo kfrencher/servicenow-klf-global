@@ -6,7 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_ScoperUtilsTest</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[// @ts-ignore
 function KLF_ScoperUtilsTest(outputs, steps, params, stepResult, assertEqual) {
     // Need to clear out the cache before running the tests
