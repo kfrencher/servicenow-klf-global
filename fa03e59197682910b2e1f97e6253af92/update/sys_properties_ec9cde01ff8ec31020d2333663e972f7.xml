@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>The source system endpoint path to use to validate the credentials passed to the KLF_RecordExporterService are valid</description>
+        <ignore_cache>true</ignore_cache>
+        <is_private>true</is_private>
+        <name>KLF_RecordExporterService.credential_validation_endpoint_path</name>
+        <read_roles/>
+        <suffix/>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-11 13:16:44</sys_created_on>
+        <sys_id>ec9cde01ff8ec31020d2333663e972f7</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>KLF_RecordExporterService.credential_validation_endpoint_path</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_properties_ec9cde01ff8ec31020d2333663e972f7</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-11 13:17:38</sys_updated_on>
+        <type>string</type>
+        <value>/api/now/table/sys_user?sysparm_limit=1</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=ec9cde01ff8ec31020d2333663e972f7"/>
+</record_update>

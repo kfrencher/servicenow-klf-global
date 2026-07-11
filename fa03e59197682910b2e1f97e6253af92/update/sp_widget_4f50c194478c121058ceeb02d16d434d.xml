@@ -839,7 +839,7 @@ img {
   float: left;
 }
 
-.snb-expanded-items .timeline &gt; li.timeline-inverted &gt; .timeline-panel {
+.klf-expanded-items .timeline &gt; li.timeline-inverted &gt; .timeline-panel {
   float: left;
 }</css>
         <data_table>sp_instance</data_table>
@@ -1060,16 +1060,16 @@ img {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-11 23:58:31</sys_created_on>
         <sys_id>4f50c194478c121058ceeb02d16d434d</sys_id>
-        <sys_mod_count>12</sys_mod_count>
+        <sys_mod_count>13</sys_mod_count>
         <sys_name>KLF Ticket Conversations</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_widget_4f50c194478c121058ceeb02d16d434d</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-03-18 11:19:33</sys_updated_on>
-        <template><![CDATA[<!-- TEST -->
-<div ng-class="::{'klf-expanded-items':isKlfExpandedItems}">
+        <sys_updated_on>2026-07-11 13:21:11</sys_updated_on>
+        <template><![CDATA[<!-- Testing -->
+<div ng-class="::{'klf-expanded-items':isKlfExpandedItmes}">
 <div ng-if="!data.canRead && !data.isNewRecord">
     ${Requested record not found}
   </div>

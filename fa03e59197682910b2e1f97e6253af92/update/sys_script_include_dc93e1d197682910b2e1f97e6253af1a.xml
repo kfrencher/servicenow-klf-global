@@ -79,7 +79,7 @@ KLF_SPUtils.prototype = {
     /**
      * substitute call for $sp.getStream. For some reason $sp.getStream was returning a
      * NullPointerException in Rome, so I replaced it with an equivalent call. This is used
-     * in the snb-ticket-conversation widget
+     * in the klf-ticket-conversation widget
      * @param {string} tableName
      * @param {string} sysId
      * @returns {Object}
@@ -367,13 +367,13 @@ global.KLF_SPUtils = KLF_SPUtils;]]></script>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:04:23</sys_created_on>
         <sys_id>dc93e1d197682910b2e1f97e6253af1a</sys_id>
-        <sys_mod_count>30</sys_mod_count>
+        <sys_mod_count>31</sys_mod_count>
         <sys_name>KLF_SPUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_dc93e1d197682910b2e1f97e6253af1a</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-03-18 11:27:39</sys_updated_on>
+        <sys_updated_on>2026-07-11 13:20:52</sys_updated_on>
     </sys_script_include>
 </record_update>
