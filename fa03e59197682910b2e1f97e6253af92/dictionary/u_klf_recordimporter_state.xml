@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?><database>
     <element db_object_id="fdcace19838dcf503c9299e0deaad320" label="KLF_RecordImporter_State" max_length="40" name="u_klf_recordimporter_state" type="collection">
+        <element label="Transform Position" max_length="255" name="u_transform_position" type="string"/>
+        <element label="Checkpoint" max_length="10000" name="u_checkpoint" type="string"/>
+        <element label="Loaded Data JSON" max_length="5000" name="u_loaded_data_json" type="string"/>
+        <element label="Data Manifest" max_length="1000" name="u_data_manifest" type="string"/>
+        <element attributes="edge_encryption_enabled=true" label="Force Transform All" max_length="40" name="u_force_transform_all" type="boolean"/>
         <element label="Group Mapping" max_length="5000" name="u_group_mapping" type="string"/>
+        <element label="Transaction ID" max_length="32" name="u_transaction_id" read_only="true" type="string"/>
+        <element label="Name" max_length="255" name="u_name" read_only="true" type="string" unique="true"/>
         <element choice="1" label="State" max_length="40" name="u_state" type="string">
             <choice>
-                <element inactive_on_update="false" label="Complete" value="complete"/>
                 <element inactive_on_update="false" label="Transforming" value="transforming"/>
                 <element inactive_on_update="false" label="Loaded" value="loaded"/>
                 <element inactive_on_update="false" label="Loading" value="loading"/>
+                <element inactive_on_update="false" label="Complete" value="complete"/>
             </choice>
         </element>
         <element label="Logs" max_length="10000" name="u_logs" type="string"/>
@@ -15,14 +22,10 @@
         <element choice="1" label="Scheduled Job Name" max_length="255" name="u_scheduled_job_name" type="string">
             <choice/>
         </element>
-        <element label="Transaction ID" max_length="32" name="u_transaction_id" read_only="true" type="string"/>
-        <element label="Checkpoint" max_length="10000" name="u_checkpoint" type="string"/>
-        <element label="Loaded Data JSON" max_length="5000" name="u_loaded_data_json" type="string"/>
-        <element attributes="edge_encryption_enabled=true" label="Force Transform All" max_length="40" name="u_force_transform_all" type="boolean"/>
-        <element label="Transform Position" max_length="255" name="u_transform_position" type="string"/>
-        <element label="Name" max_length="255" name="u_name" read_only="true" type="string" unique="true"/>
-        <element label="Data Manifest" max_length="1000" name="u_data_manifest" type="string"/>
         <index name="index" unique="true">
+            <element name="u_name"/>
+        </index>
+        <index name="index2">
             <element name="u_name"/>
         </index>
     </element>

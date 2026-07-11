@@ -155,10 +155,12 @@ jasmine.getEnv().execute();
     <sys_update_version action="INSERT_OR_UPDATE">
         <action>DELETE</action>
         <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <comments/>
         <file_path/>
         <instance_id>3985fabbdb7037808aea21c40596199a</instance_id>
         <instance_name>dev82424</instance_name>
         <name>sys_atf_step_938b5f3297a42150b2e1f97e6253af86</name>
+        <order/>
         <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step"><sys_atf_step action="INSERT_OR_UPDATE"><active>true</active><copied_from/><description>Run Server Side Validation Script</description><display_name>Run Server Side Script</display_name><inputs/><mugshots_cache_json/><notes/><order>1</order><step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config><sys_class_name>sys_atf_step</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-01-26 13:45:53</sys_created_on><sys_id>938b5f3297a42150b2e1f97e6253af86</sys_id><sys_mod_count>0</sys_mod_count><sys_name>Run Server Side Script</sys_name><sys_package display_value="G KLF" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package><sys_policy/><sys_scope display_value="G KLF">fa03e59197682910b2e1f97e6253af92</sys_scope><sys_update_name>sys_atf_step_938b5f3297a42150b2e1f97e6253af86</sys_update_name><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-01-27 01:58:31</sys_updated_on><table/><test display_value="KLF_GlideRecordUtilsTest">b57b1f3297a42150b2e1f97e6253afed</test><timeout/><warning_message/></sys_atf_step><sys_variable_value action="delete_multiple" query="document_key=938b5f3297a42150b2e1f97e6253af86"/><sys_variable_value action="INSERT_OR_UPDATE"><document>sys_atf_step</document><document_key>938b5f3297a42150b2e1f97e6253af86</document_key><order>200</order><sys_class_name>sys_variable_value</sys_class_name><sys_created_by>admin</sys_created_by><sys_created_on>2023-01-26 13:45:53</sys_created_on><sys_id>f70d5bf297a42150b2e1f97e6253aff7</sys_id><sys_mod_count>13</sys_mod_count><sys_updated_by>admin</sys_updated_by><sys_updated_on>2023-01-28 20:40:16</sys_updated_on><value>(function(outputs, steps, params, stepResult, assertEqual) {
 	/**
 	 * Function that creates two sample test tasks for
@@ -279,6 +281,7 @@ jasmine.getEnv().execute();
         <sys_class_name>sys_metadata_delete</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-28 21:04:52</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_db_object display_value="" name="sys_atf_step">sys_atf_step</sys_db_object>
         <sys_id>61cfbe45b5034ad897be469088c0f840</sys_id>
         <sys_metadata>938b5f3297a42150b2e1f97e6253af86</sys_metadata>
@@ -287,6 +290,7 @@ jasmine.getEnv().execute();
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_parent/>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
         <sys_update_name>sys_atf_step_938b5f3297a42150b2e1f97e6253af86</sys_update_name>

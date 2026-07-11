@@ -8,6 +8,7 @@
         <description/>
         <mobile_callable>false</mobile_callable>
         <name>KLF_RoleUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * This script contains general functions that help with role management in ServiceNow.
  * - userHasRole: Returns true if the user has the specified role.
@@ -78,11 +79,13 @@ global.KLF_RoleUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-18 22:16:44</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>e03ce4a6470c121058ceeb02d16d43db</sys_id>
         <sys_mod_count>4</sys_mod_count>
         <sys_name>KLF_RoleUtils</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_e03ce4a6470c121058ceeb02d16d43db</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>

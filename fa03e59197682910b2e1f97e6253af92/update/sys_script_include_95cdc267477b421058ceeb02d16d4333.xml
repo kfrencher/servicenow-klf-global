@@ -6,7 +6,9 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description/>
+        <mobile_callable>false</mobile_callable>
         <name>KLF_RecordSync_RoleUtils</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/**
  * When transferring an application between ServiceNow instances the various users and
  * groups on the target system will not have the same roles as the source system. This
