@@ -236,7 +236,7 @@ global.KLF_RecordImporter = (function() {
             this.checkpointRecordSysId = checkpointIds.checkpointRecordSysId;
             this.transactionId = checkpointIds.transactionId;
             this.exportService = new global.KLF_RecordExporterService(connectionConfig, this.transactionId);
-            const validationResponse = this.exportService.validateRemoteCredentials(connectionConfig);
+            const validationResponse = this.exportService.validateRemoteCredentials();
             if (!validationResponse.success) {
                 this.logError(validationResponse.message);
                 throw new Error(validationResponse.message);
@@ -874,6 +874,8 @@ global.KLF_RecordImporter = (function() {
         }
     }
 
+    _RecordImporter.logLookbackDays = Number(gs.getProperty('KLF_RecordImporter.log_lookback_days', '1'));
+
     _RecordImporter.transactionId = '';
 
     /**
@@ -905,7 +907,7 @@ global.KLF_RecordImporter = (function() {
 
         const log = new GlideRecord('syslog');
         log.addQuery('message', 'CONTAINS', checkpointRecord.getValue('u_transaction_id'));
-        log.addQuery('sys_created_on', '>', gs.daysAgoStart(1));
+        log.addQuery('sys_created_on', '>', gs.daysAgoStart(this.logLookbackDays));
         log.addQuery('level', '2');
         log.addQuery('source', 'IN', 'KLF_RecordImporter,KLF_RecordExporterService');
         log.orderByDesc('sys_created_on');
@@ -1879,14 +1881,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>327</sys_mod_count>
+        <sys_mod_count>329</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-10 21:08:19</sys_updated_on>
+        <sys_updated_on>2026-07-11 06:07:50</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
