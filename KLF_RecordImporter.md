@@ -73,16 +73,10 @@ To manage the Scheduled Import from the KLF_RecordImporter_State record, make su
 
 ## UI Actions available for Managing Scheduled Imports
 When those fields are set, you can manage the import from the KLF_RecordImporter_State record. The following UI Actions can be performed:
-1. Execute Job - This starts the specified Scheduled Import
-2. Stop Data Load - This will stop data from being loaded from the source system. Stopping the data load will not stop the transform process if the data has already been loaded. It will just prevent any new data from being loaded. The transform process will continue to run until completion for any data that has already been loaded. To stop the transform process, you need to use the Stop Transform action.
-3. Stop Transform - This will stop the transform process for the records that are being transformed from the staging table to the target tables.
-4. Retrieve Logs - This retrieves Error-level logs associated with the transaction ID on the record and stores them in the Logs field.
-
-UI Actions
-1. **Execute Job** - Shown when the KLF_RecordImporter_State record `Name` field (`u_name`) is set, `Scheduled Import Name` field (`u_scheduled_job_name`) is set, and the state is empty or `Complete`.
-2. **Stop Data Load** - Shown when the KLF_RecordImporter_State `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, and there is an active killable data load transaction for the scheduled job.
-3. **Stop Transform** - Shown when the KLF_RecordImporter_State record `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, the state is `Transforming`, and there are active running transform runs.
-4. **Retrieve Logs** - Shown when the KLF_RecordImporter_State `Transaction ID` (`u_transaction_id`) is set.
+1. **Execute Job** - Starts the specified Scheduled Import. Shown when the KLF_RecordImporter_State record `Name` field (`u_name`) is set, `Scheduled Import Name` field (`u_scheduled_job_name`) is set, and the state is empty or `Complete`.
+2. **Stop Data Load** - Stops data from being loaded from the source system. Stopping the data load will not stop the transform process if data has already been loaded. It prevents new data from being loaded while allowing the transform to continue for already loaded data. To stop transforms, use Stop Transform. Shown when the KLF_RecordImporter_State `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, and the state is `Loading`.
+3. **Stop Transform** - Stops the transform process for records being transformed from the staging table to the target tables. Shown when the KLF_RecordImporter_State record `Name` field (`u_name`) and `Scheduled Import Name` field (`u_scheduled_job_name`) are set, the state is `Transforming`, and there are active running transform runs.
+4. **Retrieve Logs** - Retrieves Error-level logs associated with the transaction ID on the record and stores them in the Logs field. Shown when the KLF_RecordImporter_State `Transaction ID` (`u_transaction_id`) is set.
 
 If one of these actions is missing or has no effect, verify the KLF_RecordImporter_State `u_name`, `u_scheduled_job_name`, `u_transaction_id`, and the current runtime state (active data load transaction or active transform run).
 
