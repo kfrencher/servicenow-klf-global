@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+  <sys_ui_section action="DELETE" caption="" section_id="66ad8e9d838dcf503c9299e0deaad34f" sys_domain="global" table="u_klf_recordimporter_state" view="">
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>.begin_split</element>
+      <position>0</position>
+      <sys_id>d8769c1b56fb4625b04d6ef491bc153d</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type>.begin_split</type>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_name</element>
+      <position>1</position>
+      <sys_id>8de4edcbbe0346d6aa745854c0a3c0e3</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_scheduled_job_name</element>
+      <position>2</position>
+      <sys_id>896cce4b5e4a4991aeca8e76be8645d7</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_transaction_id</element>
+      <position>3</position>
+      <sys_id>7256a7ebe4434337a2033f0356107ce4</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>.split</element>
+      <position>4</position>
+      <sys_id>aa7c96c08e594b3dadbb0e5c184125d1</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type>.split</type>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_state</element>
+      <position>5</position>
+      <sys_id>8ae654b753af42428950c92502d86d34</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_transform_position</element>
+      <position>6</position>
+      <sys_id>d75f86a048854565821ad90d85a53a6f</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_force_transform_all</element>
+      <position>7</position>
+      <sys_id>0b24eb5bbbf443838a0b755766f649e2</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>.end_split</element>
+      <position>8</position>
+      <sys_id>acc193ee89084f058c1a4f2515316309</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type>.end_split</type>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_data_manifest</element>
+      <position>9</position>
+      <sys_id>86888890ce0143f5903ef94ac1811eae</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_loaded_data</element>
+      <position>10</position>
+      <sys_id>ab31aff6d0174c17ad98077d96db3bb0</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_checkpoint</element>
+      <position>11</position>
+      <sys_id>50e4fb29bb604eee808ee801bc7450f5</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_user_mapping</element>
+      <position>12</position>
+      <sys_id>cb637f6b923b47cdacc124cf85bdfcf5</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_group_mapping</element>
+      <position>13</position>
+      <sys_id>654e06a18f1e49c19fd6c4506452b3e8</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_logs</element>
+      <position>14</position>
+      <sys_id>99075e672bfe4f8ab57470d662570efb</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_section action="DELETE">
+      <caption/>
+      <header>false</header>
+      <name>u_klf_recordimporter_state</name>
+      <roles/>
+      <sys_domain>global</sys_domain>
+      <sys_id>66ad8e9d838dcf503c9299e0deaad34f</sys_id>
+      <sys_scope display_value="global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+      <sys_user/>
+      <title>false</title>
+      <view_name/>
+      <view display_value="Default view" name="NULL">Default view</view>
+    </sys_ui_section>
+  </sys_ui_section>
+<sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>sys_ui_section_66ad8e9d838dcf503c9299e0deaad34f</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update>
+  <sys_ui_section caption="" section_id="66ad8e9d838dcf503c9299e0deaad34f" sys_domain="global" table="u_klf_recordimporter_state" view="">
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>.begin_split</element>
+      <position>0</position>
+      <sys_id>d8769c1b56fb4625b04d6ef491bc153d</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type>.begin_split</type>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_name</element>
+      <position>1</position>
+      <sys_id>8de4edcbbe0346d6aa745854c0a3c0e3</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_scheduled_job_name</element>
+      <position>2</position>
+      <sys_id>896cce4b5e4a4991aeca8e76be8645d7</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_transaction_id</element>
+      <position>3</position>
+      <sys_id>7256a7ebe4434337a2033f0356107ce4</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>.split</element>
+      <position>4</position>
+      <sys_id>aa7c96c08e594b3dadbb0e5c184125d1</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type>.split</type>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_state</element>
+      <position>5</position>
+      <sys_id>8ae654b753af42428950c92502d86d34</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_transform_position</element>
+      <position>6</position>
+      <sys_id>d75f86a048854565821ad90d85a53a6f</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_force_transform_all</element>
+      <position>7</position>
+      <sys_id>0b24eb5bbbf443838a0b755766f649e2</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>.end_split</element>
+      <position>8</position>
+      <sys_id>acc193ee89084f058c1a4f2515316309</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type>.end_split</type>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_data_manifest</element>
+      <position>9</position>
+      <sys_id>86888890ce0143f5903ef94ac1811eae</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_loaded_data</element>
+      <position>10</position>
+      <sys_id>ab31aff6d0174c17ad98077d96db3bb0</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_checkpoint</element>
+      <position>11</position>
+      <sys_id>50e4fb29bb604eee808ee801bc7450f5</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_user_mapping</element>
+      <position>12</position>
+      <sys_id>cb637f6b923b47cdacc124cf85bdfcf5</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_group_mapping</element>
+      <position>13</position>
+      <sys_id>654e06a18f1e49c19fd6c4506452b3e8</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_element action="INSERT_OR_UPDATE">
+      <element>u_logs</element>
+      <position>14</position>
+      <sys_id>99075e672bfe4f8ab57470d662570efb</sys_id>
+      <sys_ui_formatter/>
+      <sys_ui_section caption="" display_value="" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">66ad8e9d838dcf503c9299e0deaad34f</sys_ui_section>
+      <sys_user/>
+      <type/>
+    </sys_ui_element>
+    <sys_ui_section action="INSERT_OR_UPDATE">
+      <caption/>
+      <header>false</header>
+      <name>u_klf_recordimporter_state</name>
+      <roles/>
+      <sys_domain>global</sys_domain>
+      <sys_id>66ad8e9d838dcf503c9299e0deaad34f</sys_id>
+      <sys_scope display_value="global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+      <sys_user/>
+      <title>false</title>
+      <view_name/>
+      <view display_value="Default view" name="NULL">Default view</view>
+    </sys_ui_section>
+  </sys_ui_section>
+</record_update>]]></payload>
+        <payload_hash>-1763930187</payload_hash>
+        <record_name>KLF_RecordImporter_State</record_name>
+        <reverted_from/>
+        <source>2190ca84837a87d03c9299e0deaad317</source>
+        <source_table>sys_upgrade_history</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-14 15:27:01</sys_created_on>
+        <sys_id>d5a042c4837a87d03c9299e0deaad376</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>1a000e23b5f0000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-14 15:27:01</sys_updated_on>
+        <type>Form Layout</type>
+        <update_guid>11a042c4957a87d0828180bd5d57e176</update_guid>
+        <update_guid_history>11a042c4957a87d0828180bd5d57e176:0,759b38f33e6683d05d8afb0117f3d73b:0,40b101c9e4824750f65bab7296aa29b0:0,0d1b0e47bbf14710cae6521ed806809f:0,2cbce8398e41c390ab29cc702e18020a:292484514,3047b47dfa81c390fdb0f38ce4806701:0,2cbce8398e41c390ab29cc702e18020a:292484514,0e80e471d301c3904e800d005faeac0d:1790024273,9d70e071c101c3909d4a295909893860:1056231609,80e168219a41439091191b75b3b02f2f:1363118894,dac1a421114143905327f5609553c39a:878882798,0d81acede60143900bac9c58c6076c1d:-2037544131,fd50e06d7c014390925d91c99844b877:-615033231,81decca93c8d03900d8fbd4791371717:-1385192676,6c5d88e5298d03902baf8b4de8d4af71:-543117859,b3fa40e1508d0390c4338c994feb7480:-1383015496,e16a0c61438d0390c6f75f8a4485faa7:178288745,7d2a7b51890d039059592c8c3862425e:1971014365,aead8e9df58dcf503b77f49371d13a8e:894601702,2ead8e9dbb8dcf50a485b0b9b3946655:2001529913</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-14 15:27:46</sys_created_on>
+        <sys_db_object display_value="" name="sys_ui_section">sys_ui_section</sys_db_object>
+        <sys_id>0a271865a05243c88175175d4baf4610</sys_id>
+        <sys_metadata>66ad8e9d838dcf503c9299e0deaad34f</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_klf_recordimporter_state</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent display_value="KLF_RecordImporter_State">fdcace19838dcf503c9299e0deaad320</sys_parent>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_ui_section_66ad8e9d838dcf503c9299e0deaad34f</sys_update_name>
+        <sys_update_version display_value="sys_ui_section_66ad8e9d838dcf503c9299e0deaad34f">d5a042c4837a87d03c9299e0deaad376</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-14 15:27:46</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
