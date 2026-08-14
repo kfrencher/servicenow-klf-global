@@ -32,7 +32,7 @@ function KLF_OAuthUtilService($window) {
         <sys_id>d6c7288ac4ba221020d2af62322a083e</sys_id>
         <sys_mod_count>12</sys_mod_count>
         <sys_name>KLF_OAuthUtilService</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_angular_provider_d6c7288ac4ba221020d2af62322a083e</sys_update_name>
@@ -40,18 +40,4 @@ function KLF_OAuthUtilService($window) {
         <sys_updated_on>2025-10-26 14:56:55</sys_updated_on>
         <type>service</type>
     </sp_angular_provider>
-    <sys_claim action="INSERT_OR_UPDATE">
-        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
-        <claim_timestamp>19824b4ce9a0000001</claim_timestamp>
-        <metadata_update_name>sp_angular_provider_d6c7288ac4ba221020d2af62322a083e</metadata_update_name>
-        <previous_claim_app_version>1.1.0</previous_claim_app_version>
-        <previous_claim_name>KLF Global</previous_claim_name>
-        <previous_claim_scope>fa03e59197682910b2e1f97e6253af92</previous_claim_scope>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2025-07-19 22:01:25</sys_created_on>
-        <sys_id>2645f15ac4f2a21020d2af62322a0893</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2025-07-19 22:01:25</sys_updated_on>
-    </sys_claim>
 </record_update>

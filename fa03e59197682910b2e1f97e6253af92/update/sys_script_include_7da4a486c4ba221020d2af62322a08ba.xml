@@ -79,27 +79,13 @@
         <sys_id>7da4a486c4ba221020d2af62322a08ba</sys_id>
         <sys_mod_count>17</sys_mod_count>
         <sys_name>KLF_OAuthHelper</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_7da4a486c4ba221020d2af62322a08ba</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2025-10-26 15:21:25</sys_updated_on>
     </sys_script_include>
-    <sys_claim action="INSERT_OR_UPDATE">
-        <claim_owner_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</claim_owner_scope>
-        <claim_timestamp>198249551ed0000001</claim_timestamp>
-        <metadata_update_name>sys_script_include_7da4a486c4ba221020d2af62322a08ba</metadata_update_name>
-        <previous_claim_app_version>1.1.0</previous_claim_app_version>
-        <previous_claim_name>KLF Global</previous_claim_name>
-        <previous_claim_scope>fa03e59197682910b2e1f97e6253af92</previous_claim_scope>
-        <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2025-07-19 21:27:02</sys_created_on>
-        <sys_id>ba6daddec4b2a21020d2af62322a08a6</sys_id>
-        <sys_mod_count>0</sys_mod_count>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2025-07-19 21:27:02</sys_updated_on>
-    </sys_claim>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>7da4a486c4ba221020d2af62322a08ba</id>
         <sys_created_by>admin</sys_created_by>

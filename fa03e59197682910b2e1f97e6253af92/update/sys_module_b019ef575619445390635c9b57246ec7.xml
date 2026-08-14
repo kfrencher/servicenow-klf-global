@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_module">
+    <sys_module action="INSERT_OR_UPDATE">
+        <content><![CDATA[{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:79f94d52-235d-4b8a-bb0c-27ab490f5986",
+  "metadata": {
+    "timestamp": "2026-08-14T15:40:31.597Z",
+    "tools": {
+      "components": [
+        {
+          "type": "library",
+          "name": "sdk-build-plugins",
+          "group": "@servicenow",
+          "version": "4.8.1",
+          "author": "ServiceNow"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "name": "x-53417-klf-global",
+      "version": "1.1.0",
+      "bom-ref": "pkg:servicenow/x-53417-klf-global@1.1.0?sys_scope_id=fa03e59197682910b2e1f97e6253af92",
+      "licenses": [
+        {
+          "license": {
+            "name": "UNLICENSED"
+          }
+        }
+      ],
+      "purl": "pkg:servicenow/x-53417-klf-global@1.1.0?sys_scope_id=fa03e59197682910b2e1f97e6253af92"
+    }
+  },
+  "components": [],
+  "dependencies": [
+    {
+      "ref": "pkg:servicenow/x-53417-klf-global@1.1.0?sys_scope_id=fa03e59197682910b2e1f97e6253af92"
+    }
+  ]
+}]]></content>
+        <external_source>false</external_source>
+        <path>/global/x-53417-klf-global/1.1.0/bom.json</path>
+        <sys_class_name>sys_module</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-05 12:32:56</sys_created_on>
+        <sys_id>b019ef575619445390635c9b57246ec7</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>/global/x-53417-klf-global/1.1.0/bom.json</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_module_b019ef575619445390635c9b57246ec7</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-05 12:32:56</sys_updated_on>
+    </sys_module>
+</record_update>

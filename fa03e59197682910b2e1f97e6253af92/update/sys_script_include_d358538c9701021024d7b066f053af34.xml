@@ -71,7 +71,6 @@ global.KLF_RecordSync = function(connectionConfig, groupMapping, userMapping, be
     this.connectionConfig = connectionConfig;
     this.groupMapping = groupMapping;
     this.userMapping = userMapping;
-    this.usernameMapping = userMapping && userMapping.usernameMapping ? userMapping.usernameMapping : null;
     this.beforeTransfer = beforeTransfer;
 };
 
@@ -722,30 +721,6 @@ global.KLF_RecordSync.prototype = {
     },
 
     /**
-     * Uses the user mapping to map the users in the record to the users in the target instance
-     * @param {GlideRecord} glideRecord 
-     */
-    mapCreatedByAndUpdatedBy: function(glideRecord) {
-        var me = this;
-
-        if (!me.usernameMapping) {
-            return;
-        }
-
-        var mapping = me.usernameMapping;
-
-        ['sys_created_by', 'sys_updated_by'].forEach(function(fieldName) {
-            if (glideRecord.isValidField(fieldName)) {
-                glideRecord.setValue(fieldName, mapping[glideRecord.getValue(fieldName)] || glideRecord.getValue(fieldName));
-            }
-        });
-
-		if(glideRecord.getTableName() === 'sys_audit' && glideRecord.isValidField('user')) {
-			glideRecord.setValue('user', mapping[glideRecord.getValue('user')] || glideRecord.getValue('user'));
-		}
-    },
-
-    /**
      * Uses the group mapping to map the groups in the record to the groups in the target instance
      * @param {GlideRecord} glideRecord 
      */
@@ -809,12 +784,10 @@ global.KLF_RecordSync.prototype = {
 
             // This will map the groups in the record to the groups in the target instance
             // if a group mapping is provided in the constructor
-            this.mapGroups(extended);
+            this.mapGroups(glideRecord);
 
             // This will map the users in the record to the users in the target instance
-            this.mapUsers(extended);
-
-            this.mapCreatedByAndUpdatedBy(extended);
+            this.mapUsers(glideRecord);
             // @ts-ignore
             new global.GlideUnloader().unloadGlideRecord(_document, extended, 'INSERT_OR_UPDATE');
         } else {
@@ -824,8 +797,6 @@ global.KLF_RecordSync.prototype = {
 
             // This will map the users in the record to the users in the target instance
             this.mapUsers(glideRecord);
-
-            this.mapCreatedByAndUpdatedBy(glideRecord);
 
             // @ts-ignore
             new global.GlideUnloader().unloadGlideRecord(_document, glideRecord, 'INSERT_OR_UPDATE');
@@ -1110,7 +1081,7 @@ global.KLF_RecordSync.prototype = {
         <sys_id>d358538c9701021024d7b066f053af34</sys_id>
         <sys_mod_count>234</sys_mod_count>
         <sys_name>KLF_RecordSync</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_d358538c9701021024d7b066f053af34</sys_update_name>

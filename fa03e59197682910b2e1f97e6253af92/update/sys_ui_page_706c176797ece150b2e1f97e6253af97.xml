@@ -5,25 +5,22 @@
         <description/>
         <direct>false</direct>
         <endpoint/>
-        <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+        <html><![CDATA[<?xml version="1.0" encoding="utf-8"?>
 <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
-	<g:ui_form>
-		<input type="hidden" name="sys_package" value="${sysparm_sys_package}"/>
-		<input type="hidden" name="test_target_sys_id" value="${sysparm_to_test_sys_id}"/>
-		<p>Select test to add steps from</p>
-		<div style="margin: 15px 0">
-			<!-- 
+  <g:ui_form>
+    <input type="hidden" name="sys_package" value="${sysparm_sys_package}"></input>
+    <input type="hidden" name="test_target_sys_id" value="${sysparm_to_test_sys_id}"></input>
+    <p>Select test to add steps from</p>
+    <div style="margin: 15px 0">
+      <!-- 
 				Constrain to tests in the current application scope and exclude the current test from the list 
 				Only show tests with names that start with template
 				Order by name
 			-->
-			<g:macro_invoke macro="ui_reference" name="test_source_sys_id" 
-							table="sys_atf_test" show_popup="true" 
-							show_lookup="true" 
-							query="sys_package=${sysparm_sys_package}^sys_id!=${sysparm_to_test_sys_id}^u_template=true^ORDERBYname"/>
-		</div>
-		<g:dialog_buttons_ok_cancel ok="return true" />
-	</g:ui_form>
+      <g:macro_invoke macro="ui_reference" name="test_source_sys_id" table="sys_atf_test" show_popup="true" show_lookup="true" query="sys_package=${sysparm_sys_package}^sys_id!=${sysparm_to_test_sys_id}^u_template=true^ORDERBYname"></g:macro_invoke>
+    </div>
+    <g:dialog_buttons_ok_cancel ok="return true"></g:dialog_buttons_ok_cancel>
+  </g:ui_form>
 </j:jelly>]]></html>
         <name>klf_add_steps_from_test_modal</name>
         <processing_script><![CDATA[if(sys_package != gs.getCurrentApplicationId()) {
@@ -52,7 +49,7 @@ response.sendRedirect(urlOnStack);]]></processing_script>
         <sys_id>706c176797ece150b2e1f97e6253af97</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_name>klf_add_steps_from_test_modal</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ui_page_706c176797ece150b2e1f97e6253af97</sys_update_name>
