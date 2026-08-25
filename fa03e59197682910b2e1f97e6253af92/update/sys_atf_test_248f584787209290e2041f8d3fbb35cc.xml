@@ -12,11 +12,13 @@
         <sys_class_name>sys_atf_test</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2024-09-14 07:09:40</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>248f584787209290e2041f8d3fbb35cc</sys_id>
         <sys_mod_count>2</sys_mod_count>
         <sys_name>KLF_ScoperUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_atf_test_248f584787209290e2041f8d3fbb35cc</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
