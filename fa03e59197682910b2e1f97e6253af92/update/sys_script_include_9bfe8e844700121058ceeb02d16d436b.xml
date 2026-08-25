@@ -527,11 +527,13 @@ function KLF_RecordSync_RoleUtilsTest(outputs, steps, params, stepResult, assert
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-11 11:03:34</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>9bfe8e844700121058ceeb02d16d436b</sys_id>
         <sys_mod_count>72</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtilsTest</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_9bfe8e844700121058ceeb02d16d436b</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>

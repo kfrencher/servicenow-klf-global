@@ -152,10 +152,12 @@
 <sys_update_version action="INSERT_OR_UPDATE">
         <action>DELETE</action>
         <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <comments/>
         <file_path/>
         <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
         <instance_name>dev229555</instance_name>
         <name>sys_ui_section_66ad8e9d838dcf503c9299e0deaad34f</name>
+        <order/>
         <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update>
   <sys_ui_section caption="" section_id="66ad8e9d838dcf503c9299e0deaad34f" sys_domain="global" table="u_klf_recordimporter_state" view="">
     <sys_ui_element action="INSERT_OR_UPDATE">
@@ -330,6 +332,7 @@
         <sys_class_name>sys_metadata_delete</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-08-14 15:27:46</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_db_object display_value="" name="sys_ui_section">sys_ui_section</sys_db_object>
         <sys_id>0a271865a05243c88175175d4baf4610</sys_id>
         <sys_metadata>66ad8e9d838dcf503c9299e0deaad34f</sys_metadata>
@@ -338,6 +341,7 @@
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_parent display_value="KLF_RecordImporter_State">fdcace19838dcf503c9299e0deaad320</sys_parent>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
         <sys_update_name>sys_ui_section_66ad8e9d838dcf503c9299e0deaad34f</sys_update_name>
