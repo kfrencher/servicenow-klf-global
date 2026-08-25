@@ -170,7 +170,9 @@ global.KLF_RecordImporter = (function() {
         LOADING: 'loading',
         LOADED: 'loaded',
         TRANSFORMING: 'transforming',
-        COMPLETE: 'complete'
+        COMPLETE: 'complete',
+        CANCELLED: 'cancelled',
+        CANCELLING: 'cancelling'
     };
 
     class _RecordImporter {
@@ -178,14 +180,14 @@ global.KLF_RecordImporter = (function() {
          * @param {string} message 
          */
         logInfo(message) {
-            _RecordImporter.logInfo(message);
+            _RecordImporter.logInfo(message, this.transactionId);
         }
 
         /**
          * @param {string} message 
          */
         logError(message) {
-            _RecordImporter.logError(message);
+            _RecordImporter.logError(message, this.transactionId);
         }
 
         start() {
@@ -226,49 +228,47 @@ global.KLF_RecordImporter = (function() {
                 throw new Error(`Checkpoint table ${CHECKPOINT_TABLE_NAME} does not exist or is not accessible`);
             }
 
-            if (!connectionConfig) {
-                throw new Error('You must provide a connection config with instanceUrl, username, and password to use KLF_RecordImporter');
-            }
-
-            if (!connectionConfig.instanceUrl) {
-                throw new Error('Connection config is missing instanceUrl');
-            }
-
-            if (!connectionConfig.username) {
-                throw new Error('Connection config is missing username');
-            }
-
-            if (!connectionConfig.password) {
-                throw new Error('Connection config is missing password');
-            }
-
             this.connectionConfig = connectionConfig;
-            this.exportService = new global.KLF_RecordExporterService(connectionConfig);
             this.scopeName = scopeName;
             this.checkpointKey = _RecordImporter.calculateCheckpointKey(scopeName);
             this.stagingTableName = stagingTableName;
             this.attachmentSizeThresholdMB = attachmentSizeThresholdMB;
             this.scheduledJobName = scheduledJobName;
-            this.checkpointRecordSysId = this._initCheckpointRecord();
+            const checkpointIds = this._initCheckpointRecord();
+            this.checkpointRecordSysId = checkpointIds.checkpointRecordSysId;
+            this.transactionId = checkpointIds.transactionId;
+            this.exportService = new global.KLF_RecordExporterService(connectionConfig, this.transactionId);
+            const validationResponse = this.exportService.validateRemoteCredentials();
+            if (!validationResponse.success) {
+                this.logError(validationResponse.message);
+                throw new Error(validationResponse.message);
+            }
         }
 
 
         /**
-         * Creates a system property directly in they sys_properties table
-         * and marks it as ignore_cache so it does not invalidate the cache every time it is updated
-         * @returns {string} The unique ID of the checkpoint record
+         * Creates a checkpoint record in the checkpoint table to track the progress of the import. If a checkpoint record with the same name already exists, it will be updated with a new transaction ID and scheduled job name (if provided).
+         * @returns {{
+         * checkpointRecordSysId: string,
+         * transactionId: string
+         * }} The unique ID of the checkpoint record and the transaction ID
          */
         _initCheckpointRecord() {
             const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
             if (!checkpointGr.get('u_name', this.checkpointKey)) {
                 checkpointGr.initialize();
                 checkpointGr.setValue('u_name', this.checkpointKey);
-                if (this.scheduledJobName) {
-                    checkpointGr.setValue('u_scheduled_job_name', this.scheduledJobName);
-                }
-                checkpointGr.update();
             }
-            return checkpointGr.getUniqueValue();
+            if (this.scheduledJobName) {
+                checkpointGr.u_scheduled_job_name = this.scheduledJobName;
+            }
+            const transactionId = gs.generateGUID();
+            checkpointGr.u_transaction_id = transactionId;
+            checkpointGr.update();
+            return {
+                checkpointRecordSysId: checkpointGr.getUniqueValue(),
+                transactionId: transactionId
+            };
         }
 
         getExportService() {
@@ -566,7 +566,7 @@ global.KLF_RecordImporter = (function() {
             // tableInfos is sorted by row count ascending
             const tableInfos = this.exportService.getTableInfo(tableOptions);
             if (!tableInfos || tableInfos.length === 0) {
-                throw new Error(`Failed to get table info for tables: ${tables.join(', ')}`);
+                throw new Error(`Failed to get table info for tables: ${tables.join(', ')}.`);
             }
             const sortedTables = tableInfos.map(tableInfo => tableInfo.tableName);
             const formattedTableInfo = this.getFormattedTableInfo(tableOptions);
@@ -643,6 +643,24 @@ global.KLF_RecordImporter = (function() {
         }
 
         /**
+         * Checks to see if the import has been cancelled by looking at the checkpoint record state. If the state is "cancelled" then this returns true, otherwise it returns false.
+         * @returns {boolean} True if the import has been cancelled, false otherwise.
+         */
+        isCancelled() {
+            if (!this.checkpointRecordSysId) {
+                throw new Error('Checkpoint record sys_id is not set');
+            }
+
+            const checkpointGr = new GlideRecord(CHECKPOINT_TABLE_NAME);
+            checkpointGr.addQuery('sys_id', this.checkpointRecordSysId);
+            checkpointGr.addQuery('u_state', STATE.CANCELLING)
+                .addOrCondition('u_state', STATE.CANCELLED);
+            checkpointGr.setLimit(1);
+            checkpointGr.query();
+            return checkpointGr.hasNext();
+        }
+
+        /**
          * Imports records from a table in batches and stores progress so the job can resume after interruption.
          *
          * This method exports records via `RecordExporter.exportTable`, imports each XML payload via
@@ -687,6 +705,18 @@ global.KLF_RecordImporter = (function() {
             let hasMoreRecords = true;
 
             while (hasMoreRecords) {
+                if (this.isCancelled()) {
+                    this.logError('Cancellation detected - stopping data load gracefully for table ' + tableName + '. Records staged so far: ' + stagedCount);
+                    try {
+                        const checkpointGr = this.getCheckpointRecord();
+                        checkpointGr.setValue('u_state', STATE.CANCELLED);
+                        checkpointGr.update();
+                    } catch (e) {
+                        this.logError('Error updating checkpoint record: ' + (e instanceof Error ? e.message : 'Unknown error'));
+                    }
+                    break;
+                }
+
                 const response = exportService.exportTable({
                     tableName: tableName,
                     scopeName: scopeNamespace,
@@ -876,18 +906,76 @@ global.KLF_RecordImporter = (function() {
         }
     }
 
+    _RecordImporter.logLookbackDays = Number(gs.getProperty('KLF_RecordImporter.log_lookback_days', '1'));
+
+    _RecordImporter.transactionId = '';
+
     /**
-     * @param {string} message 
+     * Returns true if the Stop Transform UI Action should be shown.
+     * The button should be shown if the transform can be stopped.
+     * @param {GlideRecord} checkpointRecord 
      */
-    _RecordImporter.logInfo = function(message) {
-        gs.log(`${LOG_PREFIX}${message}`, LOG_SOURCE);
+    _RecordImporter.showRetrieveLogs = function(checkpointRecord) {
+        if (!checkpointRecord || !checkpointRecord.canWrite()) {
+            return false;
+        }
+
+        if (checkpointRecord.u_transaction_id.nil()) {
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * Retrieves logs for a given checkpoint record and transaction ID, and updates the checkpoint log field
+     * @param {GlideRecord} checkpointRecord
+     */
+    _RecordImporter.retrieveLogs = function(checkpointRecord) {
+        if (checkpointRecord.u_transaction_id.nil()) {
+            gs.addErrorMessage('There must be a "Transaction ID" set to retrieve logs');
+            return;
+        }
+
+        const log = new GlideRecord('syslog');
+        log.addQuery('message', 'CONTAINS', checkpointRecord.getValue('u_transaction_id'));
+        log.addQuery('sys_created_on', '>', gs.daysAgoStart(this.logLookbackDays));
+        log.addQuery('level', '2');
+        log.addQuery('source', 'IN', 'KLF_RecordImporter,KLF_RecordExporterService');
+        log.orderByDesc('sys_created_on');
+
+        log.query();
+        const logs = [];
+        while (log.next()) {
+            logs.push({
+                message: log.getValue('message'),
+                level: log.getDisplayValue('level'),
+                timestamp: log.getDisplayValue('sys_created_on')
+            });
+        }
+        const formattedLogs = logs.map(log => {
+            return `[${log.timestamp}] ${log.level}: ${log.message}`;
+        }).join('\n');
+        checkpointRecord.u_logs = formattedLogs;
+        checkpointRecord.update();
     };
 
     /**
      * @param {string} message 
+     * @param {string} [transactionId]
      */
-    _RecordImporter.logError = function(message) {
-        gs.logError(`${LOG_PREFIX}${message}`, LOG_SOURCE);
+    _RecordImporter.logInfo = function(message, transactionId) {
+        const _transactionId = transactionId || this.transactionId || '';
+        gs.log(`${LOG_PREFIX}${_transactionId ? '[' + _transactionId + '] ' : ''}${message}`, LOG_SOURCE);
+    };
+
+    /**
+     * @param {string} message 
+     * @param {string} [transactionId]
+     */
+    _RecordImporter.logError = function(message, transactionId) {
+        const _transactionId = transactionId || this.transactionId || '';
+        gs.logError(`${LOG_PREFIX}${_transactionId ? '[' + _transactionId + '] ' : ''}${message}`, LOG_SOURCE);
     };
 
     /**
@@ -895,7 +983,7 @@ global.KLF_RecordImporter = (function() {
      * @returns {GlideRecord|null} The checkpoint record or null if not found
      */
     _RecordImporter.getCheckpointRecord = function(source) {
-        if(source.u_checkpoint_record.nil()) {
+        if (source.u_checkpoint_record.nil()) {
             return null;
         }
 
@@ -913,7 +1001,7 @@ global.KLF_RecordImporter = (function() {
      * @returns {string}
      */
     _RecordImporter.mapUsers = function(xml, userMapping) {
-        if(!userMapping) {
+        if (!userMapping) {
             return xml;
         }
 
@@ -921,7 +1009,7 @@ global.KLF_RecordImporter = (function() {
             /** @type {KLF_RecordSync_UserMapping} */
             const userMappingObj = JSON.parse(userMapping);
             const mapping = userMappingObj.mapping;
-            if(!mapping) {
+            if (!mapping) {
                 this.logError(`User mapping JSON does not contain a mapping object`);
                 return xml;
             }
@@ -947,7 +1035,7 @@ global.KLF_RecordImporter = (function() {
      * @returns {string}
      */
     _RecordImporter.mapGroups = function(xml, groupMapping) {
-         if(!groupMapping) {
+        if (!groupMapping) {
             return xml;
         }
 
@@ -955,7 +1043,7 @@ global.KLF_RecordImporter = (function() {
             /** @type {KLF_RecordSync_GroupMapping} */
             const groupMappingObj = JSON.parse(groupMapping);
             const mapping = groupMappingObj.mapping;
-            if(!mapping) {
+            if (!mapping) {
                 this.logError(`Group mapping JSON does not contain a mapping object`);
                 return xml;
             }
@@ -982,12 +1070,12 @@ global.KLF_RecordImporter = (function() {
      */
     _RecordImporter.mapUsersAndGroups = function(xml, source) {
         const checkpointRecord = this.getCheckpointRecord(source);
-        if(!checkpointRecord) {
+        if (!checkpointRecord) {
             return xml;
         }
         const userMapping = checkpointRecord.getValue('u_user_mapping');
         const groupMapping = checkpointRecord.getValue('u_group_mapping');
-        
+
         let mappedXml = this.mapUsers(xml, userMapping);
         mappedXml = this.mapGroups(mappedXml, groupMapping);
         return mappedXml;
@@ -1004,7 +1092,7 @@ global.KLF_RecordImporter = (function() {
         _source.addQuery('sys_import_set', importSetSysId);
         _source.addAggregate('COUNT');
         _source.query();
-        if(_source.next()) {
+        if (_source.next()) {
             return Number(_source.getAggregate('COUNT') || 0);
         }
         return 0;
@@ -1018,9 +1106,9 @@ global.KLF_RecordImporter = (function() {
     _RecordImporter.importRecord = function(source) {
         // for every 100 rows, update the checkpoint record transform position field
         const row = Number(source.getValue('sys_import_row'));
-        if(row % 100 === 0) {
+        if (row % 100 === 0) {
             const checkpointRecord = this.getCheckpointRecord(source);
-            if(checkpointRecord) {
+            if (checkpointRecord) {
                 checkpointRecord.u_transform_position = `${row} of ${this.getImportSetSize(source)}`;
                 checkpointRecord.update();
             }
@@ -1030,23 +1118,25 @@ global.KLF_RecordImporter = (function() {
          * @param {GlideRecord} source 
          * @returns {string[]?} XML content of the record
          */
-        const getRecordXmlFromAttachment = (source) =>  {
+        const getRecordXmlFromAttachment = (source) => {
             const attachmentGr = new GlideRecord('sys_attachment');
             if (attachmentGr.get(source.getValue('u_record_xml_attachment_sys_id'))) {
                 return getAttachmentBuffer(attachmentGr);
             } else {
-                this.logError(`Failed to find attachment with sys_id ${source.getValue('u_record_xml_attachment_sys_id')} to import record with sys_id ${source.getValue('record_sys_id')} and table ${source.getValue('record_table_name')}`);
+                const checkpointRecord = this.getCheckpointRecord(source);
+                const transactionId = checkpointRecord ? checkpointRecord.getValue('u_transaction_id') : '';
+                this.logError(`Failed to find attachment with sys_id ${source.getValue('u_record_xml_attachment_sys_id')} to import record with sys_id ${source.getValue('record_sys_id')} and table ${source.getValue('record_table_name')}`, transactionId);
             }
             return null;
         };
 
-        const xml = !source.u_record_xml_attachment_sys_id.nil() ? getRecordXmlFromAttachment(source)
-        : source.getValue('u_record_xml');
+        const xml = !source.u_record_xml_attachment_sys_id.nil() ? getRecordXmlFromAttachment(source) :
+            source.getValue('u_record_xml');
 
-        if(xml) {
+        if (xml) {
             // @ts-ignore
             var updateManager = new global.GlideUpdateManager2();
-            if(typeof xml === 'string') {
+            if (typeof xml === 'string') {
                 const mappedXml = this.mapUsersAndGroups(xml, source);
                 updateManager.loadXML(mappedXml);
             } else {
@@ -1064,8 +1154,8 @@ global.KLF_RecordImporter = (function() {
         const attachmentSysId = attachmentGr.getUniqueValue();
         const stagingRecordGr = new GlideRecord(stagingTableName);
         if (stagingRecordGr.get('u_record_xml_attachment_sys_id', attachmentSysId)) {
-                attachmentGr.table_sys_id = stagingRecordGr.getUniqueValue();
-                attachmentGr.update();
+            attachmentGr.table_sys_id = stagingRecordGr.getUniqueValue();
+            attachmentGr.update();
         } else {
             this.logError(`Failed to find attachment with sys_id ${attachmentSysId} to update with staging record sys_id ${stagingRecordGr.getUniqueValue()}`);
         }
@@ -1095,10 +1185,29 @@ global.KLF_RecordImporter = (function() {
         _source.addQuery('sys_import_set', importSetSysId);
         _source.setLimit(1);
         _source.query();
-        if(_source.next()) {
+        if (_source.next()) {
             return _source;
         }
         return null;
+    };
+
+    /**
+     * @param {GlideRecord} importSet 
+     */
+    _RecordImporter.setTransactionIdForImportSet = function(importSet) {
+        if (!importSet) {
+            const errorMessage = '_RecordImporter.setTransactionIdForImportSet: Import set is not provided';
+            this.logError(errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        const _source = this.getFirstRecordInImportSet(importSet);
+        if (_source) {
+            const checkpointRecord = this.getCheckpointRecord(_source);
+            if (checkpointRecord) {
+                _RecordImporter.transactionId = checkpointRecord.getValue('u_transaction_id');
+            }
+        }
     };
 
     /**
@@ -1106,18 +1215,15 @@ global.KLF_RecordImporter = (function() {
      * @param {GlideRecord} importSet
      */
     _RecordImporter.onImportStart = function(importSet) {
-        if(!importSet) {
-            this.logError('_RecordImporter.onImportStart: Import set is not provided');
-        }
+        this.setTransactionIdForImportSet(importSet);
 
         const _source = this.getFirstRecordInImportSet(importSet);
-        if(_source) {
+        if (_source) {
             const checkpointRecord = this.getCheckpointRecord(_source);
             if (checkpointRecord) {
                 checkpointRecord.u_state = STATE.TRANSFORMING;
                 checkpointRecord.update();
-                this.logError('Updating checkpoint record');
-                if(checkpointRecord.u_force_transform_all) {
+                if (checkpointRecord.u_force_transform_all) {
                     // If the checkpoint record indicates that all records should be transformed,
                     // skip ignoring existing records in the import set and allow the transform to process all records.
                     this.logInfo('_RecordImporter.onImportStart: Skipping ignore of existing records in the import set due to u_force_transform_all being true');
@@ -1125,7 +1231,7 @@ global.KLF_RecordImporter = (function() {
                 }
             }
         }
-    
+
         this.logInfo('_RecordImporter.onImportStart: Ignoring existing records');
         this.ignoreExistingRecordsInImportSet(importSet.getUniqueValue(), importSet.getValue('table_name'));
     };
@@ -1135,6 +1241,7 @@ global.KLF_RecordImporter = (function() {
      * @param {GlideRecord} importSet
      */
     _RecordImporter.onImportComplete = function(importSet) {
+        this.setTransactionIdForImportSet(importSet);
         const importSetSysId = importSet.getUniqueValue();
         const stagingTableName = importSet.getValue('table_name');
 
@@ -1183,37 +1290,37 @@ global.KLF_RecordImporter = (function() {
             }
         }
 
-		/**
-		 * Check to see if there are any orphaned attachments
-		 */
+        /**
+         * Check to see if there are any orphaned attachments
+         */
 
-		// Find all source records in the staging table that have attachments
-		const sourceWithAttachment = new GlideRecord(stagingTableName);
-		sourceWithAttachment.addQuery('sys_import_set', importSetSysId);
-		sourceWithAttachment.addNotNullQuery('u_record_xml_attachment_sys_id');
-		sourceWithAttachment.query();
-		while(sourceWithAttachment.next()) {
-			// The associated attachment should have the source's sys_id
-			var targetTableSysId = sourceWithAttachment.getUniqueValue();
+        // Find all source records in the staging table that have attachments
+        const sourceWithAttachment = new GlideRecord(stagingTableName);
+        sourceWithAttachment.addQuery('sys_import_set', importSetSysId);
+        sourceWithAttachment.addNotNullQuery('u_record_xml_attachment_sys_id');
+        sourceWithAttachment.query();
+        while (sourceWithAttachment.next()) {
+            // The associated attachment should have the source's sys_id
+            var targetTableSysId = sourceWithAttachment.getUniqueValue();
 
-			// Check to make sure the attachment has the source's sys_id
-			// If the source.sys_id is different than that attachment.table_sys_id they are different and should be updated
-			var attachmentSysId = sourceWithAttachment.getValue('u_record_xml_attachment_sys_id');
-			var attachmentGr = new GlideRecord('sys_attachment');
-			attachmentGr.setLimit(1);
-			attachmentGr.addQuery('sys_id', attachmentSysId);
-			attachmentGr.addQuery('table_sys_id', '!=', targetTableSysId);
-			attachmentGr.query();
-			if (attachmentGr.next()) {
-				attachmentGr.table_sys_id = targetTableSysId;
-				attachmentGr.update();
-			}
-		}
+            // Check to make sure the attachment has the source's sys_id
+            // If the source.sys_id is different than that attachment.table_sys_id they are different and should be updated
+            var attachmentSysId = sourceWithAttachment.getValue('u_record_xml_attachment_sys_id');
+            var attachmentGr = new GlideRecord('sys_attachment');
+            attachmentGr.setLimit(1);
+            attachmentGr.addQuery('sys_id', attachmentSysId);
+            attachmentGr.addQuery('table_sys_id', '!=', targetTableSysId);
+            attachmentGr.query();
+            if (attachmentGr.next()) {
+                attachmentGr.table_sys_id = targetTableSysId;
+                attachmentGr.update();
+            }
+        }
 
         const _source = this.getFirstRecordInImportSet(importSet);
-        if(_source) {
+        if (_source) {
             const checkpointRecord = this.getCheckpointRecord(_source);
-            if(checkpointRecord) {
+            if (checkpointRecord) {
                 checkpointRecord.u_state = STATE.COMPLETE;
                 checkpointRecord.update();
             }
@@ -1369,6 +1476,13 @@ global.KLF_RecordImporter = (function() {
             }
         }
 
+        var usernameToEmployeeNumber = remoteUsers.reduce(function(index, remoteUser) {
+            if (remoteUser.username && remoteUser.employeeNumber) {
+                index[remoteUser.username] = remoteUser.employeeNumber;
+            }
+            return index;
+        }, /** @type {{[username:string]:string}} */ ({}));
+
         var mappedUsers = Object.keys(localToRemoteMapping);
         var allUsers = Object.keys(sysIdToSysId);
         var missingUsers = new global.ArrayUtil().diff(allUsers, mappedUsers);
@@ -1377,7 +1491,8 @@ global.KLF_RecordImporter = (function() {
             success: true,
             hasMissingUsers: missingUsers.length > 0,
             missingUsers: missingUsers,
-            mapping: localToRemoteMapping
+            mapping: localToRemoteMapping,
+            usernameMapping: usernameToEmployeeNumber
         };
     };
 
@@ -1479,16 +1594,188 @@ global.KLF_RecordImporter = (function() {
      */
     _RecordImporter.getScheduledJobList = function() {
         const scheduledJobsJson = gs.getProperty(SCHEDULED_JOB_LIST_PROPERTY_NAME);
-        if(!scheduledJobsJson) {
+        if (!scheduledJobsJson) {
             return null;
         }
 
         try {
             return JSON.parse(scheduledJobsJson);
-        } catch(e) {
+        } catch (e) {
             this.logError(`_RecordImporter.getScheduledJobList - Failed to parse JSON`);
             return null;
         }
+    };
+
+    /**
+     * Finds running transform history records for the checkpoint's scheduled import.
+     * Linkage: checkpoint.u_scheduled_job_name = sys_import_set.schedule_import.name
+     * @param {GlideRecord} checkpointRecord
+     * @returns {string[]} Running sys_import_set_run sys_ids.
+     */
+    _RecordImporter.getRunningTransformRunIds = function(checkpointRecord) {
+        if (!checkpointRecord) {
+            return [];
+        }
+
+        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+        if (!scheduledJobName) {
+            return [];
+        }
+
+        const importSetGr = new GlideRecord('sys_import_set');
+        importSetGr.addQuery('schedule_import.name', scheduledJobName);
+        importSetGr.query();
+
+        /** @type {string[]} */
+        const importSetSysIds = [];
+        while (importSetGr.next()) {
+            importSetSysIds.push(importSetGr.getUniqueValue());
+        }
+
+        if (importSetSysIds.length === 0) {
+            return [];
+        }
+
+        const runGr = new GlideRecord('sys_import_set_run');
+        runGr.addQuery('set', 'IN', importSetSysIds.join(','));
+        runGr.addQuery('state', 'running');
+        runGr.query();
+
+        /** @type {string[]} */
+        const runSysIds = [];
+        while (runGr.next()) {
+            runSysIds.push(runGr.getUniqueValue());
+        }
+
+        return runSysIds;
+    };
+
+    /**
+     * Returns true if the Stop Transform UI Action should be shown.
+     * The button should be shown if the transform can be stopped.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.showStopTransform = function(checkpointRecord) {
+        if (!checkpointRecord || !checkpointRecord.canWrite()) {
+            return false;
+        }
+
+        if (checkpointRecord.getValue('u_state') !== STATE.TRANSFORMING) {
+            return false;
+        }
+
+        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+        if (!scheduledJobName) {
+            return false;
+        }
+
+        return this.getRunningTransformRunIds(checkpointRecord).length > 0;
+    };
+
+    /**
+     * Stops the data transform
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.stopTransform = function(checkpointRecord) {
+        if (!checkpointRecord) {
+            this.logError('_RecordImporter.stopTransform - checkpointRecord is required');
+            return;
+        }
+
+        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+        if (!scheduledJobName) {
+            this.logError('_RecordImporter.stopTransform - u_scheduled_job_name is missing');
+            return;
+        }
+
+        const runSysIds = this.getRunningTransformRunIds(checkpointRecord);
+        if (runSysIds.length === 0) {
+            gs.addInfoMessage(`No active transform run found for "${scheduledJobName}".`);
+            this.logInfo(`_RecordImporter.stopTransform - no running transform runs found for "${scheduledJobName}"`);
+            return;
+        }
+
+        const runGr = new GlideRecord('sys_import_set_run');
+        runGr.addQuery('sys_id', 'IN', runSysIds.join(','));
+        runGr.addQuery('state', 'running');
+        runGr.query();
+
+        let canceledCount = 0;
+        let failedCount = 0;
+        while (runGr.next()) {
+            try {
+                runGr.setValue('state', 'cancel_requested');
+                runGr.update();
+                canceledCount += 1;
+            } catch (error) {
+                failedCount += 1;
+                this.logError(`_RecordImporter.stopTransform - failed to request cancel for run ${runGr.getUniqueValue()}: ${error}`);
+            }
+        }
+
+        if (canceledCount > 0) {
+            gs.addInfoMessage(`Sent cancel request for ${canceledCount} transform run(s) for "${scheduledJobName}".`);
+        }
+
+        if (failedCount > 0) {
+            gs.addErrorMessage(`Failed to cancel ${failedCount} transform run(s) for "${scheduledJobName}".`);
+        }
+
+        this.logInfo(`_RecordImporter.stopTransform - matched=${runSysIds.length}, canceled=${canceledCount}, failed=${failedCount} for "${scheduledJobName}"`);
+    };
+
+
+    /**
+     * Returns true if the Save UI Action should be shown.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.showSave = function(checkpointRecord) {
+        return checkpointRecord && checkpointRecord.canWrite();
+    };
+
+    /**
+     * Saves the checkpoint record.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.save = function(checkpointRecord) {
+        checkpointRecord.update();
+    };
+
+    /**
+     * Returns true if the Stop Data Load UI Action should be shown.
+     * The button should be shown if a transaction can be found for the data load and it is possible to stop it.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.showStopDataLoad = function(checkpointRecord) {
+        if (!checkpointRecord || !checkpointRecord.canWrite()) {
+            return false;
+        }
+
+        const state = checkpointRecord.getValue('u_state');
+        return checkpointRecord.canWrite() &&
+            !checkpointRecord.u_scheduled_job_name.nil() &&
+            state === STATE.LOADING;
+    };
+
+    /**
+     * Locates the transaction for the data load in the Active Transactions [v_transaction] table
+     * and kills the transaction to stop the data load process.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.stopDataLoad = function(checkpointRecord) {
+        if (!checkpointRecord) {
+            this.logError('_RecordImporter.stopDataLoad - checkpointRecord is required');
+            return;
+        }
+
+        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+        if (!scheduledJobName) {
+            this.logError('_RecordImporter.stopDataLoad - u_scheduled_job_name is missing');
+            return;
+        }
+
+        checkpointRecord.u_state = STATE.CANCELLING;
+        checkpointRecord.update();
     };
 
     /**
@@ -1496,7 +1783,7 @@ global.KLF_RecordImporter = (function() {
      */
     _RecordImporter.showExecuteJob = function(checkpointRecord) {
         const state = checkpointRecord.getValue('u_state');
-        if(!state || state === 'complete') {
+        if (!state || state === 'complete') {
             return checkpointRecord.canWrite() && !checkpointRecord.u_scheduled_job_name.nil();
         }
 
@@ -1510,12 +1797,33 @@ global.KLF_RecordImporter = (function() {
         if (checkpointRecord.canWrite() && !checkpointRecord.u_scheduled_job_name.nil()) {
             const scheduledJob = new GlideRecord('scheduled_import_set');
             const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
-            if(scheduledJob.get('name', scheduledJobName)) {
+            if (scheduledJob.get('name', scheduledJobName)) {
                 // @ts-ignore
                 SncTriggerSynchronizer.executeNow(scheduledJob);
+                checkpointRecord.u_state = STATE.LOADING;
+                checkpointRecord.update();
             } else {
                 gs.addErrorMessage(`Could not find scheduled import named ${scheduledJobName}`);
             }
+        }
+    };
+
+    /**
+     * Checks if the scheduled import associated with the checkpoint record exists in the system property 'KLF_RecordImporter.scheduled_imports'.
+     * If not, an error message is added.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.checkScheduledJobList = function(checkpointRecord) {
+        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
+        if (!scheduledJobName) {
+            return;
+        }
+        const name = checkpointRecord.getValue('u_name');
+        /** @type {{scheduledImportName: string, scopeName: string}[]} */
+        const scheduledImports = JSON.parse(gs.getProperty('KLF_RecordImporter.scheduled_imports'));
+        const scheduledJobNames = scheduledImports.map(scheduledImport => scheduledImport.scheduledImportName);
+        if (!scheduledJobNames.includes(scheduledJobName)) {
+            gs.addErrorMessage(`Scheduled Import "${scheduledJobName}" not found in KLF_RecordImporter.scheduled_imports system property. Please add job name to system property.`);
         }
     };
 
@@ -1534,14 +1842,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>338</sys_mod_count>
+        <sys_mod_count>342</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-11 15:37:26</sys_updated_on>
+        <sys_updated_on>2026-07-14 10:29:30</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
