@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script">
+  <sys_script action="DELETE">
+    <sys_id>916dcce5838d03903c9299e0deaad32d</sys_id>
+    <sys_scope display_value="global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+    <sys_update_name>sys_script_916dcce5838d03903c9299e0deaad32d</sys_update_name>
+    <abort_action>false</abort_action>
+    <access>package_private</access>
+    <action_delete>false</action_delete>
+    <action_insert>true</action_insert>
+    <action_query>false</action_query>
+    <action_update>true</action_update>
+    <active>true</active>
+    <add_message>false</add_message>
+    <advanced>true</advanced>
+    <change_fields>false</change_fields>
+    <client_callable>false</client_callable>
+    <collection>u_klf_recordimporter_state</collection>
+    <condition/>
+    <description/>
+    <execute_function>false</execute_function>
+    <filter_condition/>
+    <is_rest>false</is_rest>
+    <message/>
+    <name>onLoadedDataJsonUpdated</name>
+    <order>100</order>
+    <priority>100</priority>
+    <rest_method/>
+    <rest_method_text/>
+    <rest_service/>
+    <rest_service_text/>
+    <rest_variables/>
+    <role_conditions/>
+    <script><![CDATA[(function executeRule(current, previous /*null when async*/) {
+
+	global.KLF_RecordImporter.onLoadedDataJsonUpdated(current);
+
+})(current, previous);]]></script>
+    <sys_policy/>
+    <template/>
+    <when>before</when>
+  </sys_script>
+<sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>sys_script_916dcce5838d03903c9299e0deaad32d</name>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_script"&gt;
+  &lt;sys_script action="INSERT_OR_UPDATE"&gt;
+    &lt;sys_id&gt;916dcce5838d03903c9299e0deaad32d&lt;/sys_id&gt;
+    &lt;sys_scope display_value="global"&gt;fa03e59197682910b2e1f97e6253af92&lt;/sys_scope&gt;
+    &lt;sys_update_name&gt;sys_script_916dcce5838d03903c9299e0deaad32d&lt;/sys_update_name&gt;
+    &lt;abort_action&gt;false&lt;/abort_action&gt;
+    &lt;access&gt;package_private&lt;/access&gt;
+    &lt;action_delete&gt;false&lt;/action_delete&gt;
+    &lt;action_insert&gt;true&lt;/action_insert&gt;
+    &lt;action_query&gt;false&lt;/action_query&gt;
+    &lt;action_update&gt;true&lt;/action_update&gt;
+    &lt;active&gt;true&lt;/active&gt;
+    &lt;add_message&gt;false&lt;/add_message&gt;
+    &lt;advanced&gt;true&lt;/advanced&gt;
+    &lt;change_fields&gt;false&lt;/change_fields&gt;
+    &lt;client_callable&gt;false&lt;/client_callable&gt;
+    &lt;collection&gt;u_klf_recordimporter_state&lt;/collection&gt;
+    &lt;condition/&gt;
+    &lt;description/&gt;
+    &lt;execute_function&gt;false&lt;/execute_function&gt;
+    &lt;filter_condition/&gt;
+    &lt;is_rest&gt;false&lt;/is_rest&gt;
+    &lt;message/&gt;
+    &lt;name&gt;onLoadedDataJsonUpdated&lt;/name&gt;
+    &lt;order&gt;100&lt;/order&gt;
+    &lt;priority&gt;100&lt;/priority&gt;
+    &lt;rest_method/&gt;
+    &lt;rest_method_text/&gt;
+    &lt;rest_service/&gt;
+    &lt;rest_service_text/&gt;
+    &lt;rest_variables/&gt;
+    &lt;role_conditions/&gt;
+    &lt;script&gt;&lt;![CDATA[(function executeRule(current, previous /*null when async*/) {
+
+	global.KLF_RecordImporter.onLoadedDataJsonUpdated(current);
+
+})(current, previous);]]&gt;&lt;/script&gt;
+    &lt;sys_policy/&gt;
+    &lt;template/&gt;
+    &lt;when&gt;before&lt;/when&gt;
+  &lt;/sys_script&gt;
+&lt;/record_update&gt;</payload>
+        <payload_hash>1937607777</payload_hash>
+        <record_name>onLoadedDataJsonUpdated</record_name>
+        <reverted_from/>
+        <source>ce8b70f3836683d03c9299e0deaad34e</source>
+        <source_table>sys_upgrade_history</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-13 15:46:43</sys_created_on>
+        <sys_id>0c9b74f3836683d03c9299e0deaad3bb</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>19ffbcde6f70000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-13 15:46:43</sys_updated_on>
+        <type>Business Rule</type>
+        <update_guid>8c9b74f30f6683d056027dd9ede32eae</update_guid>
+        <update_guid_history>8c9b74f30f6683d056027dd9ede32eae:0,1e34125caf2643506d502e591e9b6d11:0,d61e9d949f6e035003ab5f0802d5b838:0,b739d70b197d47109eae7fcdcc686533:0,9ced8c29f98d039090c473696975ea78:-1501304344</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-14 19:40:14</sys_created_on>
+        <sys_db_object display_value="" name="sys_script">sys_script</sys_db_object>
+        <sys_id>027e3f4985874f0e867213bdfcbb00e1</sys_id>
+        <sys_metadata>916dcce5838d03903c9299e0deaad32d</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>onLoadedDataJsonUpdated</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent display_value="KLF_RecordImporter_State">fdcace19838dcf503c9299e0deaad320</sys_parent>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_script_916dcce5838d03903c9299e0deaad32d</sys_update_name>
+        <sys_update_version display_value="sys_script_916dcce5838d03903c9299e0deaad32d">0c9b74f3836683d03c9299e0deaad3bb</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-14 19:40:14</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>
