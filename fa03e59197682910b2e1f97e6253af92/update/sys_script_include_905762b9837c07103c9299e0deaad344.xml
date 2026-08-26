@@ -647,7 +647,7 @@ global.KLF_RecordImporter = (function() {
          * @returns {boolean} True if the import has been cancelled, false otherwise.
          */
         isCancelled() {
-            if(!this.checkpointRecordSysId) {
+            if (!this.checkpointRecordSysId) {
                 throw new Error('Checkpoint record sys_id is not set');
             }
 
@@ -705,7 +705,7 @@ global.KLF_RecordImporter = (function() {
             let hasMoreRecords = true;
 
             while (hasMoreRecords) {
-                if(this.isCancelled()) {
+                if (this.isCancelled()) {
                     this.logError('Cancellation detected - stopping data load gracefully for table ' + tableName + '. Records staged so far: ' + stagedCount);
                     try {
                         const checkpointGr = this.getCheckpointRecord();
@@ -1724,6 +1724,23 @@ global.KLF_RecordImporter = (function() {
         this.logInfo(`_RecordImporter.stopTransform - matched=${runSysIds.length}, canceled=${canceledCount}, failed=${failedCount} for "${scheduledJobName}"`);
     };
 
+
+    /**
+     * Returns true if the Save UI Action should be shown.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.showSave = function(checkpointRecord) {
+        return checkpointRecord && checkpointRecord.canWrite();
+    };
+
+    /**
+     * Saves the checkpoint record.
+     * @param {GlideRecord} checkpointRecord 
+     */
+    _RecordImporter.save = function(checkpointRecord) {
+        checkpointRecord.update();
+    };
+
     /**
      * Returns true if the Stop Data Load UI Action should be shown.
      * The button should be shown if a transaction can be found for the data load and it is possible to stop it.
@@ -1734,39 +1751,10 @@ global.KLF_RecordImporter = (function() {
             return false;
         }
 
-        const scheduledJobName = checkpointRecord.getValue('u_scheduled_job_name');
-        if (!scheduledJobName) {
-            return false;
-        }
-
-        // @ts-ignore
-        const transactionManager = GlideTransactionManager.get();
-        if (!transactionManager) {
-            this.logError('_RecordImporter.showStopDataLoad - GlideTransactionManager unavailable');
-            return false;
-        }
-
-        const transactionUrl = `System Trigger-${scheduledJobName}`;
-        const transactionGr = new GlideRecord('v_transaction');
-        transactionGr.addQuery('url', transactionUrl);
-        transactionGr.query();
-
-        while (transactionGr.next()) {
-            const isUncancelable = transactionGr.getValue('uncancelable') === 'true';
-            if (isUncancelable) {
-                continue;
-            }
-
-            const transactionSysId = transactionGr.getUniqueValue();
-            const transactionId = transactionGr.getValue('transaction_id');
-            if (!transactionSysId || !transactionId) {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
+        const state = checkpointRecord.getValue('u_state');
+        return checkpointRecord.canWrite() &&
+            !checkpointRecord.u_scheduled_job_name.nil() &&
+            state === STATE.LOADING;
     };
 
     /**
@@ -1854,14 +1842,14 @@ global.KLF_RecordImporter = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-05-12 18:44:30</sys_created_on>
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
-        <sys_mod_count>338</sys_mod_count>
+        <sys_mod_count>340</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
         <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-11 15:37:26</sys_updated_on>
+        <sys_updated_on>2026-08-26 12:51:51</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>905762b9837c07103c9299e0deaad344</id>
