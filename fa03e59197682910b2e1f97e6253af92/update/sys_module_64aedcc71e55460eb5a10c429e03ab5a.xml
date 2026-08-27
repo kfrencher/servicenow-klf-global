@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_module">
+    <sys_module action="INSERT_OR_UPDATE">
+        <content><![CDATA[{
+  "name": "x-53417-klf-global",
+  "version": "1.1.1",
+  "description": "",
+  "license": "UNLICENSED",
+  "imports": {
+    "#now:*": "./@types/servicenow/fluent/*/index.js"
+  },
+  "scripts": {
+    "build": "now-sdk build",
+    "deploy": "now-sdk install",
+    "clean": "now-sdk clean",
+    "transform": "now-sdk transform",
+    "types": "now-sdk dependencies",
+    "rename-generated:dry": "node scripts/rename-generated-artifacts.mjs",
+    "rename-generated:apply": "node scripts/rename-generated-artifacts.mjs --apply"
+  },
+  "devDependencies": {
+    "@servicenow/sdk": "4.8.1",
+    "@servicenow/glide": "27.0.5",
+    "@types/angular": "^1.8.4",
+    "@types/jasmine": "3.3.0",
+    "@types/chance": "^1.1.6"
+  }
+}]]></content>
+        <external_source>false</external_source>
+        <path>/global/x-53417-klf-global/1.1.1/package.json</path>
+        <sys_class_name>sys_module</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-27 12:41:28</sys_created_on>
+        <sys_id>64aedcc71e55460eb5a10c429e03ab5a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>/global/x-53417-klf-global/1.1.1/package.json</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_module_64aedcc71e55460eb5a10c429e03ab5a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-27 12:41:28</sys_updated_on>
+    </sys_module>
+</record_update>

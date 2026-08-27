@@ -57,7 +57,7 @@
         <sys_metadata>730a6b6797202550b2e1f97e6253afb3</sys_metadata>
         <sys_mod_count>0</sys_mod_count>
         <sys_name>KLF_TestUtilsTest copy</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_parent/>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>

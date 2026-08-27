@@ -32,10 +32,16 @@
         <script><![CDATA[(function executeRule(current, previous /*null when async*/) {
 
 	if(current.u_name.nil() && !current.u_scheduled_job_name.nil()) {
-		const jobList = KLF_RecordImporter.getScheduledJobList();
+		const jobList = global.KLF_RecordImporter.getScheduledJobList();
+		if(!jobList) {
+			return;
+		}
 		const scheduledJobName = current.getValue('u_scheduled_job_name');
 		const job = jobList.find(job => job.scheduledImportName == scheduledJobName);
-		current.u_name = KLF_RecordImporter.calculateCheckpointKey(job.scopeName);
+		if(!job) {
+			return;
+		}
+		current.u_name = global.KLF_RecordImporter.calculateCheckpointKey(job.scopeName);
 	}
 	
 
@@ -49,7 +55,7 @@
         <sys_mod_count>3</sys_mod_count>
         <sys_name>KLFSTATE onUpdate</sys_name>
         <sys_overrides/>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_3c254083ffbd831020d2333663e9725d</sys_update_name>

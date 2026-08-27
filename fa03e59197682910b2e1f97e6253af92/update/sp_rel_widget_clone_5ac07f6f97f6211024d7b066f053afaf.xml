@@ -471,13 +471,13 @@ table {
   cursor: pointer;
   vertical-align: middle;
 
-  &amp;amp;:nth-child(2) {
+  &amp;:nth-child(2) {
     border-left: none;
   }
 
 
 
-  &amp;amp;:last-child {
+  &amp;:last-child {
     border-right: none;
   }
 }
@@ -1005,7 +1005,7 @@ tbody tr:last-child {
         <sys_id>5ac07f6f97f6211024d7b066f053afaf</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_name>92c07f6f97f6211024d7b066f053afaa</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_rel_widget_clone_5ac07f6f97f6211024d7b066f053afaf</sys_update_name>

@@ -89,13 +89,11 @@
         <sys_class_name>sys_script_fix</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2025-04-30 21:01:38</sys_created_on>
-        <sys_customer_update>false</sys_customer_update>
         <sys_id>994865ec33592e10504662989d5c7b20</sys_id>
         <sys_mod_count>32</sys_mod_count>
         <sys_name>KLF Test Migration</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
-        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_fix_994865ec33592e10504662989d5c7b20</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>

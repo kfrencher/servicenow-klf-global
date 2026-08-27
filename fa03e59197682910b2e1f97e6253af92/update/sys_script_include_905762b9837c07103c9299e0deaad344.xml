@@ -1844,7 +1844,7 @@ global.KLF_RecordImporter = (function() {
         <sys_id>905762b9837c07103c9299e0deaad344</sys_id>
         <sys_mod_count>340</sys_mod_count>
         <sys_name>KLF_RecordImporter</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_905762b9837c07103c9299e0deaad344</sys_update_name>

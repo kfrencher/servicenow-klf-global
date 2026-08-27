@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_ui_section caption="KLF_RecordImporter_State" section_id="731de6685ed54852b5d97ffe22c99247" sys_domain="global" table="u_klf_recordimporter_state" version="3" view="">
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>.begin_split</element>
+            <position>0</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>063539c96bd44e6ea7e67e1742a24ca8</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type>.begin_split</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_name</element>
+            <position>1</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>1dfbbbe247ad4eea936641fee482ed45</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_scheduled_job_name</element>
+            <position>2</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>a8b5aa9c9b2a47d49205f0ee3a21da7f</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_transaction_id</element>
+            <position>3</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>f688473edfeb48359f7655a734916502</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>.split</element>
+            <position>4</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>ae78b7dd621546878398f41539bee2ea</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type>.split</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_state</element>
+            <position>5</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>d5289307737a4f078655c659b52ae73b</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_transform_position</element>
+            <position>6</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>9c8fb80e43044d7fab1bf2d7dcf2a268</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_force_transform_all</element>
+            <position>7</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>bed4b7e536754bb69f1854a71e9ebbeb</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>.end_split</element>
+            <position>8</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>6513ea00084b43abb5ec7c0df68efaa0</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type>.end_split</type>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_data_manifest</element>
+            <position>9</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>2bc03f6827ba4364bdaae9318d449650</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_loaded_data</element>
+            <position>10</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>595a5a78dff147aabe134b4edb785c1d</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_checkpoint</element>
+            <position>11</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>7ff24e4c837a87d03c9299e0deaad3ed</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_user_mapping</element>
+            <position>12</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>fbf24e4c837a87d03c9299e0deaad3ee</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_group_mapping</element>
+            <position>13</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>7bf24e4c837a87d03c9299e0deaad3ef</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_element action="INSERT_OR_UPDATE">
+            <element>u_logs</element>
+            <position>14</position>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_id>f7f24e4c837a87d03c9299e0deaad3f0</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_ui_formatter/>
+            <sys_ui_section caption="KLF_RecordImporter_State" display_value="KLF_RecordImporter_State" name="u_klf_recordimporter_state" sys_domain="global" view="Default view">731de6685ed54852b5d97ffe22c99247</sys_ui_section>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <type/>
+        </sys_ui_element>
+        <sys_ui_section action="INSERT_OR_UPDATE">
+            <caption>KLF_RecordImporter_State</caption>
+            <header>false</header>
+            <name>u_klf_recordimporter_state</name>
+            <roles/>
+            <sys_class_name>sys_ui_section</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2026-08-27 12:41:36</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>731de6685ed54852b5d97ffe22c99247</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>u_klf_recordimporter_state</sys_name>
+            <sys_overrides/>
+            <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+            <sys_update_name>sys_ui_section_731de6685ed54852b5d97ffe22c99247</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2026-08-27 12:41:36</sys_updated_on>
+            <sys_user/>
+            <title>false</title>
+            <view display_value="Default view" name="NULL">Default view</view>
+            <view_name/>
+        </sys_ui_section>
+    </sys_ui_section>
+</record_update>

@@ -663,8 +663,8 @@ api.controller =
 }</css>
         <data_table>sp_instance</data_table>
         <demo_data/>
-        <description>This form is cloned from the "form" widget.&#13;
-&#13;
+        <description>This form is cloned from the "form" widget.
+
 Refer to comments in the "Server script" field for details on customizations.</description>
         <docs/>
         <field_list/>
@@ -874,7 +874,7 @@ Refer to comments in the "Server script" field for details on customizations.</d
         <sys_id>bef4a95597682910b2e1f97e6253af86</sys_id>
         <sys_mod_count>44</sys_mod_count>
         <sys_name>KLF Form</sys_name>
-        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sp_widget_bef4a95597682910b2e1f97e6253af86</sys_update_name>
