@@ -11,16 +11,16 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-06-02 22:58:30</sys_created_on>
         <sys_id>e55350b997ae421024d7b066f053af9c</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_name>KLF_RecordSync_GroupUtils.endpoint.notifications.path</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_properties_e55350b997ae421024d7b066f053af9c</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-06-02 22:58:30</sys_updated_on>
+        <sys_updated_on>2026-08-29 14:03:29</sys_updated_on>
         <type>string</type>
-        <value>/api/53417/klf_import_xml/notifications</value>
+        <value>/api/global/klf_import_xml/notifications</value>
         <write_roles/>
     </sys_properties>
     <sys_translated_text action="delete_multiple" query="documentkey=e55350b997ae421024d7b066f053af9c"/>
