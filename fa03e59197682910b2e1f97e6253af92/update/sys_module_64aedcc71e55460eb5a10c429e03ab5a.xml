@@ -12,13 +12,14 @@
     "build": "now-sdk build",
     "deploy": "now-sdk install",
     "clean": "now-sdk clean",
-    "transform": "now-sdk transform",
+    "transform": "now-sdk transform -f false",
+    "download": "now-sdk download -f false",
     "types": "now-sdk dependencies",
     "rename-generated:dry": "node scripts/rename-generated-artifacts.mjs",
     "rename-generated:apply": "node scripts/rename-generated-artifacts.mjs --apply"
   },
   "devDependencies": {
-    "@servicenow/sdk": "4.8.1",
+    "@servicenow/sdk": "4.11.2",
     "@servicenow/glide": "27.0.5",
     "@types/angular": "^1.8.4",
     "@types/jasmine": "3.3.0",

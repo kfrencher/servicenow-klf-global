@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_documentation element="" label="Sys Atf Test" language="en" table="sys_atf_test">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element/>
+            <help/>
+            <hint/>
+            <label>Sys Atf Test</label>
+            <language>en</language>
+            <name>sys_atf_test</name>
+            <plural>Sys Atf Tests</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>system</sys_created_by>
+            <sys_created_on>2024-05-15 11:14:19</sys_created_on>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>Test</sys_name>
+            <sys_package display_value="Automated Test Framework" source="com.glide.automated_testing_framework">1e8545378dc20210d0ad51af418663df</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+            <sys_update_name>sys_documentation_sys_atf_test__en</sys_update_name>
+            <sys_updated_by>system</sys_updated_by>
+            <sys_updated_on>2024-05-15 11:14:19</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

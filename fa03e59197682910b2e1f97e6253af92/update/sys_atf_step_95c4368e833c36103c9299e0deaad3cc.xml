@@ -34,11 +34,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2026-08-27 12:41:28</sys_created_on>
+        <sys_created_on>2026-08-29 23:16:40</sys_created_on>
         <sys_id>0df62501f2dd4c21aa91bc385601e3de</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-08-27 12:41:28</sys_updated_on>
+        <sys_updated_on>2026-08-29 23:16:40</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>
@@ -48,17 +48,16 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2026-08-27 12:41:28</sys_created_on>
+        <sys_created_on>2026-08-29 23:16:40</sys_created_on>
         <sys_id>f3af9b68170842d79590f31a6db3b2db</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-08-27 12:41:28</sys_updated_on>
+        <sys_updated_on>2026-08-29 23:16:40</sys_updated_on>
         <value>KLF_TestJasmineMatchers(global);
 
 KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual);
 
-jasmine.getEnv().execute();
-</value>
+jasmine.getEnv().execute();</value>
         <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
     </sys_variable_value>
 </record_update>
