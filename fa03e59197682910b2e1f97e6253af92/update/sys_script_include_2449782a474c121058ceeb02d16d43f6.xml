@@ -153,10 +153,10 @@ function KLF_RoleUtilsTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-18 23:14:58</sys_created_on>
         <sys_id>e189b0aa474c121058ceeb02d16d43a1</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-18 23:14:58</sys_updated_on>
+        <sys_updated_on>2026-08-29 23:33:31</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>
