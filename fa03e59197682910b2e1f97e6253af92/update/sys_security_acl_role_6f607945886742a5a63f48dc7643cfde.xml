@@ -2,7 +2,7 @@
     <sys_security_acl_role action="INSERT_OR_UPDATE">
         <sys_class_name>sys_security_acl_role</sys_class_name>
         <sys_created_by>admin</sys_created_by>
-        <sys_created_on>2026-08-02 21:18:57</sys_created_on>
+        <sys_created_on>2026-08-29 23:16:47</sys_created_on>
         <sys_id>6f607945886742a5a63f48dc7643cfde</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_name>u_klf_recordimporter_state.u_klf_recordimporter_state_user</sys_name>
@@ -12,7 +12,7 @@
         <sys_security_acl display_value="u_klf_recordimporter_state">26ea0659838dcf503c9299e0deaad34b</sys_security_acl>
         <sys_update_name>sys_security_acl_role_6f607945886742a5a63f48dc7643cfde</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-08-02 21:18:57</sys_updated_on>
+        <sys_updated_on>2026-08-29 23:16:47</sys_updated_on>
         <sys_user_role display_value="u_klf_recordimporter_state_user" name="u_klf_recordimporter_state_user">92eac259838dcf503c9299e0deaad3e0</sys_user_role>
     </sys_security_acl_role>
 </record_update>
