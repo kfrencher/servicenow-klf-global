@@ -739,4 +739,15 @@ global.KLF_LdapGroupService = KLF_LdapGroupService;]]></script>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
         <sys_updated_on>2024-09-27 08:55:01</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>ed33a5d197682910b2e1f97e6253af0a</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:38</sys_created_on>
+        <sys_id>463bf44ccedd4bddb1f5370a363209d8</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:38</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

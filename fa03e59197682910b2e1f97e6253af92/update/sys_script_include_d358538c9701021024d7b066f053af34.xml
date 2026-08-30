@@ -1117,4 +1117,15 @@ global.KLF_RecordSync.prototype = {
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2026-07-10 21:19:13</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>d358538c9701021024d7b066f053af34</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:37</sys_created_on>
+        <sys_id>45a66dcece0d4eb488227ebe62429eb3</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:37</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

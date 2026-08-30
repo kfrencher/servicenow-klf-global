@@ -356,4 +356,15 @@ global.KLF_CalendarCreator = function(config) {
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2025-10-26 22:08:43</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>77b1e09547f3821058ceeb02d16d4310</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:36</sys_created_on>
+        <sys_id>07a73e921e2145178ef033959b81c95f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:36</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

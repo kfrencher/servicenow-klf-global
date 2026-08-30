@@ -164,4 +164,15 @@ global.KLF_CommandProbe.prototype = {
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2024-08-02 23:20:33</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>56852b4f97112110b2e1f97e6253afc5</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:36</sys_created_on>
+        <sys_id>3fc0c21641784ac9a7a7e8e41a17f106</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:36</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

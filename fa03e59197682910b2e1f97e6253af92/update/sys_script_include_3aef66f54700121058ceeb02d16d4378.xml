@@ -141,4 +141,15 @@ function KLF_JasmineTest(outputs, steps, params, stepResult, assertEqual) {
         <sys_updated_by>kenneth.frencher</sys_updated_by>
         <sys_updated_on>2024-09-28 00:16:55</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>3aef66f54700121058ceeb02d16d4378</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:36</sys_created_on>
+        <sys_id>052167dc2a1d40deb0860acee80351ef</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:36</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

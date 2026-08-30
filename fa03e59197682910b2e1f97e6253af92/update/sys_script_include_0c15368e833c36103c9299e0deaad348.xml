@@ -1118,4 +1118,15 @@ function KLF_CalendarCreatorTest(outputs, steps, params, stepResult, assertEqual
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2026-01-10 20:47:50</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>0c15368e833c36103c9299e0deaad348</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:35</sys_created_on>
+        <sys_id>899102b44afc4ab59970e0ca14811043</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:35</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

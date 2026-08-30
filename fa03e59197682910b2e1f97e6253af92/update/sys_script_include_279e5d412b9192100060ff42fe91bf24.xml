@@ -160,4 +160,15 @@ global.KLF_TestMockRESTAPIResponse.MockRESTAPIResponseStream.prototype.getConten
         <sys_updated_by>kenneth.frencher</sys_updated_by>
         <sys_updated_on>2024-10-18 14:16:38</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>279e5d412b9192100060ff42fe91bf24</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:35</sys_created_on>
+        <sys_id>c1b61908f5814f94a06b5857727300ae</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:35</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

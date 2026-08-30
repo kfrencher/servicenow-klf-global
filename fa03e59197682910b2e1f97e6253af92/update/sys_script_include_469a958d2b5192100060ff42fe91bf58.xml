@@ -157,4 +157,15 @@ global.KLF_TestMockRESTAPIRequest.MockRESTAPIRequestBody.prototype.hasNext = fun
         <sys_updated_by>kenneth.frencher</sys_updated_by>
         <sys_updated_on>2024-10-18 14:14:58</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>469a958d2b5192100060ff42fe91bf58</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:36</sys_created_on>
+        <sys_id>ee58f2ff60f4444aa89dbaed2c3c14d2</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:36</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
