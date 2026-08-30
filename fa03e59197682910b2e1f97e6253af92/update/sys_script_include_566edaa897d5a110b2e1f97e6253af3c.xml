@@ -109,4 +109,15 @@ global.KLF_MetricUtils.prototype = {
         <sys_updated_by>admin</sys_updated_by>
         <sys_updated_on>2025-10-26 15:50:52</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>566edaa897d5a110b2e1f97e6253af3c</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:36</sys_created_on>
+        <sys_id>a143a702a7f04015b4b3737ef109d838</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:36</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

@@ -538,4 +538,15 @@
         <sys_updated_by>kenneth.frencher</sys_updated_by>
         <sys_updated_on>2024-09-28 00:28:04</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>90733b9847d8961058ceeb02d16d43d9</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-30 03:00:37</sys_created_on>
+        <sys_id>65690cae6afd41dd88f4044660417abb</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-30 03:00:37</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
