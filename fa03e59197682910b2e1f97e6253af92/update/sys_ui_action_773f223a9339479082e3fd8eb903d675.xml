@@ -7,7 +7,7 @@
 
 }]]></client_script_v2>
         <comments/>
-        <condition>KLF_RecordImporter.showExecuteJob(current)</condition>
+        <condition>global.KLF_RecordImporter.showExecuteJob(current);</condition>
         <form_action>true</form_action>
         <form_button>true</form_button>
         <form_button_icon/>
@@ -33,7 +33,7 @@
         <onclick/>
         <order>100</order>
         <script><![CDATA[current.update();
-KLF_RecordImporter.executeJob(current);
+global.KLF_RecordImporter.executeJob(current);
 action.setRedirectURL(current);]]></script>
         <show_form_icon_only>false</show_form_icon_only>
         <show_insert>true</show_insert>
