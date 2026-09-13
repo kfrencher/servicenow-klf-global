@@ -104,8 +104,8 @@ global.KLF_CommandProbe.prototype = {
     /**
      * Adds a parameter to the payload that can be retrieved by a mid server
      * script include using 
-     * @param {XMLDocument} payloadDoc
-     * @param {HTMLElement} parametersElement
+     * @param {Document} payloadDoc
+     * @param {Node} parametersElement
      * @param {string} name 
      * @param {string} value 
      */
@@ -155,14 +155,14 @@ global.KLF_CommandProbe.prototype = {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-03-05 15:48:29</sys_created_on>
         <sys_id>56852b4f97112110b2e1f97e6253afc5</sys_id>
-        <sys_mod_count>51</sys_mod_count>
+        <sys_mod_count>53</sys_mod_count>
         <sys_name>KLF_CommandProbe</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_56852b4f97112110b2e1f97e6253afc5</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2024-08-02 23:20:33</sys_updated_on>
+        <sys_updated_on>2026-09-13 16:44:33</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>56852b4f97112110b2e1f97e6253afc5</id>

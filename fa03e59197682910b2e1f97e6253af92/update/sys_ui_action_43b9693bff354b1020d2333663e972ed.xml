@@ -3,14 +3,11 @@
         <action_name>klf_stop_data_load</action_name>
         <active>true</active>
         <client>false</client>
-        <client_script_v2><![CDATA[function onClick(g_form) {
-
-}]]></client_script_v2>
+        <client_script_v2/>
         <comments/>
         <condition>global.KLF_RecordImporter.showStopDataLoad(current);</condition>
         <form_action>true</form_action>
         <form_button>true</form_button>
-        <form_button_icon/>
         <form_button_v2>false</form_button_v2>
         <form_context_menu>false</form_context_menu>
         <form_link>false</form_link>
@@ -22,7 +19,6 @@
         <list_action>false</list_action>
         <list_banner_button>false</list_banner_button>
         <list_button>false</list_button>
-        <list_button_icon/>
         <list_choice>false</list_choice>
         <list_context_menu>false</list_context_menu>
         <list_link>false</list_link>
@@ -34,9 +30,7 @@
         <order>100</order>
         <script><![CDATA[global.KLF_RecordImporter.stopDataLoad(current);
 action.setRedirectURL(current);]]></script>
-        <show_form_icon_only>false</show_form_icon_only>
         <show_insert>true</show_insert>
-        <show_list_icon_only>false</show_list_icon_only>
         <show_multiple_update>false</show_multiple_update>
         <show_query>false</show_query>
         <show_update>true</show_update>
@@ -46,7 +40,7 @@ action.setRedirectURL(current);]]></script>
         <sys_domain>global</sys_domain>
         <sys_domain_path>/</sys_domain_path>
         <sys_id>43b9693bff354b1020d2333663e972ed</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_name>Stop Data Load</sys_name>
         <sys_overrides/>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
@@ -54,7 +48,7 @@ action.setRedirectURL(current);]]></script>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_ui_action_43b9693bff354b1020d2333663e972ed</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-07 12:22:03</sys_updated_on>
+        <sys_updated_on>2026-09-13 14:40:23</sys_updated_on>
         <table>u_klf_recordimporter_state</table>
         <ui11_compatible>true</ui11_compatible>
         <ui16_compatible>false</ui16_compatible>

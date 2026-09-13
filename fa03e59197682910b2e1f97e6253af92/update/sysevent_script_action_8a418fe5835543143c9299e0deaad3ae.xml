@@ -6,8 +6,10 @@
         <event_name>klf_recordimporter.link_attachment</event_name>
         <name>KLF_RecordImporter Link Attachment</name>
         <order>100</order>
-        <script><![CDATA[global.KLF_RecordImporter.logInfo('Linking record to attachment');
-global.KLF_RecordImporter.handleLinkAttachment(current, event.parm1, event.parm2);]]></script>
+        <script><![CDATA[(function(current, event) {
+  global.KLF_RecordImporter.logInfo('Linking record to attachment');
+  global.KLF_RecordImporter.handleLinkAttachment(current, event.parm1);
+})(current, /** @type {SysEvent} */ (event));]]></script>
         <synchronous>false</synchronous>
         <sys_class_name>sysevent_script_action</sys_class_name>
         <sys_created_by>admin</sys_created_by>
@@ -15,7 +17,7 @@ global.KLF_RecordImporter.handleLinkAttachment(current, event.parm1, event.parm2
         <sys_domain>global</sys_domain>
         <sys_domain_path>/</sys_domain_path>
         <sys_id>8a418fe5835543143c9299e0deaad3ae</sys_id>
-        <sys_mod_count>4</sys_mod_count>
+        <sys_mod_count>8</sys_mod_count>
         <sys_name>KLF_RecordImporter Link Attachment</sys_name>
         <sys_overrides/>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
@@ -23,7 +25,7 @@ global.KLF_RecordImporter.handleLinkAttachment(current, event.parm1, event.parm2
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sysevent_script_action_8a418fe5835543143c9299e0deaad3ae</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-06-05 23:01:23</sys_updated_on>
+        <sys_updated_on>2026-09-13 15:28:59</sys_updated_on>
     </sysevent_script_action>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>8a418fe5835543143c9299e0deaad3ae</id>
