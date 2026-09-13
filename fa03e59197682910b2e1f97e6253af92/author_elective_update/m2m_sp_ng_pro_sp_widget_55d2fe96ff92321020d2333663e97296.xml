@@ -18,10 +18,12 @@
 <sys_update_version action="INSERT_OR_UPDATE">
         <action>DELETE</action>
         <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <comments/>
         <file_path/>
         <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
         <instance_name>dev229555</instance_name>
         <name>m2m_sp_ng_pro_sp_widget_55d2fe96ff92321020d2333663e97296</name>
+        <order/>
         <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_ng_pro_sp_widget">
     <m2m_sp_ng_pro_sp_widget action="INSERT_OR_UPDATE">
         <sp_angular_provider display_value="klfFormContext">cf2feedeff52321020d2333663e97267</sp_angular_provider>
@@ -58,10 +60,11 @@
         <update_guid_history>cc957acf7fb88f10a6652834911c4b41:1562446782</update_guid_history>
     </sys_update_version>
     <sys_metadata_delete action="INSERT_OR_UPDATE">
-        <sys_audit_delete display_value="klfFormContext.KLF Test Execute Action">aa2c2d29839347543c9299e0deaad31c</sys_audit_delete>
+        <sys_audit_delete display_value="">aa2c2d29839347543c9299e0deaad31c</sys_audit_delete>
         <sys_class_name>sys_metadata_delete</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-09-13 02:19:49</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_db_object display_value="" name="m2m_sp_ng_pro_sp_widget">m2m_sp_ng_pro_sp_widget</sys_db_object>
         <sys_id>99dafcbe80a4435490c46cfcb07bc444</sys_id>
         <sys_metadata>55d2fe96ff92321020d2333663e97296</sys_metadata>
@@ -70,6 +73,7 @@
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_parent/>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
         <sys_update_name>m2m_sp_ng_pro_sp_widget_55d2fe96ff92321020d2333663e97296</sys_update_name>

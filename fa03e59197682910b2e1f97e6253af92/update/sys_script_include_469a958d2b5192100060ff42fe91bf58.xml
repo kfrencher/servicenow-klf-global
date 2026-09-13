@@ -147,11 +147,13 @@ global.KLF_TestMockRESTAPIRequest.MockRESTAPIRequestBody.prototype.hasNext = fun
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>kenneth.frencher</sys_created_by>
         <sys_created_on>2024-10-15 13:07:03</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>469a958d2b5192100060ff42fe91bf58</sys_id>
         <sys_mod_count>3</sys_mod_count>
         <sys_name>KLF_TestMockRESTAPIRequest</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_469a958d2b5192100060ff42fe91bf58</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>

@@ -28,10 +28,12 @@
 <sys_update_version action="INSERT_OR_UPDATE">
         <action>DELETE</action>
         <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <comments/>
         <file_path/>
         <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
         <instance_name>dev229555</instance_name>
         <name>sys_ui_policy_action_31a82f7affb9831020d2333663e9720c</name>
+        <order/>
         <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_policy_action">
     <sys_ui_policy_action action="INSERT_OR_UPDATE">
         <cleared>false</cleared>
@@ -82,6 +84,7 @@
         <sys_class_name>sys_metadata_delete</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-09-13 02:10:29</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_db_object display_value="" name="sys_ui_policy_action">sys_ui_policy_action</sys_db_object>
         <sys_id>02bab1b00cfd4c91810401406b0456d1</sys_id>
         <sys_metadata>31a82f7affb9831020d2333663e9720c</sys_metadata>
@@ -90,6 +93,7 @@
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_parent display_value="KLFSTATE Scheduled Job Name Readonly">f468e37affb9831020d2333663e97249</sys_parent>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
         <sys_update_name>sys_ui_policy_action_31a82f7affb9831020d2333663e9720c</sys_update_name>

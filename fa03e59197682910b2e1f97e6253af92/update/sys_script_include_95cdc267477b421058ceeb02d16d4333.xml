@@ -514,11 +514,13 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2024-08-09 21:41:17</sys_created_on>
+        <sys_customer_update>false</sys_customer_update>
         <sys_id>95cdc267477b421058ceeb02d16d4333</sys_id>
         <sys_mod_count>45</sys_mod_count>
         <sys_name>KLF_RecordSync_RoleUtils</sys_name>
         <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
         <sys_policy/>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
         <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
         <sys_update_name>sys_script_include_95cdc267477b421058ceeb02d16d4333</sys_update_name>
         <sys_updated_by>kenneth.frencher</sys_updated_by>
@@ -531,7 +533,7 @@ global.KLF_RecordSync_RoleUtils.prototype = {
         <sys_id>d020262f47bb421058ceeb02d16d43a4</sys_id>
         <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-08-29 23:33:33</sys_updated_on>
+        <sys_updated_on>2026-09-13 02:50:59</sys_updated_on>
         <table>sys_script_include</table>
         <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
