@@ -104,4 +104,15 @@
         <web_service_definition display_value="KLF Import XML">7323a9159725061024d7b066f053af7c</web_service_definition>
         <web_service_version display_value="v1">8e1539e9976f0a5424d7b066f053af48</web_service_version>
     </sys_ws_operation>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>137170d4477b461058ceeb02d16d43f6</id>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-09-13 12:38:04</sys_created_on>
+        <sys_id>96254fe930654f03a02eb9531a57a0eb</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-09-13 12:38:04</sys_updated_on>
+        <table>sys_ws_operation</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

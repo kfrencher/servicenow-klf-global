@@ -7,7 +7,7 @@
 
 }]]></client_script_v2>
         <comments/>
-        <condition>KLF_RecordImporter.showStopTransform(current)</condition>
+        <condition>global.KLF_RecordImporter.showStopTransform(current);</condition>
         <form_action>true</form_action>
         <form_button>true</form_button>
         <form_button_icon/>
@@ -32,7 +32,7 @@
         <name>Stop Transform</name>
         <onclick/>
         <order>100</order>
-        <script><![CDATA[KLF_RecordImporter.stopTransform(current);
+        <script><![CDATA[global.KLF_RecordImporter.stopTransform(current);
 action.setRedirectURL(current);]]></script>
         <show_form_icon_only>false</show_form_icon_only>
         <show_insert>true</show_insert>

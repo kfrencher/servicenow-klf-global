@@ -9,14 +9,13 @@
     "#now:*": "./@types/servicenow/fluent/*/index.js"
   },
   "scripts": {
+    "build_and_deploy": "now-sdk build && now-sdk deploy",
     "build": "now-sdk build",
     "deploy": "now-sdk install",
     "clean": "now-sdk clean",
     "transform": "now-sdk transform -f false",
     "download": "now-sdk download -f false",
-    "types": "now-sdk dependencies",
-    "rename-generated:dry": "node scripts/rename-generated-artifacts.mjs",
-    "rename-generated:apply": "node scripts/rename-generated-artifacts.mjs --apply"
+    "types": "now-sdk dependencies"
   },
   "devDependencies": {
     "@servicenow/sdk": "4.12.1",
