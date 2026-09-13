@@ -19,11 +19,10 @@
     var users = JSON.parse(bodyJSON);
     var userMapping = global.KLF_RecordSync_UserUtils.createMappingFromRemote(users);
 
-    response.setStatus('200');
+    response.setStatus(200);
     response.setBody(userMapping);
 
-// @ts-ignore
-})(request, response);]]></operation_script>
+})(/** @type {RESTAPIRequest} */ (request), /** @type {RESTAPIResponse} */ (response));]]></operation_script>
         <operation_uri>/api/global/v1/klf_import_xml/user_mapping</operation_uri>
         <produces>application/json</produces>
         <produces_customized>true</produces_customized>

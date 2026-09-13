@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="DELETE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-23 13:34:25</sys_created_on>
+        <sys_id>eaea0659838dcf503c9299e0deaad35d</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_klf_recordimporter_state.u_klf_recordimporter_state_user</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_security_acl display_value="u_klf_recordimporter_state">2eea0659838dcf503c9299e0deaad357</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_eaea0659838dcf503c9299e0deaad35d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-23 13:34:25</sys_updated_on>
+        <sys_user_role display_value="u_klf_recordimporter_state_user" name="u_klf_recordimporter_state_user">92eac259838dcf503c9299e0deaad3e0</sys_user_role>
+    </sys_security_acl_role>
+<sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>sys_security_acl_role_eaea0659838dcf503c9299e0deaad35d</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_security_acl_role">
+    <sys_security_acl_role action="INSERT_OR_UPDATE">
+        <sys_class_name>sys_security_acl_role</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-23 13:34:25</sys_created_on>
+        <sys_id>eaea0659838dcf503c9299e0deaad35d</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_klf_recordimporter_state.u_klf_recordimporter_state_user</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_security_acl display_value="u_klf_recordimporter_state">2eea0659838dcf503c9299e0deaad357</sys_security_acl>
+        <sys_update_name>sys_security_acl_role_eaea0659838dcf503c9299e0deaad35d</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-23 13:34:25</sys_updated_on>
+        <sys_user_role display_value="u_klf_recordimporter_state_user" name="u_klf_recordimporter_state_user">92eac259838dcf503c9299e0deaad3e0</sys_user_role>
+    </sys_security_acl_role>
+</record_update>]]></payload>
+        <payload_hash>550509815</payload_hash>
+        <record_name>u_klf_recordimporter_state.u_klf_recordimporter_state_user</record_name>
+        <reverted_from/>
+        <source>f109dbc7837d47103c9299e0deaad337</source>
+        <source_table>sys_upgrade_history</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-05 12:33:23</sys_created_on>
+        <sys_id>3f491f0b837d47103c9299e0deaad33f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>19f3244e4980000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-05 12:33:23</sys_updated_on>
+        <type>Access Roles</type>
+        <update_guid>77491f0b5e7d4710c40104c31d0e603f</update_guid>
+        <update_guid_history>77491f0b5e7d4710c40104c31d0e603f:0,a2ea0659fb8dcf508a0fab0e3a35d262:-1921241695</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value="u_klf_recordimporter_state.u_klf_recordimporter_state_user">524bede1839347543c9299e0deaad3bb</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-09-13 02:15:59</sys_created_on>
+        <sys_db_object display_value="" name="sys_security_acl_role">sys_security_acl_role</sys_db_object>
+        <sys_id>35a22cf868ae4ae6b9d8562098eb1584</sys_id>
+        <sys_metadata>eaea0659838dcf503c9299e0deaad35d</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_klf_recordimporter_state.u_klf_recordimporter_state_user</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent display_value="u_klf_recordimporter_state">2eea0659838dcf503c9299e0deaad357</sys_parent>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_security_acl_role_eaea0659838dcf503c9299e0deaad35d</sys_update_name>
+        <sys_update_version display_value="sys_security_acl_role_eaea0659838dcf503c9299e0deaad35d">3f491f0b837d47103c9299e0deaad33f</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-09-13 02:15:59</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>

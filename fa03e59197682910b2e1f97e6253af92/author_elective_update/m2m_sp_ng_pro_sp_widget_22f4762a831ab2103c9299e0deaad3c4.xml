@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_ng_pro_sp_widget">
+    <m2m_sp_ng_pro_sp_widget action="DELETE">
+        <sp_angular_provider display_value="klfFormContext">cf2feedeff52321020d2333663e97267</sp_angular_provider>
+        <sp_widget display_value="KLF Form">bef4a95597682910b2e1f97e6253af86</sp_widget>
+        <sys_class_name>m2m_sp_ng_pro_sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-10 20:57:55</sys_created_on>
+        <sys_id>22f4762a831ab2103c9299e0deaad3c4</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>klfFormContext.KLF Form</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>m2m_sp_ng_pro_sp_widget_22f4762a831ab2103c9299e0deaad3c4</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:57:55</sys_updated_on>
+    </m2m_sp_ng_pro_sp_widget>
+<sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>m2m_sp_ng_pro_sp_widget_22f4762a831ab2103c9299e0deaad3c4</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="m2m_sp_ng_pro_sp_widget">
+    <m2m_sp_ng_pro_sp_widget action="INSERT_OR_UPDATE">
+        <sp_angular_provider display_value="klfFormContext">cf2feedeff52321020d2333663e97267</sp_angular_provider>
+        <sp_widget display_value="KLF Form">bef4a95597682910b2e1f97e6253af86</sp_widget>
+        <sys_class_name>m2m_sp_ng_pro_sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-01-10 20:57:55</sys_created_on>
+        <sys_id>22f4762a831ab2103c9299e0deaad3c4</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>klfFormContext.KLF Form</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>m2m_sp_ng_pro_sp_widget_22f4762a831ab2103c9299e0deaad3c4</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-01-10 20:57:55</sys_updated_on>
+    </m2m_sp_ng_pro_sp_widget>
+</record_update>]]></payload>
+        <payload_hash>1320445126</payload_hash>
+        <record_name>klfFormContext.KLF Form</record_name>
+        <reverted_from/>
+        <source>f109dbc7837d47103c9299e0deaad337</source>
+        <source_table>sys_upgrade_history</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-05 12:32:38</sys_created_on>
+        <sys_id>3429130b837d47103c9299e0deaad3ed</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>19f324433820000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-05 12:32:38</sys_updated_on>
+        <type>Angular Providers</type>
+        <update_guid>7c29130bba7d4710d184dc187aad33ec</update_guid>
+        <update_guid_history>7c29130bba7d4710d184dc187aad33ec:0,a2f4762a7e1ab2104d58543e799bcac8:1690010344</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete display_value="klfFormContext.KLF Form">eb1ca929839347543c9299e0deaad3b9</sys_audit_delete>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-09-13 02:19:37</sys_created_on>
+        <sys_db_object display_value="" name="m2m_sp_ng_pro_sp_widget">m2m_sp_ng_pro_sp_widget</sys_db_object>
+        <sys_id>83db3104d175431ebd79de599b1d0fe4</sys_id>
+        <sys_metadata>22f4762a831ab2103c9299e0deaad3c4</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>klfFormContext.KLF Form</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent/>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>m2m_sp_ng_pro_sp_widget_22f4762a831ab2103c9299e0deaad3c4</sys_update_name>
+        <sys_update_version display_value="m2m_sp_ng_pro_sp_widget_22f4762a831ab2103c9299e0deaad3c4">3429130b837d47103c9299e0deaad3ed</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-09-13 02:19:37</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>

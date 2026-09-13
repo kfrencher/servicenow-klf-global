@@ -27,7 +27,7 @@
 	}
 	
 
-})(request, response);]]></operation_script>
+})(/** @type {RESTAPIRequest} */ (request), /** @type {RESTAPIResponse} */ (response));]]></operation_script>
         <operation_uri>/api/global/v1/klf_export/scope_groups</operation_uri>
         <produces>application/json,application/xml,text/xml</produces>
         <produces_customized>false</produces_customized>

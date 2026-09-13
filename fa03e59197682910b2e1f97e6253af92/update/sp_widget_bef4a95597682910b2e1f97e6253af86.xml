@@ -256,6 +256,7 @@ api.controller =
             // KLF ADDITION
             // adding to support URL redirection
             // loadForm($scope.data.table, sysID).then(constructResponseHandler(response));
+            // @ts-ignore
             me.server.get({
                 action: 'getActionResponseFromSession',
                 uiAction: uiAction
@@ -306,7 +307,7 @@ api.controller =
             };
         }
 
-        // @ts-ignore
+        /** @type {any} */
         var ctrl = this;
         // switch forms
         var unregister = $scope.$on('$sp.list.click', onListClick);
@@ -389,6 +390,7 @@ api.controller =
 
             if (gFormInstance.getTableName() == $scope.data.f.table) {
                 g_form = gFormInstance;
+                // @ts-ignore
                 window.g_form = g_form;
 
                 // KLF ADDITION
@@ -491,9 +493,12 @@ api.controller =
         var controllerArguments = arguments;
         $scope.$on('spModel.gForm.initialized', function(e, gFormInstance) {
             var originalValidate = gFormInstance.$private.validateForm;
-						window.klfForm = gFormInstance;
-						window.uiActionExecutor = uiActionExecutor;
-						window.spUIActionFactory = spUIActionFactory;
+            // @ts-ignore
+            window.klfForm = gFormInstance;
+            // @ts-ignore
+            window.uiActionExecutor = uiActionExecutor;
+            // @ts-ignore
+            window.spUIActionFactory = spUIActionFactory;
             gFormInstance.$private.validateForm = function( /**@type{string}*/ actionName) {
                 if (actionName) {
                     if (actionName.endsWith('novalidate')) {
@@ -528,6 +533,7 @@ api.controller =
                 klfModal: klfModal,
 				uiActionExecutor: uiActionExecutor
             };
+            // @ts-ignore
             CustomEvent.fire('klf.form.initialized', formContext);
 			klfFormContext.setContext(formContext);
         });
