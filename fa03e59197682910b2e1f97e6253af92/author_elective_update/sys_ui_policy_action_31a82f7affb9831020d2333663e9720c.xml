@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_policy_action">
+    <sys_ui_policy_action action="DELETE">
+        <cleared>false</cleared>
+        <disabled>true</disabled>
+        <field>u_scheduled_job_name</field>
+        <field_message/>
+        <field_message_type>none</field_message_type>
+        <mandatory>ignore</mandatory>
+        <sys_class_name>sys_ui_policy_action</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-04 19:02:05</sys_created_on>
+        <sys_id>31a82f7affb9831020d2333663e9720c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_scheduled_job_name</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_ui_policy_action_31a82f7affb9831020d2333663e9720c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-04 19:02:05</sys_updated_on>
+        <table>u_klf_recordimporter_state</table>
+        <ui_policy display_value="KLFSTATE Scheduled Job Name Readonly">f468e37affb9831020d2333663e97249</ui_policy>
+        <value/>
+        <value_action>ignore</value_action>
+        <visible>ignore</visible>
+    </sys_ui_policy_action>
+    <sys_translated_text action="DELETE" query="documentkey=31a82f7affb9831020d2333663e9720c"/>
+<sys_update_version action="INSERT_OR_UPDATE">
+        <action>DELETE</action>
+        <application display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</application>
+        <file_path/>
+        <instance_id>638ef80e1bfe7d50699443f4bd4bcb14</instance_id>
+        <instance_name>dev229555</instance_name>
+        <name>sys_ui_policy_action_31a82f7affb9831020d2333663e9720c</name>
+        <payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_policy_action">
+    <sys_ui_policy_action action="INSERT_OR_UPDATE">
+        <cleared>false</cleared>
+        <disabled>true</disabled>
+        <field>u_scheduled_job_name</field>
+        <field_message/>
+        <field_message_type>none</field_message_type>
+        <mandatory>ignore</mandatory>
+        <sys_class_name>sys_ui_policy_action</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-07-04 19:02:05</sys_created_on>
+        <sys_id>31a82f7affb9831020d2333663e9720c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_scheduled_job_name</sys_name>
+        <sys_package display_value="KLF Global" source="fa03e59197682910b2e1f97e6253af92">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_update_name>sys_ui_policy_action_31a82f7affb9831020d2333663e9720c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-07-04 19:02:05</sys_updated_on>
+        <table>u_klf_recordimporter_state</table>
+        <ui_policy display_value="KLFSTATE Scheduled Job Name Readonly">f468e37affb9831020d2333663e97249</ui_policy>
+        <value/>
+        <value_action>ignore</value_action>
+        <visible>ignore</visible>
+    </sys_ui_policy_action>
+    <sys_translated_text action="delete_multiple" query="documentkey=31a82f7affb9831020d2333663e9720c"/>
+</record_update>]]></payload>
+        <payload_hash>-930533153</payload_hash>
+        <record_name>u_scheduled_job_name</record_name>
+        <reverted_from/>
+        <source>0798cbb3837ac7103c9299e0deaad3a4</source>
+        <source_table>sys_upgrade_history</source_table>
+        <state>previous</state>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-08-26 12:18:53</sys_created_on>
+        <sys_id>1aa8c7f3837ac7103c9299e0deaad370</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_recorded_at>1a03e024d0b0000001</sys_recorded_at>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-08-26 12:18:53</sys_updated_on>
+        <type>UI Policy Action</type>
+        <update_guid>52a8c7f3c27ac7101742244732bca470</update_guid>
+        <update_guid_history>52a8c7f3c27ac7101742244732bca470:0,a4595f0bcf7d47104397bcf010942343:0,781b0e4730f147100b500840d4417a40:-930533153</update_guid_history>
+    </sys_update_version>
+    <sys_metadata_delete action="INSERT_OR_UPDATE">
+        <sys_audit_delete/>
+        <sys_class_name>sys_metadata_delete</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-09-13 02:10:29</sys_created_on>
+        <sys_db_object display_value="" name="sys_ui_policy_action">sys_ui_policy_action</sys_db_object>
+        <sys_id>02bab1b00cfd4c91810401406b0456d1</sys_id>
+        <sys_metadata>31a82f7affb9831020d2333663e9720c</sys_metadata>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>u_scheduled_job_name</sys_name>
+        <sys_package display_value="KLF Global" source="global">fa03e59197682910b2e1f97e6253af92</sys_package>
+        <sys_parent display_value="KLFSTATE Scheduled Job Name Readonly">f468e37affb9831020d2333663e97249</sys_parent>
+        <sys_policy/>
+        <sys_scope display_value="KLF Global">fa03e59197682910b2e1f97e6253af92</sys_scope>
+        <sys_scope_delete display_value="">412a50ca22244ec0a8eec5f023b91000</sys_scope_delete>
+        <sys_update_name>sys_ui_policy_action_31a82f7affb9831020d2333663e9720c</sys_update_name>
+        <sys_update_version display_value="sys_ui_policy_action_31a82f7affb9831020d2333663e9720c">1aa8c7f3837ac7103c9299e0deaad370</sys_update_version>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-09-13 02:10:29</sys_updated_on>
+    </sys_metadata_delete>
+</record_update>

@@ -13,6 +13,7 @@
     $scope.msg = "";
     $scope.isNative = cabrillo.isNative();
     $scope.errorMessages = [];
+    // @ts-ignore
     var dateFormat = window.NOW.dateFormat;
     var hasTimeZone = g_user_date_time_format.indexOf('z') > -1;
     $scope.showDate = !hasTimeZone && (dateFormat.dateBoth || !dateFormat.timeAgo);
@@ -185,10 +186,10 @@
         $scope.typing = [];
         var liveMessages = [];
         var tempTypingUsers = [];
-        Object.keys(sessions).forEach(function(session) {
-            var journalFields = scope.data.stream.journal_fields;
+        Object.keys(sessions).forEach(function(sessionKey) {
+            var journalFields = $scope.data.stream.journal_fields;
             var canUserReadJournalField = false;
-            session = sessions[session];
+            var session = sessions[sessionKey];
 
             for (var j = 0; j < journalFields.length; j++) {
                 if (journalFields[j].name === session.field_type) {
@@ -957,7 +958,7 @@ img {
 
     if (input) { // if we have input then we're saving
         if (input.isPosting && input.journalEntry && input.journalEntryField) {
-            if (gr.canWrite(input.journalEntryField)) {
+            if (gr.canWrite()) {
                 gr[input.journalEntryField].setDisplayValue(input.journalEntry);
                 gr.update();
                 $sp.logStat('Comments', data.table, data.sys_id, input.journalEntry);

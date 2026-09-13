@@ -16,7 +16,7 @@
         <logo/>
         <menu/>
         <name>KLF Global</name>
-        <package_json display_value="/global/x-53417-klf-global/1.1.1/package.json" path="/global/x-53417-klf-global/1.1.1/package.json">/global/x-53417-klf-global/1.1.1/package.json</package_json>
+        <package_json display_value="/global/x-53417-klf-global/1.2.0/package.json" path="/global/x-53417-klf-global/1.2.0/package.json">/global/x-53417-klf-global/1.2.0/package.json</package_json>
         <package_resolver_version>2.0.0</package_resolver_version>
         <private>false</private>
         <restrict_table_access>false</restrict_table_access>
@@ -33,16 +33,16 @@
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2023-01-21 13:01:55</sys_created_on>
         <sys_id>fa03e59197682910b2e1f97e6253af92</sys_id>
-        <sys_mod_count>5</sys_mod_count>
+        <sys_mod_count>8</sys_mod_count>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2026-07-04 14:51:00</sys_updated_on>
+        <sys_updated_on>2026-09-13 02:27:35</sys_updated_on>
         <template/>
         <trackable>true</trackable>
         <uninstall_blocked>false</uninstall_blocked>
         <user_role/>
         <vendor/>
         <vendor_prefix/>
-        <version>1.1.1</version>
+        <version>1.2.0</version>
     </sys_app>
     <sys_translated_text action="delete_multiple" query="documentkey=fa03e59197682910b2e1f97e6253af92"/>
     <sys_attachment action="INSERT_OR_UPDATE">

@@ -21,11 +21,10 @@
     var result =
         global.KLF_RecordSync_GroupUtils.updateNotifications(updateNotificationsRequest.groupMapping, updateNotificationsRequest.notificationSysIds);
 
-    response.setStatus('200');
+    response.setStatus(200);
     response.setBody(result);
 
-// @ts-ignore
-})(request, response);]]></operation_script>
+})(/** @type {RESTAPIRequest} */ (request), /** @type {RESTAPIResponse} */ (response));]]></operation_script>
         <operation_uri>/api/global/v1/klf_import_xml/notifications</operation_uri>
         <produces>application/json</produces>
         <produces_customized>true</produces_customized>

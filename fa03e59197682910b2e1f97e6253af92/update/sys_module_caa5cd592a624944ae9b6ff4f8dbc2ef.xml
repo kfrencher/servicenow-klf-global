@@ -5,16 +5,16 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
   "version": 1,
-  "serialNumber": "urn:uuid:4e8a6484-f324-4c8a-b444-77bf761724c6",
+  "serialNumber": "urn:uuid:3761fce7-2e06-47c9-83d4-fb525ebb8048",
   "metadata": {
-    "timestamp": "2026-08-30T02:59:28.480Z",
+    "timestamp": "2026-09-13T02:34:57.085Z",
     "tools": {
       "components": [
         {
           "type": "library",
           "name": "sdk-build-plugins",
           "group": "@servicenow",
-          "version": "4.11.2",
+          "version": "4.12.1",
           "author": "ServiceNow"
         }
       ]
@@ -22,8 +22,8 @@
     "component": {
       "type": "application",
       "name": "x-53417-klf-global",
-      "version": "1.1.1",
-      "bom-ref": "pkg:servicenow/x-53417-klf-global@1.1.1?sys_scope_id=fa03e59197682910b2e1f97e6253af92",
+      "version": "1.2.0",
+      "bom-ref": "pkg:servicenow/x-53417-klf-global@1.2.0?sys_scope_id=fa03e59197682910b2e1f97e6253af92",
       "licenses": [
         {
           "license": {
@@ -31,18 +31,18 @@
           }
         }
       ],
-      "purl": "pkg:servicenow/x-53417-klf-global@1.1.1?sys_scope_id=fa03e59197682910b2e1f97e6253af92"
+      "purl": "pkg:servicenow/x-53417-klf-global@1.2.0?sys_scope_id=fa03e59197682910b2e1f97e6253af92"
     }
   },
   "components": [],
   "dependencies": [
     {
-      "ref": "pkg:servicenow/x-53417-klf-global@1.1.1?sys_scope_id=fa03e59197682910b2e1f97e6253af92"
+      "ref": "pkg:servicenow/x-53417-klf-global@1.2.0?sys_scope_id=fa03e59197682910b2e1f97e6253af92"
     }
   ]
 }]]></content>
         <external_source>false</external_source>
-        <path>/global/x-53417-klf-global/1.1.1/bom.json</path>
+        <path>/global/x-53417-klf-global/1.2.0/bom.json</path>
         <sys_class_name>sys_module</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-08-27 12:41:28</sys_created_on>

@@ -2,6 +2,8 @@
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
         <client_script><![CDATA[function controller($scope, $location, $window, spUtil, amb, $http, spAriaUtil, $timeout, spNavStateManager, i18n) {
+    /** @type {this & {data: any}} */
+    // @ts-ignore
     var c = this;
     /*
      * options:
@@ -564,6 +566,7 @@ tbody tr:last-child {
 		if (e.ctrlKey)
 			return; // ctrlKey is for the debug menu, not this menu
 
+		/** @type {any} */
 		var rowScope = angular.element(e.target).scope();
 		var field, item, fieldVal;
 
@@ -903,9 +906,12 @@ tbody tr:last-child {
 		var elements = grForMetaData.getElements();
 		// Global and scoped GlideRecord.getElements return two different things,
 		// so convert to Array if needed before looping through
+		// @ts-ignore
 		if (typeof elements.size != "undefined") {
 			var elementArr = [];
+		// @ts-ignore
 			for (var i = 0; i < elements.size(); i++)
+			// @ts-ignore
 				elementArr.push(elements.get(i));
 			elements = elementArr;
 		}
