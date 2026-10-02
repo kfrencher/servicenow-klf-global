@@ -11,6 +11,7 @@
   "scripts": {
     "build_and_deploy": "now-sdk build && now-sdk deploy",
     "build": "now-sdk build",
+    "concatenate:script-includes": "node tools/concatenate-script-includes.cjs",
     "deploy": "now-sdk install",
     "clean": "now-sdk clean",
     "transform": "now-sdk transform -f false",
@@ -18,11 +19,13 @@
     "types": "now-sdk dependencies"
   },
   "devDependencies": {
-    "@servicenow/sdk": "4.12.1",
     "@servicenow/glide": "27.0.5",
+    "@servicenow/sdk": "^4.13.3",
     "@types/angular": "^1.8.4",
+    "@types/chance": "^1.1.6",
     "@types/jasmine": "3.3.0",
-    "@types/chance": "^1.1.6"
+    "@types/jquery": "^4.0.1",
+    "@xmldom/xmldom": "^0.9.12"
   },
   "allowScripts": {
     "@parcel/watcher@2.6.0": true,

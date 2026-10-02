@@ -9,10 +9,7 @@
         <mobile_callable>false</mobile_callable>
         <name>KLF_RecordExporter</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[//@ts-ignore
-var global = global || {};
-
-/**
+        <script><![CDATA[/**
  * @typedef {Object} KLF_ExportRecord
  * @property {string} xml - The XML representation of the record and its related records.
  * @property {string} tableName - The name of the table the record belongs to.

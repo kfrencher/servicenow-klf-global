@@ -11,7 +11,6 @@
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/* eslint-disable */
 // @ts-nocheck
-var global = global || {};
 
 global.KLF_TestChance =
     (function() {

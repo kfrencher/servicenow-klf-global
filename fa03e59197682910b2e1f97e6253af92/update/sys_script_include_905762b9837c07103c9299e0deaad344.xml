@@ -42,9 +42,6 @@
  * @property {(message: string) => void} error
  */
 
-//@ts-ignore
-var global = global || {};
-
 /**
  * @class KLF_RecordImporter
  * Contains utility functions for importing records exported by `RecordExporter`.

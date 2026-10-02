@@ -9,8 +9,7 @@
         <mobile_callable>false</mobile_callable>
         <name>KLF_TestMockRESTAPIResponse</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[var global = global || {};
-
+        <script><![CDATA[
 /**
  * Creates a mock RESTAPIResponse object for testing purposes.
  * @constructor
