@@ -20,9 +20,6 @@
  * into the parent group
  */
 
-//@ts-ignore
-var global = global || {};
-
 global.KLF_GroupUtils = function() {};
 
 global.KLF_GroupUtils.prototype = {

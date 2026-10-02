@@ -11,14 +11,16 @@
         <name>KLFSTATE onLoad</name>
         <order/>
         <script><![CDATA[function onLoad() {
-	const scheduledJobList = g_scratchpad.scheduledJobList;
-	if (scheduledJobList && scheduledJobList.length > 0) {
-		scheduledJobList.forEach(scheduledJob => {
-			g_form.addOption('u_scheduled_job_name', scheduledJob.scheduledImportName, scheduledJob.scheduledImportName);
-		});
-	}
-
-}]]></script>
+  const scheduledJobList = g_scratchpad.scheduledJobList;
+  if (scheduledJobList && scheduledJobList.length > 0) {
+    scheduledJobList.forEach(
+      /** @type {(scheduledJob: { scheduledImportName: string }) => void} */ (scheduledJob) => {
+        g_form.addOption('u_scheduled_job_name', scheduledJob.scheduledImportName, scheduledJob.scheduledImportName);
+      },
+    );
+  }
+}
+]]></script>
         <sys_class_name>sys_script_client</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-07-04 18:56:40</sys_created_on>

@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[api.controller = function ($scope, spUtil, uiActionExecutor) {
+        <client_script><![CDATA[api.controller = function() {};
+
+/**
+ * @param {angular.IScope & Object.<string, *>} $scope
+ * @param {*} spUtil
+ * @param {*} uiActionExecutor 
+ */
+api.controller = function($scope, spUtil, uiActionExecutor) {
 	
 	$scope.executeAction = async function () {
 		spUtil.addInfoMessage('Executing action');
@@ -26,7 +33,13 @@
         <has_preview>false</has_preview>
         <id>klf_test_execute_action</id>
         <internal>false</internal>
-        <link><![CDATA[function link(scope, element, attrs, controller) {
+        <link><![CDATA[/**
+ * @param {angular.IScope & Object.<string, *>} scope
+ * @param {JQuery<HTMLElement> & angular.IAugmentedJQuery} element 
+ * @param {*} attrs 
+ * @param {*} controller 
+ */
+function link(scope, element, attrs, controller) {
 }]]></link>
         <name>KLF Test Execute Action</name>
         <option_schema/>

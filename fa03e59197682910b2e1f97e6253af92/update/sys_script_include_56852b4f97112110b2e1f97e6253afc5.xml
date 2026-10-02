@@ -24,7 +24,6 @@
  * created that can be handled by a Script Action. The event name is "klf_commandprobe.response".
  */
 
-var global = global || {};
 
 /**
  * For details on how to use this class refer to the {@link global.KLF_CommandProbe#executeCommand} function

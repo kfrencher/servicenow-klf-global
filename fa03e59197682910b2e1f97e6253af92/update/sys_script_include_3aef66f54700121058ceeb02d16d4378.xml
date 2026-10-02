@@ -56,11 +56,11 @@ function KLF_JasmineTest(outputs, steps, params, stepResult, assertEqual) {
         });
 
         it("should call the spy function instead of the script include function object", function() {
-            spyOn(x_912467_klf.DateUtils, "getFiscalYear").and.callFake(function() {
+            spyOn(x_klf_common.DateUtils, "getFiscalYear").and.callFake(function() {
                 return 2021;
             });
 
-            expect(x_912467_klf.DateUtils.getFiscalYear(new GlideDateTime())).toBe(2021, 'Fiscal year is correct');
+            expect(x_klf_common.DateUtils.getFiscalYear(new GlideDateTime())).toBe(2021, 'Fiscal year is correct');
         });
 
         it("should call the spy class function instead of the script include function", function() {

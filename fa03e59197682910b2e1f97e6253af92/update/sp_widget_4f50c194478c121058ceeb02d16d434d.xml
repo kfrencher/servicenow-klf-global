@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>standard</category>
-        <client_script><![CDATA[function spTicketConversation($scope, nowAttachmentHandler, $animate, $rootScope, cabrillo, $timeout, snRecordWatcher, spUtil, spAriaUtil, $http, $window, $sce, snAttachmentHandler, i18n, dynamicTranslation, dateUtils) {
+        <client_script><![CDATA[api.controller = function() {};
+
+/**
+ * @param {angular.IScope & Object.<string, *>} $scope
+ * @param {*} nowAttachmentHandler
+ * @param {*} $animate
+ * @param {angular.IRootScopeService} $rootScope
+ * @param {*} cabrillo
+ * @param {*} snRecordWatcher
+ * @param {*} spUtil
+ * @param {*} spAriaUtil
+ * @param {*} $http
+ * @param {*} $window
+ */
+api.controller = function ($scope, nowAttachmentHandler, $animate, $rootScope, cabrillo, $timeout, snRecordWatcher, spUtil, spAriaUtil, $http, $window, $sce, snAttachmentHandler, i18n, dynamicTranslation, dateUtils) {
     // KLF ADDITION
     // Flag that will expand the items on the timeline to fill te entire horizontal
     // space of the timeline as opposed to only taking up 50% of the space.
@@ -851,7 +865,11 @@ img {
         <has_preview>false</has_preview>
         <id>klf-ticket-conversations</id>
         <internal>false</internal>
-        <link><![CDATA[function link(scope, elm) {
+        <link><![CDATA[/**
+ * @param {angular.IScope & Object.<string, *>} scope
+ * @param {JQuery<HTMLElement>} elm 
+ */
+function link(scope, elm) {
 	// Set the focus back on the input for IE11
 	scope.setFocus = function() {
 		var input = $(elm[0]).find('textarea#post-input');
@@ -1036,6 +1054,9 @@ img {
 
     data.tableLabel = gr.getLabel();
 
+    /**
+     * @param {GlideRecord} originalRecord 
+     */
     function userCanAttach(originalRecord) {
         if (!gs.hasRole(gs.getProperty("glide.attachment.role")))
             return false;

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
     <sp_widget action="INSERT_OR_UPDATE">
         <category>custom</category>
-        <client_script><![CDATA[function controller($scope, $location, $window, spUtil, amb, $http, spAriaUtil, $timeout, spNavStateManager, i18n) {
+        <client_script><![CDATA[api.controller = function() {};
+
+/**
+ * @param {angular.IScope & Object.<string, *>} $scope
+ * @param {angular.ILocationService} $location
+ * @param {angular.IWindowService} $window
+ * @param {*} spUtil
+ * @param {*} amb
+ * @param {angular.IHttpService} $http
+ * @param {*} spAriaUtil
+ * @param {angular.ITimeoutService} $timeout
+ * @param {*} spNavStateManager
+ * @param {*} i18n
+ */
+api.controller = function ($scope, $location, $window, spUtil, amb, $http, spAriaUtil, $timeout, spNavStateManager, i18n) {
     /** @type {this & {data: any}} */
     // @ts-ignore
     var c = this;
@@ -36,8 +50,9 @@
         setKeywords: 'data_table.setKeywords'
     };
 
-    $scope.go = function(table, item) {
-        if ($window.getSelection().toString().length > 0)
+    $scope.go = function(/** @type {string} */ table, /** @type {*} */ item) {
+        var selection = $window.getSelection();
+        if (selection && selection.toString().length > 0)
             return;
 
         spNavStateManager.onRecordChange(table).then(function() {
@@ -63,15 +78,16 @@
             $scope.getTinyUrl(url);
     };
 
-    $scope.getTinyUrl = function(url) {
+    $scope.getTinyUrl = function(/** @type {string} */ url) {
         $http.post('/api/now/tinyurl', {
             url: url
-        }).then(function(response) {
+        }).then(function(/** @type {*} */ response) {
             $scope.tinyUrl = new URL($window.location.origin + '/' + response.data.result).searchParams.get('sysparm_tiny');
         });
     };
 
     $scope.newRecord = function() {
+        /** @type {{id: string, table: string, view: string, sys_id: string, query?: string}} */
         var parms = {
             id: 'form',
             table: $scope.data.table,
@@ -92,7 +108,7 @@
                 $scope.data[keys[x]] = s[keys[x]];
             }
         }
-        $scope.server.update().then(function(data) {
+        $scope.server.update().then(function(/** @type {*} */ data) {
             if (s.sys_id) {
                 for (var x in data.list) {
                     if (data.list[x].sys_id == s.sys_id) {
@@ -105,7 +121,7 @@
 
     if ($scope.options.fromUrl) {
         var origSearch = $location.search();
-        $scope.$on('$locationChangeSuccess', function(e) {
+        $scope.$on('$locationChangeSuccess', function(/** @type {*} */ e) {
             var s = $location.search();
             if (origSearch.id !== s.id)
                 return;
@@ -121,17 +137,17 @@
     }
 
 
-    $scope.getNumber = function(num) {
+    $scope.getNumber = function(/** @type {number} */ num) {
         return new Array(num);
     };
 
-    $scope.mathMin = function(v1, v2) {
+    $scope.mathMin = function(/** @type {number} */ v1, /** @type {number} */ v2) {
         return Math.min(v1, v2);
     };
 
-    function getData(updateUrl) {
+    function getData(/** @type {boolean} */ updateUrl) {
         var f = $scope.data;
-        spUtil.update($scope).then(function(data) {
+        spUtil.update($scope).then(function(/** @type {*} */ data) {
             f.view = data.view;
             if ($scope.options.fromUrl && updateUrl)
                 setPermalink(f.table, f.filter, f.o, f.d, f.p);
@@ -158,7 +174,7 @@
             spAriaUtil.sendLiveMessage((data.filter ? i18nMsgs.filteredNoResults : i18nMsgs.unFilteredNoResults).withValues([data.table_plural]));
     }
 
-    function setPermalink(table, filter, orderBy, orderDirection, page) {
+    function setPermalink(/** @type {string} */ table, /** @type {string} */ filter, /** @type {string} */ orderBy, /** @type {string} */ orderDirection, /** @type {number} */ page) {
         $scope.ignoreLocationChange = true;
         var search = $location.search();
         angular.extend(search, {
@@ -172,16 +188,17 @@
         $location.search(search);
     }
 
+    /** @type {{unsubscribe: () => void}|undefined} */
     var watcher;
 
-    function initRecordWatcher(table, filter) {
+    function initRecordWatcher(/** @type {string} */ table, /** @type {string} */ filter) {
         if (watcher)
             watcher.unsubscribe();
 
         if (table && filter) {
             var watcherChannel = amb.getChannelRW(table, filter);
             amb.connect();
-            watcher = watcherChannel.subscribe(function(message) {
+            watcher = watcherChannel.subscribe(function(/** @type {*} */ message) {
                 if (!message.data)
                     return;
                 switch (message.data.action) {
@@ -202,7 +219,7 @@
         }
     }
 
-    function updateRowFromRW(message) {
+    function updateRowFromRW(/** @type {*} */ message) {
         if (message.data && message.data.sys_id && $scope.data.list) {
             var row, field;
             for (var i = 0; i < $scope.data.list.length; i++) {
@@ -225,7 +242,7 @@
             watcher.unsubscribe();
     });
 
-    $scope.setPageNum = function(num) {
+    $scope.setPageNum = function(/** @type {number} */ num) {
         $scope.data.p = num;
         getData(true);
         $timeout(function() {
@@ -233,7 +250,7 @@
         });
     };
 
-    $scope.setOrderBy = function(field) {
+    $scope.setOrderBy = function(/** @type {string} */ field) {
         var d = "asc";
         // descending default sort for date/time columns for UI consistency
         var fieldType = $scope.data.column_types[field];
@@ -258,7 +275,7 @@
         $scope.setSearch(true);
     };
 
-    $scope.setSearch = function(updateUrl) {
+    $scope.setSearch = function(/** @type {boolean} */ updateUrl) {
         $scope.data.p = 1;
         if ($scope.data.keywords) {
             var previousSearchTerm = $scope.previousSearchTerm;
@@ -274,17 +291,17 @@
         getData(updateUrl);
     };
 
-    $scope.$on(eventNames.setFilter, function(e, newFilter) {
+    $scope.$on(eventNames.setFilter, function(/** @type {*} */ e, /** @type {string} */ newFilter) {
         $scope.data.filter = newFilter;
         $scope.setSearch(false);
     });
 
-    $scope.$on(eventNames.setKeywords, function(e, keywords) {
+    $scope.$on(eventNames.setKeywords, function(/** @type {*} */ e, /** @type {string} */ keywords) {
         $scope.data.keywords = keywords;
         $scope.setSearch(false);
     });
 
-    $scope.$on('widget-filter-breadcrumbs.queryModified', function(e, newFilter) {
+    $scope.$on('widget-filter-breadcrumbs.queryModified', function(/** @type {*} */ e, /** @type {string} */ newFilter) {
         $scope.data.filter = newFilter;
         $scope.setSearch(true);
     });
@@ -301,7 +318,7 @@
         return !$scope.data.list.length && !$scope.data.num_pages && !$scope.data.invalid_table && !$scope.loadingData;
     };
 
-    c.appendQuery = function(query) {
+    c.appendQuery = function(/** @type {string} */ query) {
         if ($scope.data.filter.length > 1)
             $scope.data.filter += '^';
         $scope.data.filter += query;
@@ -320,13 +337,13 @@
         $scope.checkAndSetTinyUrl();
     });
 
-    function parseQuery(table, queryString) {
-        return $http.post('/api/now/sp/parsequery/' + table, queryString).then(function(response) {
+    function parseQuery(/** @type {string} */ table, /** @type {string} */ queryString) {
+        return $http.post('/api/now/sp/parsequery/' + table, queryString).then(function(/** @type {*} */ response) {
             return response.data.result;
         });
     }
 
-    c.createQueryTerm = function(table, field, sys_id, operator) {
+    c.createQueryTerm = function(/** @type {string} */ table, /** @type {string} */ field, /** @type {string} */ sys_id, /** @type {string} */ operator) {
         return $http.get('/api/now/sp/getInOutQueryTerm', {
             params: {
                 table: table,
@@ -334,13 +351,13 @@
                 field: field,
                 operator: operator
             }
-        }).then(function(response) {
+        }).then(function(/** @type {*} */ response) {
             if (response && response.data && response.data.result)
                 return response.data.result.parts;
         });
     };
 
-    c.isMultiPart = function(terms) {
+    c.isMultiPart = function(/** @type {*} */ terms) {
         for (var i = 0; i < terms.length; i++) {
             var term = terms[i];
             while (term.left)
@@ -351,10 +368,10 @@
         return false;
     };
 
-    c.showMatching = function(field, newTerm) {
+    c.showMatching = function(/** @type {string} */ field, /** @type {*} */ newTerm) {
         var queryString = $scope.data.filter;
         var eq = "";
-        parseQuery($scope.data.table, queryString).then(function(oldTerms) {
+        parseQuery($scope.data.table, queryString).then(function(/** @type {*} */ oldTerms) {
             var isMultiPart = c.isMultiPart(oldTerms);
             for (var i = 0; i < oldTerms.length; i++) {
                 var term = oldTerms[i];
@@ -382,11 +399,11 @@
 
             $scope.data.filter = eq;
             $scope.setSearch();
-            $location.search(angular.extend($location.$$search, { spa: 1, filter: eq, }));
+            $location.search(angular.extend(/** @type {*} */ ($location).$$search, { spa: 1, filter: eq, }));
         });
     };
 
-    c.filterOut = function(field, newTerm) {
+    c.filterOut = function(/** @type {string} */ field, /** @type {*} */ newTerm) {
         var eq = "";
         if ($scope.data.filter.indexOf("^NQ") == -1) {
             // don't need server roundtrip to parse query,
@@ -397,13 +414,13 @@
             eq += getEncodedTerm(newTerm);
             $scope.data.filter = eq;
             $scope.setSearch();
-            $location.search(angular.extend($location.$$search, { spa: 1, filter: eq, }));
+            $location.search(angular.extend(/** @type {*} */ ($location).$$search, { spa: 1, filter: eq, }));
             return;
         }
 
         // query may be multipart so must apply new term to each part
         var queryString = $scope.data.filter;
-        parseQuery($scope.data.table, queryString).then(function(oldTerms) {
+        parseQuery($scope.data.table, queryString).then(function(/** @type {*} */ oldTerms) {
             for (var i = 0; i < oldTerms.length; i++) {
                 var term = oldTerms[i];
                 if (eq.length)
@@ -427,11 +444,11 @@
 
             $scope.data.filter = eq;
             $scope.setSearch();
-            $location.search(angular.extend($location.$$search, { spa: 1, filter: eq, }));
+            $location.search(angular.extend(/** @type {*} */ ($location).$$search, { spa: 1, filter: eq, }));
         });
     };
 
-    function isSameField(t1, t2) {
+    function isSameField(/** @type {*} */ t1, /** @type {*} */ t2) {
         if ('left' in t1 && 'left' in t2)
             return t1.left.query_term_field === t2.left.query_term_field;
         else if ('left' in t1)
@@ -441,6 +458,10 @@
         return t1.query_term_field === t2.query_term_field;
     }
 
+    /**
+     * @param {*} term
+     * @returns {string}
+     */
     function getEncodedTerm(term) {
         var eq;
         if (term.left) {
@@ -555,20 +576,28 @@ tbody tr:last-child {
         <has_preview>false</has_preview>
         <id>klf_data_table</id>
         <internal>false</internal>
-        <link><![CDATA[function link(scope, element, attrs, ctrl){
-	var $ul, $contextMenu;
+        <link><![CDATA[/**
+ * 
+ * @param {angular.IScope & Object.<string, *>} scope
+ * @param {JQuery<HTMLElement> & angular.IAugmentedJQuery} element 
+ * @param {*} attrs 
+ * @param {*} ctrl 
+ */
+function link(scope, element, attrs, ctrl){
+	
+	var /** @type {angular.IAugmentedJQuery} */$ul, /** @type {angular.IAugmentedJQuery} */$contextMenu;
 
 	scope.focusOnTableHeader = function() {
 		element.find(".data-table-title").attr("tabindex", "-1").focus();
 	};
 
-	element.on('contextmenu', function(e){
+	element.on('contextmenu', function(/** @type {JQueryEventObject} */ e){
 		if (e.ctrlKey)
 			return; // ctrlKey is for the debug menu, not this menu
 
 		/** @type {any} */
-		var rowScope = angular.element(e.target).scope();
-		var field, item, fieldVal;
+		var rowScope = angular.element(/** @type {HTMLElement} */ (e.target)).scope();
+		var /** @type {string} */ field, /** @type {any} */ item, fieldVal;
 
 		// Context Menu for tbody
 		if (angular.isDefined(rowScope.field) && angular.isDefined(rowScope.item)){
@@ -579,12 +608,12 @@ tbody tr:last-child {
 
 			var items = [
 				['${Show Matching}', function(){
-					ctrl.createQueryTerm(scope.data.table, field, item.sys_id, '=').then(function(term){
+					ctrl.createQueryTerm(scope.data.table, field, item.sys_id, '=').then(function(/** @type {*} */ term){
 						ctrl.showMatching(field, term);
 					});
 				}],
 				['${Filter Out}', function(){
-					ctrl.createQueryTerm(scope.data.table, field, item.sys_id, '!=').then(function(term){
+					ctrl.createQueryTerm(scope.data.table, field, item.sys_id, '!=').then(function(/** @type {*} */ term){
 						ctrl.filterOut(field, term);
 					});
 				}]
@@ -595,12 +624,13 @@ tbody tr:last-child {
 		}
 	});
 
-	function renderContextMenu(items){
+	function renderContextMenu(/** @type {*} */ items){
+		// @ts-ignore: scrollHeight might be undefined in some environments
 		var scrollHeight = $('body').get(0).scrollHeight;
 		$contextMenu = angular.element('<div>', {'class': 'dropdown clearfix context-dropdown open'});
 
-		$contextMenu.on('click', function (e) {
-			if ($(e.target).hasClass('dropdown')) {
+		$contextMenu.on('click', function (event) {
+			if ($(/** @type {HTMLElement} */ (event.target)).hasClass('dropdown')) {
 				_clearContextMenus(event);
 			}
 		});
@@ -652,8 +682,12 @@ tbody tr:last-child {
 		}
 	}
 
-	function _clearContextMenus(event){
+	function _clearContextMenus(/** @type {JQuery.TriggeredEvent} */ event){
 		if (!event){
+			return;
+		}
+
+		if(!event.currentTarget){
 			return;
 		}
 
@@ -666,9 +700,11 @@ tbody tr:last-child {
 	}
 
 	var contextMenuItemHeight = 0;
-	function setContextMenuPosition(event){
-		if (contextMenuItemHeight === 0)
-			contextMenuItemHeight = $ul.children(0).height();
+	function setContextMenuPosition(/** @type {JQueryEventObject} */ event){
+		if (contextMenuItemHeight === 0) {
+			//@ts-ignore
+			contextMenuItemHeight = $ul.children(0).height() || 0;
+		}
 
 		// Why not just call .width() and .height() on the container? Because those calculations cause browsers to reflow
 		// that can cause IE10 to take 200ms to render a context menu.
@@ -845,6 +881,7 @@ tbody tr:last-child {
 
 	data.list = [];
 	while (gr._next()) {
+		/** @type {Record<string, any>} */
 		var record = {};
 		$sp.getRecordElements(record, gr, data.fields);
 		if (typeof FilteredGlideRecord != "undefined" && gr instanceof FilteredGlideRecord) {
@@ -876,6 +913,9 @@ tbody tr:last-child {
 	data.filterBreadcrumbs = $sp.getWidget('widget-filter-breadcrumbs', breadcrumbWidgetParams);
 
 	// copy to data from input or options
+	/**
+	 * @param {string[]} names 
+	 */
 	function optCopy(names) {
 		names.forEach(function(name) {
 			data[name] = input[name] || options[name];

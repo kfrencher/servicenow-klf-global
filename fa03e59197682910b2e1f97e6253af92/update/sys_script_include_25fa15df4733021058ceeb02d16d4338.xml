@@ -33,7 +33,6 @@
  * - sys_wizard_answer
  * - ua_table_licensing_config
  */
-var global = global || {};
 
 /**
  * @param {string} targetScope 

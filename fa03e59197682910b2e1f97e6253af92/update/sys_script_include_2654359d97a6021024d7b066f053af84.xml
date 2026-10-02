@@ -60,10 +60,6 @@
  * }} KLF_RecordSync_UpdateRemoteNotificationsResponse
  */
 
-
-//@ts-ignore
-var global = global || {};
-
 /**
  * 
  * @param {KLF_RecordSyncConnectionConfig} connectionConfig 

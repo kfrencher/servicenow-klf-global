@@ -14,7 +14,6 @@
  * I created it as a way to scope global objects. I stopped working on it because because
  * I thought the method in KLF_ScoperUtils was a better approach.
  */
-var global = global || {};
 /**
  * Object used to copy application elements from one scope to another.
  * This is useful when you want to duplicate a scoped application to a new scope.

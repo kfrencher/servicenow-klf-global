@@ -5,16 +5,16 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
   "version": 1,
-  "serialNumber": "urn:uuid:08b4d629-b2c0-474a-95bc-cd88dd13515a",
+  "serialNumber": "urn:uuid:de4b06ec-f217-4752-ba51-f3125670b234",
   "metadata": {
-    "timestamp": "2026-09-13T18:54:13.980Z",
+    "timestamp": "2026-10-02T16:03:16.776Z",
     "tools": {
       "components": [
         {
           "type": "library",
           "name": "sdk-build-plugins",
           "group": "@servicenow",
-          "version": "4.12.1",
+          "version": "4.13.3",
           "author": "ServiceNow"
         }
       ]

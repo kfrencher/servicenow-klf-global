@@ -12,7 +12,6 @@
         <script><![CDATA[/**
  * @todo This object is broken right now. Remove the ts-nocheck and fix the issues.
  */
-var global = global || {};
 
 /**
  * Object that can be used to transfer data from one scope to another.
